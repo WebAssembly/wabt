@@ -335,8 +335,8 @@ out/test/spec/function-references/unreached-invalid.wast:687: assert_invalid pas
   out/test/spec/function-references/unreached-invalid/unreached-invalid.109.wasm:000001c: error: type mismatch in i64.extend_i32_u, expected [i32] but got [i64]
   000001c: error: OnConvertExpr callback failed
 out/test/spec/function-references/unreached-invalid.wast:698: assert_invalid passed:
-  out/test/spec/function-references/unreached-invalid/unreached-invalid.110.wasm:000001b: error: type mismatch at end of function, expected [] but got [f32]
-  000001b: error: EndFunctionBody callback failed
+  out/test/spec/function-references/unreached-invalid/unreached-invalid.110.wasm:000001a: error: type mismatch in f32.abs, expected [f32] but got [(ref something)]
+  000001a: error: OnUnaryExpr callback failed
 out/test/spec/function-references/unreached-invalid.wast:710: assert_invalid passed:
   out/test/spec/function-references/unreached-invalid/unreached-invalid.111.wasm:000001f: error: type mismatch in select, expected [i64, i64, i32] but got [i32, i64, i32]
   000001f: error: OnSelectExpr callback failed

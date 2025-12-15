@@ -99,6 +99,19 @@ void BinaryReaderLogging::LogTypes(TypeVector& types) {
   LogTypes(types.size(), types.data());
 }
 
+void BinaryReaderLogging::LogSupertypesInfo(SupertypesInfo* supertypes) {
+  if (supertypes->is_final_sub_type && supertypes->sub_type_count == 0) {
+    return;
+  }
+
+  LOGF_NOINDENT("(sub%s", supertypes->is_final_sub_type ? " final" : "");
+
+  for (Index i = 0; i < supertypes->sub_type_count; i++) {
+    LOGF_NOINDENT(" %" PRIindex, supertypes->sub_types[i]);
+  }
+  LOGF_NOINDENT("), ");
+}
+
 void BinaryReaderLogging::LogField(TypeMut field) {
   if (field.mutable_) {
     LOGF_NOINDENT("(mut ");
@@ -143,21 +156,26 @@ Result BinaryReaderLogging::OnFuncType(Index index,
                                        Index param_count,
                                        Type* param_types,
                                        Index result_count,
-                                       Type* result_types) {
-  LOGF("OnFuncType(index: %" PRIindex ", params: ", index);
+                                       Type* result_types,
+                                       SupertypesInfo* supertypes) {
+  LOGF("OnFuncType(index: %" PRIindex ", ", index);
+  LogSupertypesInfo(supertypes);
+  LOGF_NOINDENT("params: ");
   LogTypes(param_count, param_types);
   LOGF_NOINDENT(", results: ");
   LogTypes(result_count, result_types);
   LOGF_NOINDENT(")\n");
   return reader_->OnFuncType(index, param_count, param_types, result_count,
-                             result_types);
+                             result_types, supertypes);
 }
 
 Result BinaryReaderLogging::OnStructType(Index index,
                                          Index field_count,
-                                         TypeMut* fields) {
-  LOGF("OnStructType(index: %" PRIindex ", fields: ", index);
-  LOGF_NOINDENT("[");
+                                         TypeMut* fields,
+                                         SupertypesInfo* supertypes) {
+  LOGF("OnStructType(index: %" PRIindex ", ", index);
+  LogSupertypesInfo(supertypes);
+  LOGF_NOINDENT("fields: [");
   for (Index i = 0; i < field_count; ++i) {
     LogField(fields[i]);
     if (i != field_count - 1) {
@@ -165,14 +183,18 @@ Result BinaryReaderLogging::OnStructType(Index index,
     }
   }
   LOGF_NOINDENT("])\n");
-  return reader_->OnStructType(index, field_count, fields);
+  return reader_->OnStructType(index, field_count, fields, supertypes);
 }
 
-Result BinaryReaderLogging::OnArrayType(Index index, TypeMut field) {
-  LOGF("OnArrayType(index: %" PRIindex ", field: ", index);
+Result BinaryReaderLogging::OnArrayType(Index index,
+                                        TypeMut field,
+                                        SupertypesInfo* supertypes) {
+  LOGF("OnArrayType(index: %" PRIindex ", ", index);
+  LogSupertypesInfo(supertypes);
+  LOGF_NOINDENT("field: ");
   LogField(field);
   LOGF_NOINDENT(")\n");
-  return reader_->OnArrayType(index, field);
+  return reader_->OnArrayType(index, field, supertypes);
 }
 
 Result BinaryReaderLogging::OnImport(Index index,
@@ -804,6 +826,7 @@ DEFINE_END(EndCustomSection)
 
 DEFINE_BEGIN(BeginTypeSection)
 DEFINE_INDEX(OnTypeCount)
+DEFINE_INDEX_INDEX(OnRecursiveType, "first_type_index", "type_count")
 DEFINE_END(EndTypeSection)
 
 DEFINE_BEGIN(BeginImportSection)

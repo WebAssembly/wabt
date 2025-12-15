@@ -29,7 +29,7 @@ TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
 SharedValidator::SharedValidator(Errors* errors, const ValidateOptions& options)
     : options_(options),
       errors_(errors),
-      typechecker_(options.features, func_types_) {
+      typechecker_(options.features, type_fields_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -46,44 +46,80 @@ void SharedValidator::OnTypecheckerError(const char* msg) {
   PrintError(expr_loc_, "%s", msg);
 }
 
+Result SharedValidator::OnRecursiveType(Index first_type_index,
+                                        Index type_count) {
+  if (type_count > 0) {
+    type_fields_.rec_groups.emplace_back(
+        RecGroup(first_type_index, type_count));
+    last_rec_type_end_ = first_type_index + type_count;
+  }
+  return Result::Ok;
+}
+
 Result SharedValidator::OnFuncType(const Location& loc,
                                    Index param_count,
                                    const Type* param_types,
                                    Index result_count,
                                    const Type* result_types,
-                                   Index type_index) {
+                                   Index type_index,
+                                   SupertypesInfo* supertypes) {
   Result result = Result::Ok;
   if (!options_.features.multi_value_enabled() && result_count > 1) {
     result |= PrintError(loc,
                          "multiple result values are not supported without "
                          "multi-value enabled.");
   }
-  if (options_.features.reference_types_enabled()) {
+
+  type_fields_.PushFunc(FuncType{ToTypeVector(param_count, param_types),
+                                 ToTypeVector(result_count, result_types),
+                                 type_index});
+
+  if (options_.features.function_references_enabled()) {
+    Index end_index = GetEndIndex();
+
     for (Index i = 0; i < param_count; i++) {
-      result |= CheckReferenceType(loc, param_types[i], "params");
+      result |= CheckReferenceType(loc, param_types[i], end_index, "params");
     }
     for (Index i = 0; i < result_count; i++) {
-      result |= CheckReferenceType(loc, result_types[i], "results");
+      result |= CheckReferenceType(loc, result_types[i], end_index, "results");
     }
+
+    type_validation_result_ |= result;
+    result |= CheckSupertypes(loc, supertypes);
   }
-  func_types_.emplace(
-      num_types_++,
-      FuncType{ToTypeVector(param_count, param_types),
-               ToTypeVector(result_count, result_types), type_index});
+
   return result;
 }
 
-Result SharedValidator::OnStructType(const Location&,
+Result SharedValidator::OnStructType(const Location& loc,
                                      Index field_count,
-                                     TypeMut* fields) {
-  struct_types_.emplace(num_types_++, StructType{TypeMutVector(
-                                          &fields[0], &fields[field_count])});
-  return Result::Ok;
+                                     TypeMut* fields,
+                                     SupertypesInfo* supertypes) {
+  type_fields_.PushStruct(
+      StructType{TypeMutVector(&fields[0], &fields[field_count])});
+
+  Result result = Result::Ok;
+  Index end_index = GetEndIndex();
+
+  for (Index i = 0; i < field_count; i++) {
+    result |= CheckReferenceType(loc, fields[i].type, end_index, "params");
+  }
+
+  type_validation_result_ |= result;
+  result |= CheckSupertypes(loc, supertypes);
+  return result;
 }
 
-Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
-  array_types_.emplace(num_types_++, ArrayType{field});
-  return Result::Ok;
+Result SharedValidator::OnArrayType(const Location& loc,
+                                    TypeMut field,
+                                    SupertypesInfo* supertypes) {
+  type_fields_.PushArray(ArrayType{field});
+
+  Result result = CheckReferenceType(loc, field.type, GetEndIndex(), "params");
+
+  type_validation_result_ |= result;
+  result |= CheckSupertypes(loc, supertypes);
+  return result;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
@@ -149,7 +185,8 @@ Result SharedValidator::OnTable(const Location& loc,
     result |= PrintError(loc, "tables must have funcref type");
   }
 
-  result |= CheckReferenceType(loc, elem_type, "tables");
+  result |=
+      CheckReferenceType(loc, elem_type, type_fields_.NumTypes(), "tables");
 
   tables_.push_back(TableType{elem_type, limits});
   return result;
@@ -202,7 +239,8 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
 Result SharedValidator::OnGlobal(const Location& loc,
                                  Type type,
                                  bool mutable_) {
-  CHECK_RESULT(CheckReferenceType(loc, type, "globals"));
+  CHECK_RESULT(
+      CheckReferenceType(loc, type, type_fields_.NumTypes(), "globals"));
   globals_.push_back(GlobalType{type, mutable_});
   return Result::Ok;
 }
@@ -221,19 +259,117 @@ Result SharedValidator::CheckType(const Location& loc,
 
 Result SharedValidator::CheckReferenceType(const Location& loc,
                                            Type type,
+                                           Index end_index,
                                            const char* desc) {
-  if (type.IsReferenceWithIndex()) {
-    Index index = type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
+  if (type.IsReferenceWithIndex() && type.GetReferenceIndex() >= end_index) {
+    return PrintError(loc,
+                      "reference %" PRIindex " is out of range (max: %" PRIindex
+                      ") in %s",
+                      type.GetReferenceIndex(), end_index, desc);
+  }
 
-    if (iter == func_types_.end()) {
-      return PrintError(loc,
-                        "reference %" PRIindex
-                        " is out of range (max: %" PRIindex ") in %s",
-                        index, num_types_, desc);
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckSupertypes(const Location& loc,
+                                        SupertypesInfo* supertypes) {
+  assert(options_.features.function_references_enabled());
+
+  TypeEntry& entry = type_fields_.type_entries.back();
+  Index current_index = type_fields_.NumTypes() - 1;
+  Index end_index;
+
+  if (current_index < last_rec_type_end_) {
+    end_index = last_rec_type_end_;
+  } else {
+    type_fields_.rec_groups.emplace_back(RecGroup(current_index, 1));
+    end_index = current_index + 1;
+  }
+
+  // Check default.
+  assert(entry.canonical_index == current_index && entry.is_final_sub_type &&
+         entry.first_sub_type == kInvalidIndex);
+  entry.is_final_sub_type = supertypes->is_final_sub_type;
+
+  if (supertypes->sub_type_count > 1) {
+    type_validation_result_ = Result::Error;
+    return PrintError(loc, "sub type count %" PRIindex " is limited to 1",
+                      supertypes->sub_type_count);
+  }
+
+  if (supertypes->sub_type_count == 1) {
+    entry.first_sub_type = supertypes->sub_types[0];
+
+    if (supertypes->sub_types[0] >= current_index) {
+      type_validation_result_ = Result::Error;
+      return PrintError(loc, "invalid sub type %" PRIindex,
+                        supertypes->sub_types[0]);
+    }
+
+    if (type_fields_.type_entries[entry.first_sub_type].is_final_sub_type) {
+      type_validation_result_ = Result::Error;
+      return PrintError(loc, "sub type %" PRIindex " has final property",
+                        entry.first_sub_type);
     }
   }
 
+  if (Failed(type_validation_result_) || end_index != current_index + 1) {
+    return Result::Ok;
+  }
+
+  Index start_index = type_fields_.rec_groups.back().start_index;
+
+  uint32_t hash = 0;
+
+  // Type checking could be done without computing the canonical_index,
+  // but runtime and validation checks could be very slow without it.
+  for (Index i = start_index; i < end_index; i++) {
+    hash = typechecker_.UpdateHash(hash, i, start_index);
+  }
+
+  type_fields_.rec_groups.back().hash = hash;
+
+  size_t size = type_fields_.rec_groups.size() - 1;
+  Index type_count = end_index - start_index;
+
+  for (Index i = 0; i < size; i++) {
+    if (type_fields_.rec_groups[i].hash == hash &&
+        type_fields_.rec_groups[i].type_count == type_count) {
+      Index base_index = type_fields_.rec_groups[i].start_index;
+      bool is_equal = true;
+
+      for (Index j = 0; j < type_count; j++) {
+        if (!typechecker_.CheckTypeFields(start_index + j, start_index,
+                                          base_index + j, base_index, true)) {
+          is_equal = false;
+          break;
+        }
+      }
+
+      if (is_equal) {
+        for (Index j = start_index; j < end_index; j++) {
+          type_fields_.type_entries[j].canonical_index = base_index++;
+        }
+        // An equal recurisve type is present in the list, there is
+        // no need to compare other recursive types to this type.
+        type_fields_.rec_groups.pop_back();
+        break;
+      }
+    }
+  }
+
+  for (Index i = start_index; i < end_index; i++) {
+    Index first_sub_type = type_fields_.type_entries[i].first_sub_type;
+    if (first_sub_type != kInvalidIndex &&
+        !typechecker_.CheckTypeFields(i, kInvalidIndex, first_sub_type,
+                                      kInvalidIndex, false)) {
+      PrintError(Location(),
+                 "sub type %" PRIindex " does not match super type %" PRIindex,
+                 type_fields_.type_entries[i].first_sub_type, i);
+      type_validation_result_ = Result::Error;
+      return Result::Error;
+    }
+  }
   return Result::Ok;
 }
 
@@ -327,9 +463,8 @@ Result SharedValidator::OnElemSegmentElemType(const Location& loc,
 
   if (elem_type.IsReferenceWithIndex()) {
     Index index = elem_type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
 
-    if (iter == func_types_.end()) {
+    if (index >= type_fields_.NumTypes()) {
       result |=
           PrintError(loc, "reference %" PRIindex " is out of range", index);
     }
@@ -409,20 +544,21 @@ Result SharedValidator::CheckLocalIndex(Var local_var, Type* out_type) {
 }
 
 Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
-  Result result = CheckIndex(sig_var, num_types_, "function type");
+  Result result = CheckIndex(sig_var, type_fields_.NumTypes(), "function type");
   if (Failed(result)) {
     *out = FuncType{};
     return Result::Error;
   }
 
-  auto iter = func_types_.find(sig_var.index());
-  if (iter == func_types_.end()) {
+  Index index = sig_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::FuncRef) {
     return PrintError(sig_var.loc, "type %d is not a function",
                       sig_var.index());
   }
 
   if (out) {
-    *out = iter->second;
+    *out = type_fields_.func_types[type_fields_.type_entries[index].map_index];
   }
   return Result::Ok;
 }
@@ -480,9 +616,8 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
   } else {
     if (sig_type.IsReferenceWithIndex()) {
       Index index = sig_type.GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes()) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
@@ -523,6 +658,16 @@ void SharedValidator::RestoreLocalRefs(Result result) {
 
 void SharedValidator::IgnoreLocalRefs() {
   std::fill(local_ref_is_set_.begin(), local_ref_is_set_.end(), true);
+}
+
+Index SharedValidator::GetEndIndex() {
+  assert(options_.features.reference_types_enabled());
+  if (options_.features.gc_enabled()) {
+    return (last_rec_type_end_ != 0) ? last_rec_type_end_
+                                     : type_fields_.NumTypes();
+  }
+
+  return type_fields_.NumTypes() - 1;
 }
 
 Result SharedValidator::BeginInitExpr(const Location& loc, Type type) {
@@ -568,7 +713,8 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
     return Result::Error;
   }
 
-  CHECK_RESULT(CheckReferenceType(loc, type, "locals"));
+  CHECK_RESULT(
+      CheckReferenceType(loc, type, type_fields_.NumTypes(), "locals"));
 
   Index local_count = GetLocalCount();
 
@@ -586,6 +732,19 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
 
 Index SharedValidator::GetLocalCount() const {
   return locals_.empty() ? 0 : locals_.back().end;
+}
+
+Index SharedValidator::GetCanonicalTypeIndex(Index type_index) {
+  if (type_index >= type_fields_.NumTypes()) {
+    return kInvalidIndex;
+  }
+
+  if (options_.features.function_references_enabled() &&
+      Succeeded(type_validation_result_)) {
+    return type_fields_.type_entries[type_index].canonical_index;
+  }
+
+  return type_index;
 }
 
 static bool is_power_of_two(uint32_t x) {
@@ -1164,20 +1323,15 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
 
   Type type = func_type_var.to_type();
 
-  switch (type) {
-    case Type::RefNull:
-      result |= CheckIndex(func_type_var, num_types_, "function type");
-      break;
-    case Type::FuncRef:
-    case Type::ExnRef:
-    case Type::ExternRef:
-      break;
-    default:
-      result |= PrintError(
-          loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
-      break;
+  if (type == Type::RefNull) {
+    result |=
+        CheckIndex(func_type_var, type_fields_.NumTypes(), "function type");
+  } else if (!type.IsNonTypedRef()) {
+    result |= PrintError(
+        loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
   }
 
+  assert(!Type::EnumIsNonTypedGCRef(type) || options_.features.gc_enabled());
   result |= typechecker_.OnRefNullExpr(type);
   return result;
 }
@@ -1241,9 +1395,9 @@ Result SharedValidator::OnSelect(const Location& loc,
   for (Index i = 0; i < result_count; i++) {
     if (result_types[i].IsReferenceWithIndex()) {
       Index index = result_types[i].GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes() ||
+          type_fields_.type_entries[index].kind != Type::FuncRef) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
