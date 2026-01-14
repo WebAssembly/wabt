@@ -749,6 +749,15 @@ bool WastParser::ParseBindVarOpt(std::string* name) {
   return true;
 }
 
+bool WastParser::ParseDefinitionOpt() {
+  WABT_TRACE(ParseDefinitionOpt);
+  if (!PeekMatch(TokenType::Definition)) {
+    return false;
+  }
+  (void)Consume();
+  return true;
+}
+
 Result WastParser::ParseVar(Var* out_var) {
   WABT_TRACE(ParseVar);
   if (PeekMatch(TokenType::Nat)) {
@@ -3673,10 +3682,20 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
 
   switch (script_module->type()) {
     case ScriptModuleType::Text: {
-      auto command = std::make_unique<ModuleCommand>();
-      module = &command->module;
-      *module = std::move(cast<TextScriptModule>(script_module.get())->module);
-      *out_command = std::move(command);
+      if (script_module->is_definition) {
+        auto command = std::make_unique<ScriptModuleCommand>();
+        module = &command->module;
+        *module =
+            std::move(cast<TextScriptModule>(script_module.get())->module);
+        command->script_module = std::move(script_module);
+        *out_command = std::move(command);
+      } else {
+        auto command = std::make_unique<ModuleCommand>();
+        module = &command->module;
+        *module =
+            std::move(cast<TextScriptModule>(script_module.get())->module);
+        *out_command = std::move(command);
+      }
       break;
     }
 
@@ -3861,6 +3880,9 @@ Result WastParser::ParseScriptModule(
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Module);
+
+  bool is_definition = ParseDefinitionOpt();
+
   std::string name;
   ParseBindVarOpt(&name);
 
@@ -3876,6 +3898,7 @@ Result WastParser::ParseScriptModule(
       bsm->name = name;
       bsm->loc = loc;
       bsm->data = std::move(data);
+      bsm->is_definition = is_definition;
       *out_module = std::move(bsm);
       break;
     }
@@ -3891,6 +3914,7 @@ Result WastParser::ParseScriptModule(
       qsm->name = name;
       qsm->loc = loc;
       qsm->data = std::move(data);
+      qsm->is_definition = is_definition;
       *out_module = std::move(qsm);
       break;
     }
@@ -3899,6 +3923,7 @@ Result WastParser::ParseScriptModule(
       auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
+      tsm->is_definition = is_definition;
       if (IsModuleField(PeekPair()) || PeekIsCustom()) {
         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
       } else if (!PeekMatch(TokenType::Rpar)) {
