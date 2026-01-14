@@ -88,6 +88,33 @@ TEST(WastParser, LongTokenSpace) {
                errors[1].message.c_str());
 }
 
+TEST(WastParser, Memory64Alignment) {
+  // from align.wast, the large align param should be OK with memory64 enabled
+  // TODO: this test can be deleted once the spec test suite is updated
+  // to include
+  // https://github.com/WebAssembly/testsuite/commit/4b24564c844e3d34bf46dfcb3c774ee5163e31cc
+  std::string text = R"(
+  (module
+    (memory 1)
+    (func
+      i32.const 0
+      i32.load offset=0xFFFF_FFFF_FFFF_FFFF align=0x8000_0000_0000_0000
+      drop
+    )
+  ))";
+
+  Features features;
+  features.enable_memory64();
+  WastParseOptions options(features);
+  Errors errors;
+  auto lexer =
+      WastLexer::CreateBufferLexer("test", text.c_str(), text.size(), &errors);
+  std::unique_ptr<Script> script;
+
+  Result result = ParseWastScript(lexer.get(), &script, &errors, &options);
+  EXPECT_EQ(Result::Ok, result);
+}
+
 TEST(WastParser, InvalidBinaryModule) {
   std::string text = R"((module binary "\00asm\bc\0a\00\00"))";
   std::vector<uint8_t> expected_data = {

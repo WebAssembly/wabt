@@ -36,7 +36,7 @@ namespace {
 
 static const size_t kMaxErrorTokenLength = 80;
 
-bool IsPowerOfTwo(uint32_t x) {
+bool IsPowerOfTwo(Address x) {
   return x && ((x & (x - 1)) == 0);
 }
 
