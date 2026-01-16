@@ -37,6 +37,7 @@ const FEATURES = Object.freeze({
   'multi_memory': false,
   'extended_const': false,
   'relaxed_simd': false,
+  'compact_imports': false,
 });
 
 /// If value is not undefined, return it. Otherwise return default_.

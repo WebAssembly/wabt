@@ -1,0 +1,117 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-compact-imports
+;;; ARGS1: -x
+(module
+  (import "mod1" "test" (func (param i32 i64 f32 f64)))
+  (import "mod1" "test2" (func (param i32) (result i32)))
+  (import "mod2" "testmem" (memory 0))
+  (import "mod2" "testtable" (table 0 funcref))
+  (import "mod1" "testtag" (tag (param i32)))
+  (import "mod1" "func" (func (param i32 i64 f32 f64)))
+)
+(;; STDERR ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; func type 0
+000000b: 60                                        ; func
+000000c: 04                                        ; num params
+000000d: 7f                                        ; i32
+000000e: 7e                                        ; i64
+000000f: 7d                                        ; f32
+0000010: 7c                                        ; f64
+0000011: 00                                        ; num results
+; func type 1
+0000012: 60                                        ; func
+0000013: 01                                        ; num params
+0000014: 7f                                        ; i32
+0000015: 01                                        ; num results
+0000016: 7f                                        ; i32
+; func type 2
+0000017: 60                                        ; func
+0000018: 01                                        ; num params
+0000019: 7f                                        ; i32
+000001a: 00                                        ; num results
+0000009: 11                                        ; FIXUP section size
+; section "Import" (2)
+000001b: 02                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 06                                        ; num imports
+; import header 0
+000001e: 04                                        ; string length
+000001f: 6d6f 6431                                mod1  ; import module name
+0000023: 00                                        ; string length
+0000024: 7f                                        ; compact import marker
+0000025: 02                                        ; import group size
+; compact import header 0
+0000026: 04                                        ; string length
+0000027: 7465 7374                                test  ; import field name
+000002b: 00                                        ; import kind
+000002c: 00                                        ; import signature index
+; compact import header 1
+000002d: 05                                        ; string length
+000002e: 7465 7374 32                             test2  ; import field name
+0000033: 00                                        ; import kind
+0000034: 01                                        ; import signature index
+; import header 2
+0000035: 04                                        ; string length
+0000036: 6d6f 6432                                mod2  ; import module name
+000003a: 00                                        ; string length
+000003b: 7f                                        ; compact import marker
+000003c: 02                                        ; import group size
+; compact import header 2
+000003d: 07                                        ; string length
+000003e: 7465 7374 6d65 6d                        testmem  ; import field name
+0000045: 02                                        ; import kind
+0000046: 00                                        ; limits: flags
+0000047: 00                                        ; limits: initial
+; compact import header 3
+0000048: 09                                        ; string length
+0000049: 7465 7374 7461 626c 65                   testtable  ; import field name
+0000052: 01                                        ; import kind
+0000053: 70                                        ; funcref
+0000054: 00                                        ; limits: flags
+0000055: 00                                        ; limits: initial
+; import header 4
+0000056: 04                                        ; string length
+0000057: 6d6f 6431                                mod1  ; import module name
+000005b: 00                                        ; string length
+000005c: 7f                                        ; compact import marker
+000005d: 02                                        ; import group size
+; compact import header 4
+000005e: 07                                        ; string length
+000005f: 7465 7374 7461 67                        testtag  ; import field name
+0000066: 04                                        ; import kind
+0000067: 00                                        ; tag attribute
+0000068: 02                                        ; tag signature index
+; compact import header 5
+0000069: 04                                        ; string length
+000006a: 6675 6e63                                func  ; import field name
+000006e: 00                                        ; import kind
+000006f: 00                                        ; import signature index
+000001c: 53                                        ; FIXUP section size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+compact-imports.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[3]:
+ - type[0] (i32, i64, f32, f64) -> nil
+ - type[1] (i32) -> i32
+ - type[2] (i32) -> nil
+Import[6]:
+ - func[0] sig=0 <mod1.test> <- mod1.test
+ - func[1] sig=1 <mod1.test2> <- mod1.test2
+ - memory[0] pages: initial=0 <- mod2.testmem
+ - table[0] type=funcref initial=0 <- mod2.testtable
+ - tag[0] sig=2 <mod1.testtag> <- mod1.testtag
+ - func[2] sig=0 <mod1.func> <- mod1.func
+
+Code Disassembly:
+
+;;; STDOUT ;;)
