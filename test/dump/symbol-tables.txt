@@ -49,29 +49,29 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - relocations for section: 5 (Code) [5]
-   - R_WASM_FUNCTION_INDEX_LEB offset=0x000004(file=0x000042) symbol=0 <env.b>
-   - R_WASM_FUNCTION_INDEX_LEB offset=0x00000d(file=0x00004b) symbol=0 <env.b>
-   - R_WASM_TYPE_INDEX_LEB offset=0x000018(file=0x000056) type=0
-   - R_WASM_TABLE_NUMBER_LEB offset=0x00001d(file=0x00005b) symbol=4 <env.timport>
-   - R_WASM_FUNCTION_INDEX_LEB offset=0x000023(file=0x000061) symbol=0 <env.b>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000004(file=0x000041) symbol=0 <env.b>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x00000d(file=0x00004a) symbol=0 <env.b>
+   - R_WASM_TYPE_INDEX_LEB offset=0x000018(file=0x000055) type=0
+   - R_WASM_TABLE_NUMBER_LEB offset=0x00001d(file=0x00005a) symbol=4 <env.timport>
+   - R_WASM_FUNCTION_INDEX_LEB offset=0x000023(file=0x000060) symbol=0 <env.b>
 
 Code Disassembly:
 
-000040 func[1] <a>:
- 000041: 10 80 80 80 80 00          | call 0 <env.b>
-           000042: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
- 000047: 0b                         | end
-000049 func[2]:
- 00004a: 10 80 80 80 80 00          | call 0 <env.b>
-           00004b: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
- 000050: 0b                         | end
-000052 func[3] <b>:
- 000053: 41 00                      | i32.const 0
- 000055: 11 80 80 80 80 00 80 80 80 | call_indirect 0 <env.timport> (type 0)
- 00005e: 80 00                      | 
-           000056: R_WASM_TYPE_INDEX_LEB 0
- 000060: 10 80 80 80 80 00          | call 0 <env.b>
-           00005b: R_WASM_TABLE_NUMBER_LEB 4 <env.timport>
- 000066: 0b                         | end
-           000061: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
+00003f func[1] <a>:
+ 000040: 10 80 80 80 80 00          | call 0 <env.b>
+           000041: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
+ 000046: 0b                         | end
+000048 func[2]:
+ 000049: 10 80 80 80 80 00          | call 0 <env.b>
+           00004a: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
+ 00004f: 0b                         | end
+000051 func[3] <b>:
+ 000052: 41 00                      | i32.const 0
+ 000054: 11 80 80 80 80 00 80 80 80 | call_indirect 0 <env.timport> (type 0)
+ 00005d: 80 00                      | 
+           000055: R_WASM_TYPE_INDEX_LEB 0
+ 00005f: 10 80 80 80 80 00          | call 0 <env.b>
+           00005a: R_WASM_TABLE_NUMBER_LEB 4 <env.timport>
+ 000065: 0b                         | end
+           000060: R_WASM_FUNCTION_INDEX_LEB 0 <env.b>
 ;;; STDOUT ;;)

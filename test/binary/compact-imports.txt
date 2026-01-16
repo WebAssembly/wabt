@@ -1,0 +1,54 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS: -v
+;;; ARGS1: --enable-compact-import
+;;; ARGS2: --enable-compact-import
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(IMPORT) {
+  count[6]
+  str("mod") str("func") func_kind type[0]
+  str("mod") str("") compact[0x7F]
+  count[3]
+  str("func2") func_kind type[0]
+  str("func3") func_kind type[0]
+  str("func4") func_kind type[0]
+  str("mod") str("") compact[0x7E]
+  func_kind
+  count[2]
+  str("func5") type[0]
+  str("func6") type[0]
+}
+(;; STDERR ;;;
+BeginModule(version: 1)
+  BeginTypeSection(5)
+    OnTypeCount(1)
+    OnFuncType(index: 0, params: [], results: [i32])
+  EndTypeSection
+  BeginImportSection(65)
+    OnImportCount(6)
+    OnImport(index: 0, kind: func, module: "mod", field: "func")
+    OnImportFunc(import_index: 0, func_index: 0, sig_index: 0)
+    OnImport(index: 1, kind: func, module: "mod", field: "func2")
+    OnImportFunc(import_index: 1, func_index: 1, sig_index: 0)
+    OnImport(index: 2, kind: func, module: "mod", field: "func3")
+    OnImportFunc(import_index: 2, func_index: 2, sig_index: 0)
+    OnImport(index: 3, kind: func, module: "mod", field: "func4")
+    OnImportFunc(import_index: 3, func_index: 3, sig_index: 0)
+    OnImport(index: 4, kind: func, module: "mod", field: "func5")
+    OnImportFunc(import_index: 4, func_index: 4, sig_index: 0)
+    OnImport(index: 5, kind: func, module: "mod", field: "func6")
+    OnImportFunc(import_index: 5, func_index: 5, sig_index: 0)
+  EndImportSection
+EndModule
+;;; STDERR ;;)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (import "mod" "func" (func (;0;) (type 0)))
+  (import "mod" "func2" (func (;1;) (type 0)))
+  (import "mod" "func3" (func (;2;) (type 0)))
+  (import "mod" "func4" (func (;3;) (type 0)))
+  (import "mod" "func5" (func (;4;) (type 0)))
+  (import "mod" "func6" (func (;5;) (type 0))))
+;;; STDOUT ;;)

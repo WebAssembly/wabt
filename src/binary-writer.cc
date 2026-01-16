@@ -435,6 +435,7 @@ class BinaryWriter {
   void WriteTagType(const Tag* tag);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
+  void WriteImport(const Import* import);
   template <typename T>
   void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
   void WriteCodeMetadataSections();
@@ -1401,6 +1402,33 @@ void BinaryWriter::WriteNames(const std::vector<T*>& elems,
   EndSubsection();
 }
 
+void BinaryWriter::WriteImport(const Import* import) {
+  switch (import->kind()) {
+    case ExternalKind::Func:
+      WriteU32Leb128(
+          stream_,
+          module_->GetFuncTypeIndex(cast<FuncImport>(import)->func.decl),
+          "import signature index");
+      break;
+
+    case ExternalKind::Table:
+      WriteTable(&cast<TableImport>(import)->table);
+      break;
+
+    case ExternalKind::Memory:
+      WriteMemory(&cast<MemoryImport>(import)->memory);
+      break;
+
+    case ExternalKind::Global:
+      WriteGlobalHeader(&cast<GlobalImport>(import)->global);
+      break;
+
+    case ExternalKind::Tag:
+      WriteTagType(&cast<TagImport>(import)->tag);
+      break;
+  }
+}
+
 Result BinaryWriter::WriteModule() {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -1466,37 +1494,49 @@ Result BinaryWriter::WriteModule() {
     BeginKnownSection(BinarySection::Import);
     WriteU32Leb128(stream_, module_->imports.size(), "num imports");
 
-    for (size_t i = 0; i < module_->imports.size(); ++i) {
+    size_t i = 0;
+    while (i < module_->imports.size()) {
       const Import* import = module_->imports[i];
       WriteHeader("import header", i);
       WriteStr(stream_, import->module_name, "import module name",
                PrintChars::Yes);
-      WriteStr(stream_, import->field_name, "import field name",
-               PrintChars::Yes);
-      stream_->WriteU8Enum(import->kind(), "import kind");
-      switch (import->kind()) {
-        case ExternalKind::Func:
-          WriteU32Leb128(
-              stream_,
-              module_->GetFuncTypeIndex(cast<FuncImport>(import)->func.decl),
-              "import signature index");
-          break;
-
-        case ExternalKind::Table:
-          WriteTable(&cast<TableImport>(import)->table);
-          break;
-
-        case ExternalKind::Memory:
-          WriteMemory(&cast<MemoryImport>(import)->memory);
-          break;
-
-        case ExternalKind::Global:
-          WriteGlobalHeader(&cast<GlobalImport>(import)->global);
-          break;
-
-        case ExternalKind::Tag:
-          WriteTagType(&cast<TagImport>(import)->tag);
-          break;
+      bool compact = false;
+      if (options_.features.compact_imports_enabled()) {
+        // Write compact imports when they are available.
+        // Currentsly we donly support grouping by module name (0x7F mode)
+        // and not the module name + kind grouping (0x7E mode).
+        size_t group_size = 1;
+        for (size_t j = i + 1; j < module_->imports.size(); ++j) {
+          if (import->module_name == module_->imports[j]->module_name) {
+            group_size++;
+          } else {
+            break;
+          }
+        }
+        // Use compact imports iff we have a continuous sequence of more than
+        // one import with the same module name.
+        if (group_size > 1) {
+          compact = true;
+          WriteStr(stream_, "", "empty field name", PrintChars::Yes);
+          stream_->WriteU8(0x7F, "compact import marker");
+          WriteU32Leb128(stream_, group_size, "import group size");
+          while (group_size--) {
+            WriteHeader("compact import header", i);
+            const Import* import = module_->imports[i];
+            WriteStr(stream_, import->field_name, "import field name",
+                     PrintChars::Yes);
+            stream_->WriteU8Enum(import->kind(), "import kind");
+            WriteImport(import);
+            i++;
+          }
+        }
+      }
+      if (!compact) {
+        WriteStr(stream_, import->field_name, "import field name",
+                 PrintChars::Yes);
+        stream_->WriteU8Enum(import->kind(), "import kind");
+        WriteImport(import);
+        i++;
       }
     }
     EndSection();

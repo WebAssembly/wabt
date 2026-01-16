@@ -32,6 +32,7 @@ options:
       --enable-extended-const                  Enable Extended constant expressions
       --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-custom-page-sizes               Enable Custom page sizes
+      --enable-compact-imports                 Enable Compact import section
       --enable-all                             Enable all features
       --no-debug-names                         Ignore debug names in the binary file
       --ignore-custom-section-errors           Ignore errors in custom sections
