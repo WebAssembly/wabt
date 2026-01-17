@@ -2696,11 +2696,14 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
     std::string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
-    uint8_t kind;
-    CHECK_RESULT(ReadU8(&kind, "import kind"));
-    CALLBACK(OnImport, i, static_cast<ExternalKind>(kind), module_name,
-             field_name);
-    switch (static_cast<ExternalKind>(kind)) {
+    uint8_t kind_u8;
+    CHECK_RESULT(ReadU8(&kind_u8, "import kind"));
+    ERROR_UNLESS(kind_u8 < kExternalKindCount, "malformed import kind: %d",
+                 kind_u8);
+    ExternalKind kind = static_cast<ExternalKind>(kind_u8);
+
+    CALLBACK(OnImport, i, kind, module_name, field_name);
+    switch (kind) {
       case ExternalKind::Func: {
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "import signature index"));
@@ -2751,10 +2754,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         num_tag_imports_++;
         break;
       }
-
-      default:
-        PrintError("malformed import kind: %d", kind);
-        return Result::Error;
     }
   }
 
