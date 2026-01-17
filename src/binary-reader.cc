@@ -117,7 +117,8 @@ class BinaryReader {
   [[nodiscard]] Result ReadType(Type* out_value, const char* desc);
   [[nodiscard]] Result ReadRefType(Type* out_value, const char* desc);
   [[nodiscard]] Result ReadExternalKind(ExternalKind* out_value,
-                                        const char* desc);
+                                        const char* desc,
+                                        const char* type);
   [[nodiscard]] Result ReadStr(std::string_view* out_str, const char* desc);
   [[nodiscard]] Result ReadBytes(const void** out_data,
                                  Address* out_data_size,
@@ -398,10 +399,11 @@ Result BinaryReader::ReadRefType(Type* out_value, const char* desc) {
 }
 
 Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
-                                      const char* desc) {
+                                      const char* desc,
+                                      const char* type) {
   uint8_t value = 0;
   CHECK_RESULT(ReadU8(&value, desc));
-  ERROR_UNLESS(value < kExternalKindCount, "invalid export external kind: %d",
+  ERROR_UNLESS(value < kExternalKindCount, "invalid %s external kind: %d", type,
                value);
   *out_value = static_cast<ExternalKind>(value);
   return Result::Ok;
@@ -2696,13 +2698,10 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
     std::string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
-    uint8_t kind_u8;
-    CHECK_RESULT(ReadU8(&kind_u8, "import kind"));
-    ERROR_UNLESS(kind_u8 < kExternalKindCount, "malformed import kind: %d",
-                 kind_u8);
-    ExternalKind kind = static_cast<ExternalKind>(kind_u8);
-
+    ExternalKind kind;
+    CHECK_RESULT(ReadExternalKind(&kind, "import kind", "import"));
     CALLBACK(OnImport, i, kind, module_name, field_name);
+
     switch (kind) {
       case ExternalKind::Func: {
         Index sig_index;
@@ -2872,7 +2871,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
     ExternalKind kind;
-    CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
+    CHECK_RESULT(ReadExternalKind(&kind, "export kind", "export"));
 
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
@@ -2930,7 +2929,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
         CHECK_RESULT(ReadRefType(&elem_type, "table elem type"));
       } else {
         ExternalKind kind;
-        CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
+        CHECK_RESULT(ReadExternalKind(&kind, "export kind", "export"));
         ERROR_UNLESS(kind == ExternalKind::Func,
                      "segment elem type must be func (%s)",
                      elem_type.GetName().c_str());

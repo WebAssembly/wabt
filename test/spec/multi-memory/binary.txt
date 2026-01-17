@@ -115,13 +115,13 @@ out/test/spec/multi-memory/binary.wast:489: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:499: assert_malformed passed:
   000000e: error: invalid import tag kind: exceptions not allowed
 out/test/spec/multi-memory/binary.wast:510: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/multi-memory/binary.wast:520: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/multi-memory/binary.wast:531: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/multi-memory/binary.wast:541: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/multi-memory/binary.wast:554: assert_malformed passed:
   0000027: error: unable to read u32 leb128: string length
 out/test/spec/multi-memory/binary.wast:573: assert_malformed passed:
