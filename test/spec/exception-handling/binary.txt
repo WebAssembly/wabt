@@ -131,17 +131,17 @@ out/test/spec/exception-handling/binary.wast:650: assert_malformed passed:
 out/test/spec/exception-handling/binary.wast:661: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/exception-handling/binary.wast:680: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/exception-handling/binary.wast:690: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/exception-handling/binary.wast:701: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/exception-handling/binary.wast:711: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/exception-handling/binary.wast:722: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/exception-handling/binary.wast:732: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/exception-handling/binary.wast:745: assert_malformed passed:
   0000027: error: unable to read u32 leb128: string length
 out/test/spec/exception-handling/binary.wast:764: assert_malformed passed:

@@ -53,8 +53,11 @@
 )
 
 (;; STDOUT ;;;
+
 branch-hints.wasm:	file format wasm 0x1
+
 Section Details:
+
 Custom:
  - name: "metadata.code.branch_hint"
    - func[0]:
@@ -75,7 +78,9 @@ Custom:
      - 0000000: 01                                       .
     - meta[7]:
      - 0000000: 00                                       .
+
 Code Disassembly:
+
 000057 func[0]:
  000058: 04 7f                      | local[0..3] type=i32
  00005a: 41 00                      | i32.const 0

@@ -111,17 +111,17 @@ out/test/spec/memory64/binary.wast:459: assert_malformed passed:
 out/test/spec/memory64/binary.wast:470: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/memory64/binary.wast:489: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/memory64/binary.wast:499: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/memory64/binary.wast:510: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/memory64/binary.wast:520: assert_malformed passed:
-  000000e: error: malformed import kind: 5
+  000000e: error: invalid import external kind: 5
 out/test/spec/memory64/binary.wast:531: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/memory64/binary.wast:541: assert_malformed passed:
-  000000e: error: malformed import kind: 128
+  000000e: error: invalid import external kind: 128
 out/test/spec/memory64/binary.wast:554: assert_malformed passed:
   0000027: error: unable to read u32 leb128: string length
 out/test/spec/memory64/binary.wast:573: assert_malformed passed:
