@@ -186,6 +186,13 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
+template<class... Fs>
+struct Overload: Fs... {
+  using Fs::operator()...;
+};
+template<class... Fs>
+Overload(Fs...)->Overload<Fs...>;
+
 enum class LabelType {
   Func,
   InitExpr,
@@ -297,8 +304,161 @@ enum class RelocType {
 
   First = FuncIndexLEB,
   Last = FuncIndexI32,
+  None = -1, // Used internally as a sentinel value
 };
+
+enum class RelocDataType {
+  I32, I64,
+  LEB, LEB64,
+  SLEB, SLEB64,
+};
+
+constexpr size_t kRelocDataTypeSize[] {
+  4, 8,
+  5, 10,
+  5, 10
+};
+
+constexpr RelocDataType kRelocDataType[] {
+  RelocDataType::LEB,    // FuncIndexLEB = 0
+  RelocDataType::SLEB,   // TableIndexSLEB = 1
+  RelocDataType::I32,    // TableIndexI32 = 2
+  RelocDataType::LEB,    // MemoryAddressLEB = 3
+  RelocDataType::SLEB,   // MemoryAddressSLEB = 4
+  RelocDataType::I32,    // MemoryAddressI32 = 5
+  RelocDataType::LEB,    // TypeIndexLEB = 6
+  RelocDataType::LEB,    // GlobalIndexLEB = 7
+  RelocDataType::I32,    // FunctionOffsetI32 = 8
+  RelocDataType::I32,    // SectionOffsetI32 = 9
+  RelocDataType::LEB,    // TagIndexLEB = 10
+  RelocDataType::SLEB,   // MemoryAddressRelSLEB = 11
+  RelocDataType::SLEB,   // TableIndexRelSLEB = 12
+  RelocDataType::I32,    // GlobalIndexI32 = 13
+  RelocDataType::LEB64,  // MemoryAddressLEB64 = 14
+  RelocDataType::SLEB64, // MemoryAddressSLEB64 = 15
+  RelocDataType::I64,    // MemoryAddressI64 = 16
+  RelocDataType::SLEB64, // MemoryAddressRelSLEB64 = 17
+  RelocDataType::SLEB64, // TableIndexSLEB64 = 18
+  RelocDataType::I64,    // TableIndexI64 = 19
+  RelocDataType::LEB,    // TableNumberLEB = 20
+  RelocDataType::SLEB,   // MemoryAddressTLSSLEB = 21
+  RelocDataType::I64,    // FunctionOffsetI64 = 22
+  RelocDataType::I32,    // MemoryAddressLocRelI32 = 23
+  RelocDataType::SLEB64, // TableIndexRelSLEB64 = 24
+  RelocDataType::SLEB64, // MemoryAddressTLSSLEB64 = 25
+  RelocDataType::I32,    // FuncIndexI32 = 26
+};
+
+enum class RelocKind {
+  Function,
+  FunctionTbl,
+  Data,
+  Global,
+  Table,
+  Tag,
+  Type,
+  Section,
+  Text,
+};
+
+constexpr RelocKind kRelocSymbolType[] {
+  RelocKind::Function,    // FuncIndexLEB = 0
+  RelocKind::FunctionTbl, // TableIndexSLEB = 1
+  RelocKind::FunctionTbl, // TableIndexI32 = 2
+  RelocKind::Data,        // MemoryAddressLEB = 3
+  RelocKind::Data,        // MemoryAddressSLEB = 4
+  RelocKind::Data,        // MemoryAddressI32 = 5
+  RelocKind::Type,        // TypeIndexLEB = 6
+  RelocKind::Global,      // GlobalIndexLEB = 7
+  RelocKind::Text,        // FunctionOffsetI32 = 8
+  RelocKind::Section,     // SectionOffsetI32 = 9
+  RelocKind::Tag,         // TagIndexLEB = 10
+  RelocKind::Data,        // MemoryAddressRelSLEB = 11
+  RelocKind::Table,       // TableIndexRelSLEB = 12
+  RelocKind::Global,      // GlobalIndexI32 = 13
+  RelocKind::Data,        // MemoryAddressLEB64 = 14
+  RelocKind::Data,        // MemoryAddressSLEB64 = 15
+  RelocKind::Data,        // MemoryAddressI64 = 16
+  RelocKind::Data,        // MemoryAddressRelSLEB64 = 17
+  RelocKind::FunctionTbl, // TableIndexSLEB64 = 18
+  RelocKind::FunctionTbl, // TableIndexI64 = 19
+  RelocKind::Table,       // TableNumberLEB = 20
+  RelocKind::Data,        // MemoryAddressTLSSLEB = 21
+  RelocKind::Text,        // FunctionOffsetI64 = 22
+  RelocKind::Data,        // MemoryAddressLocRelI32 = 23
+  RelocKind::FunctionTbl, // TableIndexRelSLEB64 = 24
+  RelocKind::Data,        // MemoryAddressTLSSLEB64 = 25
+  RelocKind::Function,    // FuncIndexI32 = 26
+};
+
+enum class RelocModifiers {
+  None = 0,
+  TLS = 1,
+  PIC = 2,
+};
+
+inline RelocModifiers operator|(RelocModifiers a, RelocModifiers b) {
+  using U = std::underlying_type_t<RelocModifiers>;
+  return RelocModifiers(U(a) | U(b));
+}
+
+inline RelocModifiers operator&(RelocModifiers a, RelocModifiers b) {
+  using U = std::underlying_type_t<RelocModifiers>;
+  return RelocModifiers(U(a) & U(b));
+}
+
+inline RelocModifiers operator~(RelocModifiers a) {
+  using U = std::underlying_type_t<RelocModifiers>;
+  return RelocModifiers(~U(a));
+}
+
+constexpr RelocModifiers kRelocModifiers[] {
+  RelocModifiers::None, // FuncIndexLEB = 0
+  RelocModifiers::None, // TableIndexSLEB = 1
+  RelocModifiers::None, // TableIndexI32 = 2
+  RelocModifiers::None, // MemoryAddressLEB = 3
+  RelocModifiers::None, // MemoryAddressSLEB = 4
+  RelocModifiers::None, // MemoryAddressI32 = 5
+  RelocModifiers::None, // TypeIndexLEB = 6
+  RelocModifiers::None, // GlobalIndexLEB = 7
+  RelocModifiers::None, // FunctionOffsetI32 = 8
+  RelocModifiers::None, // SectionOffsetI32 = 9
+  RelocModifiers::None, // TagIndexLEB = 10
+  RelocModifiers::PIC,  // MemoryAddressRelSLEB = 11
+  RelocModifiers::PIC,  // TableIndexRelSLEB = 12
+  RelocModifiers::None, // GlobalIndexI32 = 13
+  RelocModifiers::None, // MemoryAddressLEB64 = 14
+  RelocModifiers::None, // MemoryAddressSLEB64 = 15
+  RelocModifiers::None, // MemoryAddressI64 = 16
+  RelocModifiers::PIC,  // MemoryAddressRelSLEB64 = 17
+  RelocModifiers::None, // TableIndexSLEB64 = 18
+  RelocModifiers::None, // TableIndexI64 = 19
+  RelocModifiers::None, // TableNumberLEB = 20
+  RelocModifiers::TLS,  // MemoryAddressTLSSLEB = 21
+  RelocModifiers::None, // FunctionOffsetI64 = 22
+  RelocModifiers::PIC,  // MemoryAddressLocRelI32 = 23
+  RelocModifiers::PIC,  // TableIndexRelSLEB64 = 24
+  RelocModifiers::TLS,  // MemoryAddressTLSSLEB64 = 25
+  RelocModifiers::None, // FuncIndexI32 = 26
+};
+
+
 constexpr int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
+
+constexpr RelocType RecognizeReloc(RelocKind kind,
+                                   RelocDataType type,
+                                   RelocModifiers mod) {
+  for (int i = 0; i < kRelocTypeCount; ++i) {
+    if (kind != kRelocSymbolType[i])
+      continue;
+    if (type != kRelocDataType[i])
+      continue;
+    if (mod != kRelocModifiers[i])
+      continue;
+    return RelocType(i);
+  }
+  return RelocType::None;
+}
 
 struct Reloc {
   Reloc(RelocType, size_t offset, Index index, int32_t addend = 0);

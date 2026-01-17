@@ -72,6 +72,11 @@ class WastParser {
     Var var;
   };
 
+  struct DatasymAux {
+    Var name;
+    Address size;
+  };
+
   typedef std::vector<ReferenceVar> ReferenceVars;
 
   struct ResolveTypeVector {
@@ -90,6 +95,9 @@ class WastParser {
     TypeVector types;
     ReferenceVars vars;
   };
+
+  static std::optional<std::string_view> TryTrimPfx(std::string_view string,
+                                                    std::string_view prefix);
 
   void ErrorUnlessOpcodeEnabled(const Token&);
 
@@ -139,6 +147,15 @@ class WastParser {
   // Returns true if the next token's type is equal to '(' and the following
   // token is equal to the parameter. If so, then the token is consumed.
   bool MatchLpar(TokenType);
+
+  // Returns true if the next token's type is equal to the parameter, and if
+  // token's text matches parameter. If so, then the token is consumed.
+  bool MatchText(TokenType, std::string_view);
+
+  // Returns true if the next token's type is equal to the parameter, and if
+  // token's text starts with parameter. If so, then the token is consumed and
+  // the rest of token's text is returned.
+  std::optional<std::string_view> MatchTextPrefix(TokenType, std::string_view);
 
   // Like Match(), but prints an error message if the token doesn't match, and
   // returns Result::Error.
@@ -206,7 +223,13 @@ class WastParser {
 
   Result ParseCustomSectionAnnotation(Module*);
   bool PeekIsCustom();
+  bool PeekIsDataImport();
 
+  Result ParseSymAfterPar(SymbolCommon*,
+                          bool in_import,
+                          DatasymAux* dat_sym = 0);
+  Result ParseSymOpt(SymbolCommon *, bool in_import, DatasymAux *dat_sym = 0);
+  Result ParseDataImport(Module* module);
   Result ParseExportDesc(Export*);
   Result ParseInlineExports(ModuleFieldList*, ExternalKind);
   Result ParseInlineImport(Import*);
@@ -226,6 +249,14 @@ class WastParser {
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
+  Result ParseRejectReloc();
+  Result ParseUnwindReloc(int curr_indent);
+  Result ParseRelocAfterType(IrReloc*, RelocDataType type);
+  Result ParseRelocModifiers(RelocModifiers*);
+  Result ParseRelocKind(RelocKind*);
+  Result ParseRelocDataType(RelocDataType*);
+  Result ParseReloc(IrReloc*);
+  Result ParseReloc(IrReloc*, RelocDataType type);
   Result ParseCodeMetadataAnnotation(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
   Result ParseF32(Const*, ConstType type);

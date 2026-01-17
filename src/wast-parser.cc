@@ -586,7 +586,8 @@ TokenType WastParser::Peek(size_t n) {
       }
       if ((options_->features.code_metadata_enabled() &&
            cur.text().find("metadata.code.") == 0) ||
-          cur.text() == "custom") {
+          cur.text() == "custom" || cur.text() == "reloc" ||
+          cur.text() == "sym.import.data" || cur.text() == "sym") {
         tokens_.push_back(cur);
         continue;
       }
@@ -656,6 +657,26 @@ bool WastParser::MatchLpar(TokenType type) {
   return false;
 }
 
+bool WastParser::MatchText(TokenType type, std::string_view text) {
+  auto tok = GetToken();
+  if (tok.token_type() == type && tok.text() == text) {
+    Consume();
+    return true;
+  }
+  return false;
+}
+std::optional<std::string_view> WastParser::MatchTextPrefix(
+    TokenType type,
+    std::string_view prefix) {
+  auto tok = GetToken();
+  if (tok.token_type() == type)
+    if (auto rest = TryTrimPfx(tok.text(), prefix)) {
+      Consume();
+      return rest;
+    }
+  return std::nullopt;
+}
+
 Result WastParser::Expect(TokenType type) {
   if (!Match(type)) {
     Token token = Consume();
@@ -690,6 +711,14 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
   }
 
   return Result::Error;
+}
+
+std::optional<std::string_view> WastParser::TryTrimPfx(
+    std::string_view string,
+    std::string_view prefix) {
+  if (string.substr(0, prefix.size()) == prefix)
+    return string.substr(prefix.size());
+  return std::nullopt;
 }
 
 void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
@@ -1336,6 +1365,134 @@ bool WastParser::PeekIsCustom() {
   return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
          tokens_.front().text() == "custom";
 }
+bool WastParser::PeekIsDataImport() {
+  // If IsLparAnn succeeds, tokens_.front() must have text, as it is an LparAnn
+  // token.
+  return options_->features.annotations_enabled() && IsLparAnn(PeekPair()) &&
+         tokens_.front().text() == "sym.import.data";
+}
+
+Result WastParser::ParseSymAfterPar(SymbolCommon* sym,
+                                    bool in_import,
+                                    DatasymAux* data) {
+  using OnceProperty = std::pair<std::string_view, std::optional<Location>>;
+  Location last_tok_loc;
+
+  OnceProperty visibility{"visibility", {}};
+  OnceProperty binding{"linkage", {}};
+  OnceProperty retain{"retain", {}};
+  OnceProperty name{"name", {}};
+  OnceProperty size{"size", {}};
+
+  auto check_once = [this, &last_tok_loc](OnceProperty& var) {
+    if (!var.second)
+      var.second = last_tok_loc;
+    else {
+      Error(last_tok_loc, "Symbol's " PRIstringview " already specified",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+      Error(*var.second, "See previous definition");
+    }
+  };
+  auto check_seen = [this, &last_tok_loc](OnceProperty& var) {
+    if (!var.second)
+      Error(last_tok_loc, "Must specify " PRIstringview " for this symbol",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+  };
+  auto check_unseen = [this](OnceProperty& var) {
+    if (var.second)
+      Error(*var.second, "Cannot specify " PRIstringview " for this symbol",
+            WABT_PRINTF_STRING_VIEW_ARG(var.first));
+  };
+
+  auto validate = [&] {
+    if (in_import && (sym->flags_ & uint32_t(SymbolBinding::Local))) {
+      Error(*visibility.second, "static symbol cannot be an import");
+    }
+    if (data) {
+      if (!in_import)
+        check_seen(size);
+      check_seen(name);
+    } else {
+      check_unseen(size);
+    }
+  };
+
+  if (data) {
+    ParseVarOpt(&data->name, data->name);
+  }
+  for (;;) {
+    last_tok_loc = GetLocation();
+    if (Match(TokenType::Rpar)) {
+      validate();
+      return Result::Ok;
+    } else if (MatchText(TokenType::Reserved, "static")) {
+      check_once(binding);
+      sym->flags_ |= uint32_t(SymbolBinding::Local);
+    } else if (MatchText(TokenType::Reserved, "weak")) {
+      check_once(binding);
+      sym->flags_ |= uint32_t(SymbolBinding::Weak);
+    } else if (MatchText(TokenType::Reserved, "retain")) {
+      check_once(retain);
+      sym->flags_ |= WABT_SYMBOL_FLAG_NO_STRIP;
+    } else if (auto sym_name = MatchTextPrefix(TokenType::Reserved, "name=")) {
+      check_once(name);
+      RemoveEscapes(*sym_name, std::back_inserter(sym->name_));
+      sym->flags_ |= WABT_SYMBOL_FLAG_EXPLICIT_NAME;
+    } else if (auto sym_size = MatchTextPrefix(TokenType::Reserved, "size=")) {
+      check_once(size);
+      CHECK_RESULT(ParseUint64(*sym_size, &data->size));
+    } else if (MatchText(TokenType::Reserved, "hidden")) {
+      check_once(visibility);
+      sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
+    } else {
+      ErrorExpected({"symbol attribute", "')'"});
+    }
+  }
+}
+
+Result WastParser::ParseSymOpt(SymbolCommon* sym,
+                               bool in_import,
+                               DatasymAux* dat_sym) {
+  sym->flags_ |= in_import ? WABT_SYMBOL_FLAG_UNDEFINED : 0;
+  if (!IsLparAnn(PeekPair()))
+    return Result::Ok;
+  Token tok = GetToken();
+  if (tok.text() != "sym")
+    return Result::Ok;
+  Consume();
+  return ParseSymAfterPar(sym, in_import, dat_sym);
+}
+
+Result WastParser::ParseDataImport(Module* module) {
+  DataSym sym;
+  DatasymAux aux;
+  sym.flags_ |= WABT_SYMBOL_FLAG_UNDEFINED;
+  if (!IsLparAnn(PeekPair()))
+    return Result::Ok;
+  Token tok = GetToken();
+  if (tok.text() != "sym.import.data")
+    return Result::Ok;
+  Consume();
+  CHECK_RESULT(ParseSymAfterPar(&sym, true, &aux));
+
+  if (!module->data_symbols.empty()) {
+    if (module->data_symbols.back().segment != kInvalidIndex) {
+      Error(GetLocation(), "data imports must occur before definitions");
+      return Result::Error;
+    }
+  }
+  ++module->num_data_imports;
+  sym.segment = kInvalidIndex;
+  sym.offset = module->num_data_imports;
+  Index sym_idx = module->data_symbols.size();
+  if (aux.name.is_name()) {
+    module->data_symbol_bindings.insert(
+        {aux.name.name(), {aux.name.loc, sym_idx}});
+    sym.name = aux.name.name();
+  }
+  module->data_symbols.push_back(sym);
+  return Result::Ok;
+}
 
 Result WastParser::ResolveTargetRefType(const Module& module,
                                         Type* type,
@@ -1394,9 +1551,13 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   resolve_type_vectors_.clear();
   resolve_funcs_.clear();
 
-  while (IsModuleField(PeekPair()) || PeekIsCustom()) {
+  while (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport()) {
     if (PeekIsCustom()) {
       CHECK_RESULT(ParseCustomSectionAnnotation(module));
+      continue;
+    }
+    if (PeekIsDataImport()) {
+      CHECK_RESULT(ParseDataImport(module));
       continue;
     }
     if (Failed(ParseModuleField(module))) {
@@ -1424,6 +1585,51 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   CHECK_RESULT(result);
   CHECK_RESULT(ResolveFuncTypes(module, errors_));
   CHECK_RESULT(ResolveNamesModule(module, errors_));
+  for (auto exp : module->exports) {
+    auto patch = [&](auto& fields, const BindingHash& bindings) {
+      Index i = bindings.FindIndex(exp->var);
+      if (i >= fields.size())
+        return;
+      SymbolCommon& sym = *fields[i];
+      sym.flags_ |= WABT_SYMBOL_FLAG_EXPORTED | WABT_SYMBOL_FLAG_NO_STRIP;
+      if (sym.name_.empty() && sym.defined()) {
+        sym.name_ = exp->name;
+        sym.flags_ |= WABT_SYMBOL_FLAG_EXPLICIT_NAME;
+      }
+    };
+    switch (exp->kind) {
+      case ExternalKind::Func:
+        patch(module->funcs, module->func_bindings);
+        break;
+      case ExternalKind::Table:
+        patch(module->tables, module->table_bindings);
+        break;
+      case ExternalKind::Global:
+        patch(module->globals, module->global_bindings);
+        break;
+      case ExternalKind::Tag:
+        patch(module->tags, module->tag_bindings);
+        break;
+      case ExternalKind::Memory:
+        // Memories are not relocatable
+        break;
+    }
+  }
+  auto validize_flags = [](SymbolCommon* sym) {
+    if (!sym->undefined() && !sym->exported() && sym->name().empty()) {
+      sym->flags_ |= uint32_t(SymbolVisibility::Hidden);
+      sym->flags_ &= ~WABT_SYMBOL_MASK_BINDING;
+      sym->flags_ |= uint32_t(SymbolBinding::Local);
+    }
+  };
+  for (auto sym : module->funcs)
+    validize_flags(sym);
+  for (auto sym : module->globals)
+    validize_flags(sym);
+  for (auto sym : module->tables)
+    validize_flags(sym);
+  for (auto sym : module->tags)
+    validize_flags(sym);
   return Result::Ok;
 }
 
@@ -1474,7 +1680,50 @@ Result WastParser::ParseDataModuleField(Module* module) {
     field->data_segment.kind = SegmentKind::Passive;
   }
 
-  ParseTextListOpt(&field->data_segment.data);
+  field->data_segment.symbol_range.first = module->data_symbols.size();
+
+  for (;;) {
+    Token tok = GetToken();
+    if (tok.token_type() == TokenType::Rpar)
+      break;
+    if (tok.token_type() == TokenType::LparAnn) {
+      size_t offset = field->data_segment.data.size();
+      if (tok.text() == "reloc") {
+        IrReloc r;
+        ParseReloc(&r);
+        size_t reloc_size =
+            kRelocDataTypeSize[int(kRelocDataType[int(r.type)])];
+        field->data_segment.relocs.push_back({offset - reloc_size, r});
+        continue;
+      }
+      if (tok.text() == "sym") {
+        DataSym sym;
+        Index sym_idx = module->data_symbols.size();
+        DatasymAux aux = {Var{sym_idx, GetLocation()}, 0};
+        ParseSymOpt(&sym, false, &aux);
+        sym.segment = module->data_segments.size();
+        sym.offset = offset;
+        sym.size = aux.size;
+        if (aux.name.is_name()) {
+          module->data_symbol_bindings.insert(
+              {aux.name.name(), {aux.name.loc, sym_idx}});
+          sym.name = aux.name.name();
+        }
+        module->data_symbols.push_back(sym);
+        continue;
+      }
+    }
+    if (PeekMatch(TokenType::Text)) {
+      RemoveEscapes(Consume().text(),
+                    std::back_inserter(field->data_segment.data));
+      continue;
+    }
+    Expect(TokenType::Rpar);
+    return Result::Error;
+  }
+
+  field->data_segment.symbol_range.second = module->data_symbols.size();
+
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1582,6 +1831,10 @@ Result WastParser::ParseTagModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<TagModuleField>(loc, name);
+    Tag& tag = field->tag;
+    CHECK_RESULT(ParseSymOpt(&tag, false));
+    if (!name.empty() && !tag.explicit_name())
+      tag.name_ = name.substr(1);
     CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
     CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
     module->AppendField(std::move(field));
@@ -1620,6 +1873,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     CheckImportOrdering(module);
     auto import = std::make_unique<FuncImport>(name);
     Func& func = import->func;
+    CHECK_RESULT(ParseSymOpt(&func, true));
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
@@ -1631,6 +1885,9 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     auto field = std::make_unique<FuncModuleField>(loc, name);
     Func& func = field->func;
     func.loc = GetLocation();
+    CHECK_RESULT(ParseSymOpt(&func, false));
+    if (!name.empty() && !func.explicit_name())
+      func.name_ = name.substr(1);
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
 
@@ -1760,6 +2017,10 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
     module->AppendField(std::move(field));
   } else {
     auto field = std::make_unique<GlobalModuleField>(loc, name);
+    Global& global = field->global;
+    CHECK_RESULT(ParseSymOpt(&global, false));
+    if (!name.empty() && !global.explicit_name())
+      global.name_ = name.substr(1);
     CHECK_RESULT(ParseGlobalType(&field->global));
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
     module->AppendField(std::move(field));
@@ -1783,6 +2044,11 @@ Result WastParser::ParseImportModuleField(Module* module) {
   CHECK_RESULT(ParseQuotedText(&field_name));
   EXPECT(Lpar);
 
+  auto inject_name = [&](SymbolCommon& sym) {
+    if (!sym.explicit_name())
+      sym.name_ = field_name;
+  };
+
   std::unique_ptr<ImportModuleField> field;
   std::string name;
 
@@ -1791,11 +2057,13 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<FuncImport>(name);
+      CHECK_RESULT(ParseSymOpt(&import->func, true));
       CHECK_RESULT(ParseTypeUseOpt(&import->func.decl));
       CHECK_RESULT(
           ParseFuncSignature(&import->func.decl.sig, &import->func.bindings));
       CHECK_RESULT(ErrorIfLpar({"param", "result"}));
       EXPECT(Rpar);
+      inject_name(import->func);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -1804,12 +2072,14 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<TableImport>(name);
+      CHECK_RESULT(ParseSymOpt(&import->table, true));
       CHECK_RESULT(ParseLimitsIndex(&import->table.elem_limits));
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       Var elem_type;
       CHECK_RESULT(ParseRefType(&elem_type));
       VarToType(elem_type, &import->table.elem_type);
       EXPECT(Rpar);
+      inject_name(import->table);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -1831,8 +2101,10 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<GlobalImport>(name);
+      CHECK_RESULT(ParseSymOpt(&import->global, true));
       CHECK_RESULT(ParseGlobalType(&import->global));
       EXPECT(Rpar);
+      inject_name(import->global);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -1841,9 +2113,11 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = std::make_unique<TagImport>(name);
+      CHECK_RESULT(ParseSymOpt(&import->tag, true));
       CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
       EXPECT(Rpar);
+      inject_name(import->tag);
       field = std::make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
@@ -1955,6 +2229,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
     auto import = std::make_unique<TableImport>(name);
+    CHECK_RESULT(ParseSymOpt(&import->table, true));
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimitsIndex(&import->table.elem_limits));
     CHECK_RESULT(ParseLimits(&import->table.elem_limits));
@@ -1967,6 +2242,9 @@ Result WastParser::ParseTableModuleField(Module* module) {
   } else {
     auto field = std::make_unique<TableModuleField>(loc, name);
     auto& table = field->table;
+    CHECK_RESULT(ParseSymOpt(&table, false));
+    if (!name.empty() && !table.explicit_name())
+      table.name_ = name.substr(1);
     CHECK_RESULT(ParseLimitsIndex(&table.elem_limits));
     if (PeekMatch(TokenType::ValueType) || PeekMatchRefType()) {
       Var elem_type;
@@ -2176,9 +2454,17 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
-      if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
-        exprs->splice(exprs->end(), new_exprs);
+      Token tk = GetToken();
+      constexpr std::string_view pfx = "metadata.code.";
+      std::string_view name = tk.text();
+      if (name.substr(0, size(pfx)) == pfx) {
+        if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
+          exprs->splice(exprs->end(), new_exprs);
+        } else {
+          CHECK_RESULT(Synchronize(IsLparAnn));
+        }
       } else {
+        ErrorExpected({"an annotation", "an instruction"});
         CHECK_RESULT(Synchronize(IsLparAnn));
       }
     } else {
@@ -2218,11 +2504,169 @@ Result WastParser::ParseInstr(ExprList* exprs) {
   }
 }
 
+Result WastParser::ParseRejectReloc() {
+  Token tok = GetToken();
+  if (tok.token_type() == TokenType::LparAnn && tok.text() == "reloc") {
+    Error(GetLocation(), "Operand is not relocatable");
+    Consume();
+    return ParseUnwindReloc(1);
+  }
+  return Result::Ok;
+}
+Result WastParser::ParseUnwindReloc(int curr_indent) {
+  while (curr_indent) {
+    if (PeekMatch(TokenType::Lpar) || PeekMatch(TokenType::LparAnn))
+      ++curr_indent;
+    if (PeekMatch(TokenType::Rpar))
+      --curr_indent;
+    Consume();
+  }
+  return Result::Ok;
+}
+Result WastParser::ParseRelocAfterType(IrReloc* reloc, RelocDataType type) {
+  RelocKind kind;
+  CHECK_RESULT(ParseRelocKind(&kind));
+  RelocModifiers mod;
+  CHECK_RESULT(ParseRelocModifiers(&mod));
+  RelocType reloc_type = RecognizeReloc(kind, type, mod);
+  if (reloc_type == RelocType::None) {
+    Error(GetLocation(), "Invalid relocation");
+    return ParseUnwindReloc(1);
+  }
+  Var target;
+  ParseVar(&target);
+  *reloc = {reloc_type, target};
+  CHECK_RESULT(Expect(TokenType::Rpar));
+  return Result::Ok;
+}
+Result WastParser::ParseRelocModifiers(RelocModifiers* mod) {
+  *mod = RelocModifiers::None;
+  Token tok = GetToken();
+  if (tok.token_type() == TokenType::Reserved) {
+    if (tok.text() == "tls")
+      *mod = RelocModifiers::TLS;
+    else if (tok.text() == "pic")
+      *mod = RelocModifiers::PIC;
+  }
+  if (*mod != RelocModifiers::None)
+    Consume();
+  return Result::Ok;
+}
+
+Result WastParser::ParseRelocKind(RelocKind* kind) {
+  bool did_reloc = false;
+  Token tok = GetToken();
+  TokenType tt = tok.token_type();
+  if (tt == TokenType::Global) {
+    *kind = RelocKind::Global;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Function) {
+    *kind = RelocKind::Function;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Table) {
+    *kind = RelocKind::Table;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Tag) {
+    *kind = RelocKind::Tag;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Data) {
+    *kind = RelocKind::Data;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Type) {
+    *kind = RelocKind::Type;
+    did_reloc = true;
+  }
+  if (tt == TokenType::Reserved) {
+    if (tok.text() == "text") {
+      *kind = RelocKind::Text;
+      did_reloc = true;
+    }
+    if (tok.text() == "functable") {
+      *kind = RelocKind::FunctionTbl;
+      did_reloc = true;
+    }
+    if (tok.text() == "custom") {
+      *kind = RelocKind::Section;
+      did_reloc = true;
+    }
+  }
+  if (did_reloc) {
+    Consume();
+    return Result::Ok;
+  } else
+    return Result::Error;
+}
+Result WastParser::ParseRelocDataType(RelocDataType* type) {
+  bool did_reloc = false;
+  Token tok = GetToken();
+  TokenType tt = tok.token_type();
+  if (tt == TokenType::ValueType) {
+    if (tok.type() == Type::I32) {
+      *type = RelocDataType::I32;
+      did_reloc = true;
+    }
+    if (tok.type() == Type::I64) {
+      *type = RelocDataType::I64;
+      did_reloc = true;
+    }
+  }
+  if (tt == TokenType::Reserved) {
+    if (tok.text() == "leb") {
+      *type = RelocDataType::LEB;
+      did_reloc = true;
+    }
+    if (tok.text() == "sleb") {
+      *type = RelocDataType::SLEB;
+      did_reloc = true;
+    }
+    if (tok.text() == "leb64") {
+      *type = RelocDataType::LEB64;
+      did_reloc = true;
+    }
+    if (tok.text() == "sleb64") {
+      *type = RelocDataType::SLEB64;
+      did_reloc = true;
+    }
+  }
+  if (did_reloc) {
+    Consume();
+    return Result::Ok;
+  } else
+    return Result::Error;
+}
+Result WastParser::ParseReloc(IrReloc* reloc) {
+  Token tok = GetToken();
+  if (tok.token_type() == TokenType::LparAnn && tok.text() == "reloc") {
+    Consume();
+    RelocDataType t;
+    CHECK_RESULT(ParseRelocDataType(&t));
+    return ParseRelocAfterType(reloc, t);
+  }
+  return Result::Ok;
+}
+Result WastParser::ParseReloc(IrReloc* reloc, RelocDataType type) {
+  Token tok = GetToken();
+  if (tok.token_type() == TokenType::LparAnn && tok.text() == "reloc") {
+    Consume();
+    return ParseRelocAfterType(reloc, type);
+  }
+  return Result::Ok;
+}
+
 Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
   Token tk = Consume();
+  constexpr std::string_view pfx = "metadata.code.";
   std::string_view name = tk.text();
-  name.remove_prefix(sizeof("metadata.code.") - 1);
+  assert(name.substr(0, size(pfx)) == pfx &&
+         "ParseCodeMetadataAnnotation should only be called with appropriate "
+         "annotation");
+  name.remove_prefix(size(pfx));
   std::string data_text;
   CHECK_RESULT(ParseQuotedText(&data_text, false));
   std::vector<uint8_t> data(data_text.begin(), data_text.end());
@@ -2272,14 +2716,24 @@ template <typename T>
 Result WastParser::ParseLoadStoreInstr(Location loc,
                                        Token token,
                                        std::unique_ptr<Expr>* out_expr) {
+  constexpr bool relocatable =
+      std::is_same_v<T, LoadExpr> || std::is_same_v<T, StoreExpr>;
   Opcode opcode = token.opcode();
   Var memidx;
   Address offset;
   Address align;
+  IrReloc reloc;
   CHECK_RESULT(ParseMemidx(loc, &memidx));
   ParseOffsetOpt(&offset);
+  if constexpr (relocatable) {
+    CHECK_RESULT(ParseReloc(&reloc, RelocDataType::LEB));
+  }
   ParseAlignOpt(&align);
-  out_expr->reset(new T(opcode, memidx, align, offset, loc));
+  T* expr = new T(opcode, memidx, align, offset, loc);
+  if constexpr (relocatable) {
+    expr->reloc = reloc;
+  }
+  out_expr->reset(expr);
   return Result::Ok;
 }
 
@@ -2522,7 +2976,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::Const: {
       Const const_;
       CHECK_RESULT(ParseConst(&const_, ConstType::Normal));
-      out_expr->reset(new ConstExpr(const_, loc));
+      auto expr = new ConstExpr(const_, loc);
+      out_expr->reset(expr);
+      if (const_.type() == Type::I64)
+        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::SLEB64));
+      else if (const_.type() == Type::I32)
+        CHECK_RESULT(ParseReloc(&expr->reloc, RelocDataType::SLEB));
+      else
+        CHECK_RESULT(ParseRejectReloc());
       break;
     }
 
@@ -3899,7 +4360,7 @@ Result WastParser::ParseScriptModule(
       auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
-      if (IsModuleField(PeekPair()) || PeekIsCustom()) {
+      if (IsModuleField(PeekPair()) || PeekIsCustom() || PeekIsDataImport()) {
         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
       } else if (!PeekMatch(TokenType::Rpar)) {
         ConsumeIfLpar();

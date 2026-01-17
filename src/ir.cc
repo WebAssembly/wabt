@@ -131,6 +131,72 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return true;
 }
 
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Function>() {
+  return functions_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Table>() {
+  return tables_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Global>() {
+  return globals_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Tag>() {
+  return tags_;
+}
+template <>
+std::vector<Index>& SymbolTable::GetTable<Symbol::Data>() {
+  return datas_;
+}
+
+void EnlargeFor(std::vector<Index>& v, Index i) {
+  if (size(v) <= i)
+    v.resize(i + 1, kInvalidIndex);
+}
+
+Result SymbolTable::AddSymbol(Symbol sym) {
+  sym.visit([this](auto type) {
+    if constexpr (!std::is_same_v<decltype(type), Symbol::Data> &&
+                  !std::is_same_v<decltype(type), Symbol::Section>) {
+      auto& table = this->GetTable<decltype(type)>();
+      EnlargeFor(table, type.index);
+      // This is lossy since multiple symbols are genuinely possible, but apart
+      // from data symbols their semantics is not very clear
+      if (table[type.index] == kInvalidIndex)
+        table[type.index] = symbols_.size();
+    }
+  });
+  symbols_.push_back(sym);
+  return Result::Ok;
+}
+Result SymbolTable::Populate(const Module* module) {
+  auto add = [&](auto& table, auto make_sym) {
+    for (size_t i = 0; i < table.size(); ++i) {
+      auto sym = table[i];
+      CHECK_RESULT(AddSymbol({sym->name_, sym->flags_, make_sym(i, sym)}));
+    }
+    return Result::Ok;
+  };
+  add(module->funcs, [](Index i, auto&) { return Symbol::Function{i}; });
+  add(module->tables, [](Index i, auto&) { return Symbol::Table{i}; });
+  add(module->globals, [](Index i, auto&) { return Symbol::Global{i}; });
+  add(module->tags, [](Index i, auto&) { return Symbol::Tag{i}; });
+  for (size_t i = 0; i < module->data_symbols.size(); ++i) {
+    auto& sym = module->data_symbols[i];
+    CHECK_RESULT(
+        AddSymbol({sym.name_, sym.flags_,
+                   Symbol::Data{sym.segment, static_cast<Offset>(sym.offset),
+                                sym.size}}));
+    EnlargeFor(datas_, i);
+    datas_[i] = symbols().size() - 1;
+  }
+
+  return Result::Ok;
+}
+
 const Export* Module::GetExport(std::string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size()) {
@@ -169,6 +235,10 @@ Index Module::GetDataSegmentIndex(const Var& var) const {
 
 Index Module::GetElemSegmentIndex(const Var& var) const {
   return elem_segment_bindings.FindIndex(var);
+}
+
+Index Module::GetDataSymIndex(const Var& var) const {
+  return data_symbol_bindings.FindIndex(var);
 }
 
 bool Module::IsImport(ExternalKind kind, const Var& var) const {
@@ -331,6 +401,14 @@ ElemSegment* Module::GetElemSegment(const Var& var) {
     return nullptr;
   }
   return elem_segments[index];
+}
+
+DataSym* Module::GetDataSym(const Var& var) {
+  Index index = data_symbol_bindings.FindIndex(var);
+  if (index >= elem_segments.size()) {
+    return nullptr;
+  }
+  return &data_symbols[index];
 }
 
 const FuncType* Module::GetFuncType(const Var& var) const {
