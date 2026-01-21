@@ -1503,15 +1503,14 @@ Result BinaryWriter::WriteModule() {
       bool compact = false;
       if (options_.features.compact_imports_enabled()) {
         // Write compact imports when they are available.
-        // Currentsly we donly support grouping by module name (0x7F mode)
+        // Currently we only support grouping by module name (0x7F mode)
         // and not the module name + kind grouping (0x7E mode).
         size_t group_size = 1;
-        for (size_t j = i + 1; j < module_->imports.size(); ++j) {
-          if (import->module_name == module_->imports[j]->module_name) {
-            group_size++;
-          } else {
-            break;
-          }
+        size_t j = i + 1;
+        while (j < module_->imports.size() &&
+               import->module_name == module_->imports[j]->module_name) {
+          group_size++;
+          j++;
         }
         // Use compact imports iff we have a continuous sequence of more than
         // one import with the same module name.
