@@ -54,7 +54,7 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
         os.remove(test_filename)
 
     denylist_exact = {
-        'br_if', 'br_table', 'br_on_null', 'call_ref', 'extern', 'func', 
+        'br_if', 'br_table', 'br_on_null', 'call_ref', 'extern', 'func',
         'memory_max', 'return_call_ref', 'global', 'data', 'elem',
         'id', 'type-subtyping'
     }
