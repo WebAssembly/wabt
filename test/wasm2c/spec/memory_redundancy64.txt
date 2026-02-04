@@ -1,2 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/memory_redundancy64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)
