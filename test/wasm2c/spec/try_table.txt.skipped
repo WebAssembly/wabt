@@ -1,3 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/try_table.wast
-;;; ARGS*: --enable-exceptions

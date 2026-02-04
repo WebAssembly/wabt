@@ -1,3 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/relaxed_laneselect.wast
-;;; ARGS*: --enable-relaxed-simd

@@ -1,3 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/i16x8_relaxed_q15mulr_s.wast
-;;; ARGS*: --enable-relaxed-simd

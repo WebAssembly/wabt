@@ -63,6 +63,18 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
         'address', 'align'
     ]
 
+    if tool == 'run-spec-wasm2c':
+        denylist_exact.update({
+            'i31', 'linking', 'linking0', 'linking1', 'linking2', 'linking3',
+            'local_init', 'local_tee', 'memory', 'memory64',
+            'ref', 'ref_as_non_null', 'ref_cast', 'ref_eq', 'ref_func', 'ref_is_null', 'ref_null', 'ref_test',
+            'relaxed_dot_product', 'relaxed_laneselect', 'relaxed_madd_nmadd', 'relaxed_min_max',
+            'select', 'struct', 'table', 'table64', 'table_copy_mixed', 'table-sub',
+            'tag', 'throw', 'try_table', 'type-canon', 'type-equivalence', 'type-rec',
+            'unreached-invalid', 'unreached-valid',
+            'i16x8_relaxed_q15mulr_s', 'i32x4_relaxed_trunc', 'i8x16_relaxed_swizzle'
+        })
+
     for added_test_name in testsuite_tests - wabt_tests:
         if added_test_name in denylist_exact:
             continue
