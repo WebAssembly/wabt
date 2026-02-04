@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/relaxed_min_max.wast
+;;; ARGS*: --enable-relaxed-simd
+(;; STDOUT ;;;
+25/25 tests passed.
+;;; STDOUT ;;)

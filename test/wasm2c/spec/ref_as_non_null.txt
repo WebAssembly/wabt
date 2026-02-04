@@ -1,0 +1,3 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/ref_as_non_null.wast
+;;; ARGS*: --enable-function-references --enable-gc

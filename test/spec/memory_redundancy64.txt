@@ -1,0 +1,2 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory_redundancy64.wast

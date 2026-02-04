@@ -1,0 +1,3 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/br_on_cast_fail.wast
+;;; ARGS*: --enable-function-references --enable-gc

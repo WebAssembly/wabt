@@ -1,0 +1,3 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/i32x4_relaxed_trunc.wast
+;;; ARGS*: --enable-relaxed-simd

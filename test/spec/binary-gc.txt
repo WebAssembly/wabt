@@ -1,0 +1,7 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/binary-gc.wast
+(;; STDOUT ;;;
+out/test/spec/binary-gc.wast:2: assert_malformed passed:
+  000000c: error: unexpected type form (got 0x5e)
+1/1 tests passed.
+;;; STDOUT ;;)

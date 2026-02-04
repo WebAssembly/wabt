@@ -1,6 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/legacy/try_catch.wast
-;;; ARGS*: --enable-exceptions --enable-tail-call
-(;; STDOUT ;;;
-31/31 tests passed.
-;;; STDOUT ;;)

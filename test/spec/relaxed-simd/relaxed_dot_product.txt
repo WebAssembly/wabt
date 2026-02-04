@@ -1,3 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/relaxed_dot_product.wast
-;;; ARGS*: --enable-relaxed-simd

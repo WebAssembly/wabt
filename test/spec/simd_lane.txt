@@ -634,29 +634,29 @@ out/test/spec/simd_lane.wast:600: assert_malformed passed:
                                           ^
 out/test/spec/simd_lane.wast:604: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.132.wat:1:71: error: unexpected token "15.0", expected a natural number in range [0, 32).
-  ...0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15.0) (v128.const i8x16 15 14 13 12 11 ...
+  ...0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15.0 (v128.const i8x16 15 14 13 12 11 1...
                                         ^^^^
-  out/test/spec/simd_lane/simd_lane.132.wat:1:191: error: unexpected token ), expected EOF.
+  out/test/spec/simd_lane/simd_lane.132.wat:1:190: error: unexpected token ), expected EOF.
   ...8 7 6 5 4 3 2 1 0) (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)))
                                                                                  ^
 out/test/spec/simd_lane.wast:608: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.133.wat:1:36: error: unexpected token "0.5", expected a natural number in range [0, 32).
-  (func (result v128) (i8x16.shuffle 0.5 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) (...
+  (func (result v128) (i8x16.shuffle 0.5 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 (v...
                                      ^^^
 out/test/spec/simd_lane.wast:612: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.134.wat:1:36: error: unexpected token "-inf", expected a natural number in range [0, 32).
-  (func (result v128) (i8x16.shuffle -inf 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) ...
+  (func (result v128) (i8x16.shuffle -inf 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 (...
                                      ^^^^
 out/test/spec/simd_lane.wast:616: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.135.wat:1:71: error: unexpected token "inf", expected a natural number in range [0, 32).
-  ... 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 inf) (v128.const i8x16 15 14 13 12 11 ...
+  ... 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 inf (v128.const i8x16 15 14 13 12 11 1...
                                          ^^^
-  out/test/spec/simd_lane/simd_lane.135.wat:1:190: error: unexpected token ), expected EOF.
+  out/test/spec/simd_lane/simd_lane.135.wat:1:189: error: unexpected token ), expected EOF.
   ...8 7 6 5 4 3 2 1 0) (v128.const i8x16 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)))
                                                                                  ^
 out/test/spec/simd_lane.wast:620: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.136.wat:1:36: error: unexpected token "nan", expected a natural number in range [0, 32).
-  (func (result v128) (i8x16.shuffle nan 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15) (...
+  (func (result v128) (i8x16.shuffle nan 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 (v...
                                      ^^^
 out/test/spec/simd_lane.wast:877: assert_malformed passed:
   out/test/spec/simd_lane/simd_lane.141.wat:1:21: error: invalid literal "+0x0f"

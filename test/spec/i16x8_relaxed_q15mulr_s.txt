@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/i16x8_relaxed_q15mulr_s.wast
+;;; ARGS*: --enable-relaxed-simd
+(;; STDOUT ;;;
+3/3 tests passed.
+;;; STDOUT ;;)

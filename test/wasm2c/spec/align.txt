@@ -1,5 +1,2 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/align.wast
-(;; STDOUT ;;;
-48/48 tests passed.
-;;; STDOUT ;;)

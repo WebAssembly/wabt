@@ -1,0 +1,3 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/memory64.wast
+;;; ARGS*: --enable-memory64

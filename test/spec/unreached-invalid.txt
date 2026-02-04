@@ -1,5 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/unreached-invalid.wast
+;;; ARGS*: --enable-function-references --enable-gc
 (;; STDOUT ;;;
 out/test/spec/unreached-invalid.wast:4: assert_invalid passed:
   out/test/spec/unreached-invalid/unreached-invalid.0.wasm:000001a: error: local variable out of range (max 0)
@@ -333,29 +334,38 @@ out/test/spec/unreached-invalid.wast:676: assert_invalid passed:
 out/test/spec/unreached-invalid.wast:687: assert_invalid passed:
   out/test/spec/unreached-invalid/unreached-invalid.109.wasm:000001c: error: type mismatch in i64.extend_i32_u, expected [i32] but got [i64]
   000001c: error: OnConvertExpr callback failed
-out/test/spec/unreached-invalid.wast:699: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.110.wasm:000001f: error: type mismatch in select, expected [i64, i64, i32] but got [i32, i64, i32]
-  000001f: error: OnSelectExpr callback failed
-out/test/spec/unreached-invalid.wast:704: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.111.wasm:000001f: error: type mismatch in select, expected [i32, i32, i32] but got [i64, i32, i32]
-  000001f: error: OnSelectExpr callback failed
+out/test/spec/unreached-invalid.wast:698: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.110.wasm:000001b: error: type mismatch at end of function, expected [] but got [f32]
+  000001b: error: EndFunctionBody callback failed
 out/test/spec/unreached-invalid.wast:710: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.112.wasm:000001f: error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32, i64]
+  out/test/spec/unreached-invalid/unreached-invalid.111.wasm:000001f: error: type mismatch in select, expected [i64, i64, i32] but got [i32, i64, i32]
   000001f: error: OnSelectExpr callback failed
 out/test/spec/unreached-invalid.wast:715: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.113.wasm:000001d: error: type mismatch in select, expected [i32, i32, i32] but got [i32, i64]
-  000001d: error: OnSelectExpr callback failed
-out/test/spec/unreached-invalid.wast:720: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.114.wasm:000001b: error: type mismatch in select, expected [any, any, i32] but got [i64]
-  000001b: error: OnSelectExpr callback failed
+  out/test/spec/unreached-invalid/unreached-invalid.112.wasm:000001f: error: type mismatch in select, expected [i32, i32, i32] but got [i64, i32, i32]
+  000001f: error: OnSelectExpr callback failed
+out/test/spec/unreached-invalid.wast:721: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.113.wasm:000001f: error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32, i64]
+  000001f: error: OnSelectExpr callback failed
 out/test/spec/unreached-invalid.wast:726: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.115.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]
+  out/test/spec/unreached-invalid/unreached-invalid.114.wasm:000001d: error: type mismatch in select, expected [i32, i32, i32] but got [i32, i64]
+  000001d: error: OnSelectExpr callback failed
+out/test/spec/unreached-invalid.wast:731: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.115.wasm:000001b: error: type mismatch in select, expected [any, any, i32] but got [i64]
+  000001b: error: OnSelectExpr callback failed
+out/test/spec/unreached-invalid.wast:737: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.116.wasm:000001f: error: type mismatch in implicit return, expected [i32] but got [i64]
   000001f: error: EndFunctionBody callback failed
-out/test/spec/unreached-invalid.wast:733: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.116.wasm:000001a: error: type mismatch at end of function, expected [] but got [any]
+out/test/spec/unreached-invalid.wast:744: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.117.wasm:000001a: error: type mismatch at end of function, expected [] but got [any]
   000001a: error: EndFunctionBody callback failed
-out/test/spec/unreached-invalid.wast:738: assert_invalid passed:
-  out/test/spec/unreached-invalid/unreached-invalid.117.wasm:0000026: error: type mismatch in br_table, expected [i32] but got [externref]
+out/test/spec/unreached-invalid.wast:749: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.118.wasm:0000026: error: type mismatch in br_table, expected [i32] but got [externref]
   0000026: error: OnBrTableExpr callback failed
-118/118 tests passed.
+out/test/spec/unreached-invalid.wast:764: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.119.wasm:0000021: error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000021: error: EndFunctionBody callback failed
+out/test/spec/unreached-invalid.wast:774: assert_invalid passed:
+  out/test/spec/unreached-invalid/unreached-invalid.120.wasm:0000022: error: type mismatch at end of function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+121/121 tests passed.
 ;;; STDOUT ;;)

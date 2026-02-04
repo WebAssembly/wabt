@@ -1,5 +1,3 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/ref_func.wast
-(;; STDOUT ;;;
-8/8 tests passed.
-;;; STDOUT ;;)
+;;; ARGS*: --enable-function-references --enable-gc

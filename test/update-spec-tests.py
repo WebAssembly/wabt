@@ -68,8 +68,28 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
         with open(test_filename, 'w') as f:
             f.write(';;; TOOL: %s\n' % tool)
             f.write(';;; STDIN_FILE: %s\n' % wast_filename.replace(os.sep, '/'))
+
+            # Check for extra flags based on filename
+            test_name = os.path.basename(test_filename)
             if flags:
                 f.write(';;; ARGS*: %s\n' % flags)
+
+            if 'relaxed' in test_name:
+                f.write(';;; ARGS*: --enable-relaxed-simd\n')
+            if 'memory64' in test_name or 'memory_max' in test_name:
+                f.write(';;; ARGS*: --enable-memory64\n')
+            if 'call_ref' in test_name or 'ref_' in test_name or 'br_on_' in test_name or 'return_call_ref' in test_name or 'struct' in test_name or 'array' in test_name or 'i31' in test_name or 'unreached-' in test_name:
+                f.write(';;; ARGS*: --enable-function-references --enable-gc\n')
+            if 'tail' in test_name or 'return_call' in test_name:
+                 f.write(';;; ARGS*: --enable-tail-call\n')
+            if 'relaxed-simd' in test_name:
+                f.write(';;; ARGS*: --enable-relaxed-simd\n')
+            if 'extended-const' in test_name:
+                 f.write(';;; ARGS*: --enable-extended-const\n') 
+            if 'throw' in test_name or 'try' in test_name or 'catch' in test_name or 'tag' in test_name or 'exception' in test_name:
+                 f.write(';;; ARGS*: --enable-exceptions\n')
+            if 'multi' in test_name and 'memory' in test_name:
+                 f.write(';;; ARGS*: --enable-multi-memory\n')
 
 
 def ProcessProposalDir(name, flags=None, old=False):
@@ -97,26 +117,16 @@ def main(args):
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
     flags = {
-        'multi-memory': '--enable-multi-memory',
-        'exception-handling': '--enable-exceptions',
-        'extended-const': '--enable-extended-const',
-        'tail-call': '--enable-tail-call',
-        'relaxed-simd': '--enable-relaxed-simd',
-        'exception-handling': '--enable-exceptions',
         'custom-page-sizes': '--enable-custom-page-sizes',
-        'function-references': '--enable-function-references',
     }
 
-    old_proposal_flags = {
-        'memory64': '--enable-memory64',
-    }
-
+    # Proposals that were recently merged or moved might be missing.
+    # We only assert for proposals that we expect to be in the directory.
+    
     unimplemented = set([
-        'gc',
         'threads',
-        'annotations',
         'wide-arithmetic',
-        'wasm-3.0',
+        'custom-descriptors',
     ])
 
     # sanity check to verify that all flags are valid
@@ -130,8 +140,7 @@ def main(args):
     for proposal in proposals:
         ProcessProposalDir(proposal, flags.get(proposal))
 
-    for proposal in old_proposal_flags:
-        ProcessProposalDir(proposal, old_proposal_flags.get(proposal), True)
+
 
     return 0
 

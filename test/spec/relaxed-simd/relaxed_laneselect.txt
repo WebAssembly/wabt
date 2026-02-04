@@ -1,6 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/relaxed_laneselect.wast
-;;; ARGS*: --enable-relaxed-simd
-(;; STDOUT ;;;
-12/12 tests passed.
-;;; STDOUT ;;)

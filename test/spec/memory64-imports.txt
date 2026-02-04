@@ -1,0 +1,66 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/memory64-imports.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/memory64-imports.wast:37: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+out/test/spec/memory64-imports.wast:41: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (20)
+out/test/spec/memory64-imports.wast:45: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+out/test/spec/memory64-imports.wast:49: assert_unlinkable passed:
+  error: max size (20) larger than declared (18)
+out/test/spec/memory64-imports.wast:53: assert_unlinkable passed:
+  error: expected i64 memory, but i32 memory provided
+out/test/spec/memory64-imports.wast:57: assert_unlinkable passed:
+  error: expected i32 memory, but i64 memory provided
+out/test/spec/memory64-imports.wast:61: assert_unlinkable passed:
+  error: expected i64 memory, but i32 memory provided
+out/test/spec/memory64-imports.wast:65: assert_unlinkable passed:
+  error: expected i32 memory, but i64 memory provided
+out/test/spec/memory64-imports.wast:83: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (1)
+out/test/spec/memory64-imports.wast:87: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (2)
+out/test/spec/memory64-imports.wast:91: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (3)
+out/test/spec/memory64-imports.wast:95: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (3)
+out/test/spec/memory64-imports.wast:99: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/memory64-imports.wast:103: assert_unlinkable passed:
+  error: max size (4) larger than declared (1)
+out/test/spec/memory64-imports.wast:107: assert_unlinkable passed:
+  error: max size (4) larger than declared (2)
+out/test/spec/memory64-imports.wast:111: assert_unlinkable passed:
+  error: max size (4) larger than declared (3)
+out/test/spec/memory64-imports.wast:115: assert_unlinkable passed:
+  error: max size (4) larger than declared (2)
+out/test/spec/memory64-imports.wast:119: assert_unlinkable passed:
+  error: max size (4) larger than declared (3)
+out/test/spec/memory64-imports.wast:123: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/memory64-imports.wast:127: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/memory64-imports.wast:131: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/memory64-imports.wast:135: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (4)
+out/test/spec/memory64-imports.wast:139: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (4)
+out/test/spec/memory64-imports.wast:143: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+out/test/spec/memory64-imports.wast:147: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (4)
+out/test/spec/memory64-imports.wast:151: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (5)
+out/test/spec/memory64-imports.wast:155: assert_unlinkable passed:
+  error: expected i64 memory, but i32 memory provided
+out/test/spec/memory64-imports.wast:159: assert_unlinkable passed:
+  error: expected i32 memory, but i64 memory provided
+out/test/spec/memory64-imports.wast:163: assert_unlinkable passed:
+  error: expected i64 memory, but i32 memory provided
+out/test/spec/memory64-imports.wast:167: assert_unlinkable passed:
+  error: expected i32 memory, but i64 memory provided
+70/70 tests passed.
+;;; STDOUT ;;)

@@ -1,7 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/proposals/wasm-3.0/return_call_indirect.wast
-;;; ARGS*: --enable-tail-call
-(;; STDOUT ;;;
-spectest.print_i32_f32(5 91)
-49/49 tests passed.
-;;; STDOUT ;;)

@@ -1,6 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/i32x4_relaxed_trunc.wast
-;;; ARGS*: --enable-relaxed-simd
-(;; STDOUT ;;;
-17/17 tests passed.
-;;; STDOUT ;;)

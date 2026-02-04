@@ -1,5 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/ref_func.wast
+;;; ARGS*: --enable-function-references --enable-gc
 (;; STDOUT ;;;
 set-g() =>
 set-f() =>

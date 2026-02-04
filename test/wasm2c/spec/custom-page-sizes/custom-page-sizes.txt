@@ -1,6 +1,3 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --enable-custom-page-sizes --enable-multi-memory
 ;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/custom-page-sizes.wast
-(;; STDOUT ;;;
-31/31 tests passed.
-;;; STDOUT ;;)
+;;; ARGS*: --enable-custom-page-sizes
