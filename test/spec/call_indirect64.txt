@@ -1,2 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/call_indirect64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)

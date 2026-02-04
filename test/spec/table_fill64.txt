@@ -1,2 +1,39 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/table_fill64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/table_fill64.wast:64: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:72: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:77: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:120: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:128: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:133: assert_trap passed: out of bounds table access: table.fill out of bounds
+out/test/spec/table_fill64.wast:140: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.1.wasm:0000020: error: type mismatch in table.fill, expected [i32, externref, i32] but got []
+  0000020: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:149: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.2.wasm:0000024: error: type mismatch in table.fill, expected [i32, externref, i32] but got [externref, i32]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:158: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.3.wasm:0000024: error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, i32]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:167: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.4.wasm:0000024: error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, externref]
+  0000024: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:176: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.5.wasm:0000029: error: type mismatch in table.fill, expected [i32, externref, i32] but got [f32, externref, i32]
+  0000029: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:185: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.6.wasm:0000027: error: type mismatch in table.fill, expected [i32, funcref, i32] but got [i32, externref, i32]
+  0000027: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:194: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.7.wasm:0000029: error: type mismatch in table.fill, expected [i32, externref, i32] but got [i32, externref, f32]
+  0000029: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:204: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.8.wasm:000002a: error: type mismatch in table.fill, expected [i32, funcref, i32] but got [i32, externref, i32]
+  000002a: error: OnTableFillExpr callback failed
+out/test/spec/table_fill64.wast:215: assert_invalid passed:
+  out/test/spec/table_fill64/table_fill64.9.wasm:0000028: error: type mismatch in implicit return, expected [i32] but got []
+  0000028: error: EndFunctionBody callback failed
+80/80 tests passed.
+;;; STDOUT ;;)

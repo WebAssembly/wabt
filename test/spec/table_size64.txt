@@ -1,2 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/table_size64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+37/37 tests passed.
+;;; STDOUT ;;)

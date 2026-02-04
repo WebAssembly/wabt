@@ -1,2 +1,859 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/table_init64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+test() =>
+out/test/spec/table_init64.wast:43: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:44: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:49: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:54: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:60: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:61: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:62: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:63: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:64: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:65: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:66: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:67: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:68: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:69: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:70: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:71: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:72: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:102: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:103: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:108: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:109: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:110: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:111: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:112: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:113: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:120: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:121: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:122: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:123: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:124: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:125: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:126: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:127: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:128: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:129: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:130: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:131: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:169: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:170: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:175: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:180: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:182: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:187: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:189: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:191: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:194: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:195: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:196: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:197: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:198: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:228: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:229: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:234: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:239: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:245: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:246: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:247: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:248: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:249: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:250: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:251: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:252: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:253: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:254: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:255: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:256: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:257: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:287: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:288: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:293: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:294: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:295: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:296: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:297: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:298: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:305: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:306: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:307: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:308: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:309: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:310: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:311: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:312: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:313: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:314: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:315: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:316: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:354: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:355: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:360: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:365: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:367: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:372: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:374: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:376: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:379: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:380: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:381: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:382: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:383: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:413: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:414: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:419: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:424: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:430: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:431: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:432: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:433: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:434: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:435: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:436: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:437: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:438: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:439: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:440: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:441: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:442: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:472: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:473: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:478: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:479: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:480: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:481: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:482: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:483: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:490: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:491: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:492: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:493: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:494: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:495: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:496: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:497: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:498: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:499: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:500: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:501: assert_trap passed: uninitialized table element
+test() =>
+out/test/spec/table_init64.wast:539: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:540: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:545: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:550: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:552: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:557: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:559: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:561: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:564: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:565: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:566: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:567: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:568: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:570: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.10.wasm:0000024: error: elem_segment variable out of range: 0 (max 0)
+  0000024: error: OnElemDropExpr callback failed
+out/test/spec/table_init64.wast:576: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.11.wasm:000002b: error: table variable out of range: 0 (max 0)
+  out/test/spec/table_init64/table_init64.11.wasm:000002b: error: elem_segment variable out of range: 0 (max 0)
+  000002b: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:582: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.12.wasm:0000035: error: elem_segment variable out of range: 4 (max 1)
+  0000035: error: OnElemDropExpr callback failed
+out/test/spec/table_init64.wast:590: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.13.wasm:000003c: error: table variable out of range: 0 (max 0)
+  out/test/spec/table_init64/table_init64.13.wasm:000003c: error: elem_segment variable out of range: 4 (max 1)
+  000003c: error: OnTableInitExpr callback failed
+test() =>
+out/test/spec/table_init64.wast:644: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+test() =>
+out/test/spec/table_init64.wast:716: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:740: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:764: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:788: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:836: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:884: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:932: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:956: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:1004: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:1052: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+out/test/spec/table_init64.wast:1100: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:1103: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.35.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1112: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.36.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, i64]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1121: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.37.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1130: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.38.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1139: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.39.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f32]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1148: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.40.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i64]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1157: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.41.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1166: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.42.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i32]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1175: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.43.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1184: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.44.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i64]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1193: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.45.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1202: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.46.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i32]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1211: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.47.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1220: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.48.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1229: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.49.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f64]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1238: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.50.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1247: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.51.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f32]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1256: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.52.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i64]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1265: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.53.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1274: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.54.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i32]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1283: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.55.wasm:0000047: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f32]
+  0000047: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1292: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.56.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i64]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1301: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.57.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f64]
+  000004b: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1310: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.58.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1319: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.59.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f32]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1328: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.60.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i64]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1337: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.61.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1346: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.62.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1355: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.63.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f32]
+  000004b: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1364: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.64.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1373: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.65.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f64]
+  000004f: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1382: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.66.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i32]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1391: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.67.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1400: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.68.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i64]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1409: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.69.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1418: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.70.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1427: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.71.wasm:0000044: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f32]
+  0000044: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1436: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.72.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i64]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1445: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.73.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1454: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.74.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i32]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1463: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.75.wasm:0000041: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f32]
+  0000041: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1472: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.76.wasm:000003e: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i64]
+  000003e: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1481: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.77.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1490: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.78.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i32]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1499: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.79.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1508: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.80.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1517: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.81.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f64]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1526: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.82.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i32]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1535: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.83.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1544: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.84.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1553: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.85.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f64]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1562: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.86.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1571: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.87.wasm:000004b: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f32]
+  000004b: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1580: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.88.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i64]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1589: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.89.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f64]
+  000004f: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1598: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.90.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i32]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1607: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.91.wasm:0000048: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f32]
+  0000048: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1616: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.92.wasm:0000045: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i64]
+  0000045: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1625: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.93.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f64]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1634: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.94.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i32]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1643: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.95.wasm:000004f: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f32]
+  000004f: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1652: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.96.wasm:000004c: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i64]
+  000004c: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1661: assert_invalid passed:
+  out/test/spec/table_init64/table_init64.97.wasm:0000053: error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f64]
+  0000053: error: OnTableInitExpr callback failed
+out/test/spec/table_init64.wast:1697: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:1698: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1699: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1700: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1701: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1702: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1703: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1704: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1705: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1706: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1707: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1708: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1709: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1710: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1711: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1712: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1713: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1714: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1715: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1716: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1717: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1718: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1719: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1720: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1721: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1722: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1723: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1724: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1725: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1726: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1727: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1728: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1729: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1759: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:1760: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1761: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1762: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1763: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1764: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1765: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1766: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1767: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1768: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1769: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1770: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1771: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1772: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1773: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1774: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1775: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1776: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1777: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1778: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1779: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1780: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1781: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1782: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1783: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1784: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1785: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1786: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1787: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1788: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1789: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1790: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1791: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1821: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:1822: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1823: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1824: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1825: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1826: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1827: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1828: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1829: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1830: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1831: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1832: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1833: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1834: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1835: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1836: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1837: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1838: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1839: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1840: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1841: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1842: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1843: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1844: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1845: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1846: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1847: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1848: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1849: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1850: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1851: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1852: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1853: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1854: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1855: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1856: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1857: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1858: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1859: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1860: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1861: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1862: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1863: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1864: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1865: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1866: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1867: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1868: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1869: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1870: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1871: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1872: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1873: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1874: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1875: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1876: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1877: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1878: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1879: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1880: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1881: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1882: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1883: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1884: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1885: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1886: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1887: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1888: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1889: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1890: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1891: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1892: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1893: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1894: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1895: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1896: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1897: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1898: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1899: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1900: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1901: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1902: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1903: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1904: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1905: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1906: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1907: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1908: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1909: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1910: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1911: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1912: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1913: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1914: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1915: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1916: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1917: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1918: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1919: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1920: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1921: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1922: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1923: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1924: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1925: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1926: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1927: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1928: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1929: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1930: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1931: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1932: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1933: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1934: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1935: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1936: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1937: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1938: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1939: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1940: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1941: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1942: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1943: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1944: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1945: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1946: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1947: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1948: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1949: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1950: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1951: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1952: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1953: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1954: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1955: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1956: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1957: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1958: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1959: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1960: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1961: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1962: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1963: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1964: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1965: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1966: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1967: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1968: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1969: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1970: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1971: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1972: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1973: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1974: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1975: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1976: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1977: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1978: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1979: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1980: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:1981: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2011: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:2012: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2013: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2014: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2015: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2016: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2017: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2018: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2019: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2020: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2021: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2022: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2023: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2024: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2025: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2026: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2027: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2028: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2029: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2030: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2031: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2032: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2033: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2034: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2035: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2036: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2037: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2038: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2039: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2040: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2041: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2042: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2043: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2044: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2045: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2046: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2047: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2048: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2049: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2050: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2051: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2052: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2053: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2054: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2055: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2056: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2057: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2058: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2059: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2060: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2061: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2062: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2063: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2064: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2065: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2066: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2067: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2068: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2069: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2070: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2071: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2072: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2073: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2074: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2075: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2076: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2077: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2078: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2079: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2080: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2081: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2082: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2083: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2084: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2085: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2086: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2087: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2088: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2089: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2090: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2091: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2092: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2093: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2094: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2095: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2096: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2097: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2098: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2099: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2100: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2101: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2102: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2103: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2104: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2105: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2106: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2107: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2108: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2109: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2110: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2111: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2112: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2113: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2114: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2115: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2116: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2117: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2118: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2119: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2120: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2121: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2122: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2123: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2124: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2125: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2126: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2127: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2128: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2129: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2130: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2131: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2132: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2133: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2134: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2135: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2136: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2137: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2138: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2139: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2140: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2141: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2142: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2143: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2144: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2145: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2146: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2147: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2148: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2149: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2150: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2151: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2152: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2153: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2154: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2155: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2156: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2157: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2158: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2159: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2160: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2161: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2162: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2163: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2164: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2165: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2166: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2167: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2168: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2169: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2170: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2171: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2201: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:2202: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2203: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2204: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2205: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2206: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2207: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2208: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2209: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2210: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2211: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2212: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2213: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2214: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2215: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2216: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2217: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2218: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2219: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2220: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2221: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2222: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2223: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2224: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2225: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2226: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2227: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2228: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2229: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2230: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2231: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2232: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2233: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2234: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2235: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2236: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2237: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2238: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2239: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2240: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2241: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2242: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2243: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2244: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2245: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2246: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2247: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2248: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2249: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2250: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2251: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2252: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2253: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2254: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2255: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2256: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2257: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2258: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2259: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2260: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2261: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2262: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2263: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2264: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2265: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2295: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/table_init64.wast:2296: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2297: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2298: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2299: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2300: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2301: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2302: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2303: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2304: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2305: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2306: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2307: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2308: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2309: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2310: assert_trap passed: uninitialized table element
+out/test/spec/table_init64.wast:2311: assert_trap passed: uninitialized table element
+875/875 tests passed.
+;;; STDOUT ;;)

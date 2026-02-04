@@ -1,2 +1,14 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/table_set64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/table_set64.wast:41: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/table_set64.wast:42: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/table_set64.wast:43: assert_trap passed: out of bounds table access: table.set at 18446744073709551615 >= max value 1
+out/test/spec/table_set64.wast:44: assert_trap passed: out of bounds table access: table.set at 18446744073709551615 >= max value 2
+out/test/spec/table_set64.wast:46: assert_trap passed: out of bounds table access: table.set at 2 >= max value 1
+out/test/spec/table_set64.wast:47: assert_trap passed: out of bounds table access: table.set at 3 >= max value 2
+out/test/spec/table_set64.wast:48: assert_trap passed: out of bounds table access: table.set at 18446744073709551615 >= max value 1
+out/test/spec/table_set64.wast:49: assert_trap passed: out of bounds table access: table.set at 18446744073709551615 >= max value 2
+19/19 tests passed.
+;;; STDOUT ;;)

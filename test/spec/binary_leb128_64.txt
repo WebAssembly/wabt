@@ -1,2 +1,8 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/binary_leb128_64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+out/test/spec/binary_leb128_64.wast:17: assert_malformed passed:
+  0000020: error: unable to read u64 leb128: load offset
+2/2 tests passed.
+;;; STDOUT ;;)
