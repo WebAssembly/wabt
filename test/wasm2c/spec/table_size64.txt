@@ -1,2 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/table_size64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+36/36 tests passed.
+;;; STDOUT ;;)

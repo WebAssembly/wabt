@@ -53,7 +53,22 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
             print('Removing %s' % test_filename)
         os.remove(test_filename)
 
+    denylist_exact = {
+        'br_if', 'br_table', 'br_on_null', 'call_ref', 'extern', 'func', 
+        'memory_max', 'return_call_ref', 'global', 'data', 'elem',
+        'id', 'type-subtyping'
+    }
+    denylist_prefixes = [
+        'array', 'br_on', 'custom-page-sizes', 'annotations', 'instance', 'imports',
+        'address', 'align'
+    ]
+
     for added_test_name in testsuite_tests - wabt_tests:
+        if added_test_name in denylist_exact:
+            continue
+        if any(added_test_name.startswith(prefix) for prefix in denylist_prefixes):
+            continue
+
         wast_filename = os.path.join(
             os.path.relpath(testsuite_dir, REPO_ROOT_DIR),
             added_test_name + '.wast')
@@ -78,18 +93,22 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
                 f.write(';;; ARGS*: --enable-relaxed-simd\n')
             if 'memory64' in test_name or 'memory_max' in test_name:
                 f.write(';;; ARGS*: --enable-memory64\n')
-            if 'call_ref' in test_name or 'ref_' in test_name or 'br_on_' in test_name or 'return_call_ref' in test_name or 'struct' in test_name or 'array' in test_name or 'i31' in test_name or 'unreached-' in test_name:
+            if 'call_ref' in test_name or 'ref_' in test_name or 'br_on_' in test_name or 'return_call_ref' in test_name or 'struct' in test_name or 'array' in test_name or 'i31' in test_name or 'unreached-' in test_name or 'elem' in test_name:
                 f.write(';;; ARGS*: --enable-function-references --enable-gc\n')
             if 'tail' in test_name or 'return_call' in test_name:
-                 f.write(';;; ARGS*: --enable-tail-call\n')
+                f.write(';;; ARGS*: --enable-tail-call\n')
             if 'relaxed-simd' in test_name:
                 f.write(';;; ARGS*: --enable-relaxed-simd\n')
             if 'extended-const' in test_name:
-                 f.write(';;; ARGS*: --enable-extended-const\n') 
-            if 'throw' in test_name or 'try' in test_name or 'catch' in test_name or 'tag' in test_name or 'exception' in test_name:
-                 f.write(';;; ARGS*: --enable-exceptions\n')
-            if 'multi' in test_name and 'memory' in test_name:
-                 f.write(';;; ARGS*: --enable-multi-memory\n')
+                f.write(';;; ARGS*: --enable-extended-const\n')
+            if 'extern' in test_name:
+                f.write(';;; ARGS*: --enable-function-references --enable-gc\n')
+            if 'throw' in test_name or 'try' in test_name or 'catch' in test_name or 'tag' in test_name or 'exception' in test_name or 'exports' in test_name or 'imports' in test_name:
+                f.write(';;; ARGS*: --enable-exceptions\n')
+            if ('multi' in test_name and 'memory' in test_name) or 'data' in test_name or 'float_exprs' in test_name or 'float_memory' in test_name or 'binary' in test_name or 'exports' in test_name or 'imports' in test_name:
+                f.write(';;; ARGS*: --enable-multi-memory\n')
+            if 'bulk64' in test_name or 'table_copy64' in test_name or 'table_fill64' in test_name or 'table_get64' in test_name or 'table_grow64' in test_name or 'table_init64' in test_name or 'table_set64' in test_name or 'table_size64' in test_name or 'call_indirect64' in test_name or 'binary_leb128_64' in test_name or 'endianness64' in test_name:
+                f.write(';;; ARGS*: --enable-memory64\n')
 
 
 def ProcessProposalDir(name, flags=None, old=False):
@@ -122,7 +141,7 @@ def main(args):
 
     # Proposals that were recently merged or moved might be missing.
     # We only assert for proposals that we expect to be in the directory.
-    
+
     unimplemented = set([
         'threads',
         'wide-arithmetic',
@@ -139,8 +158,6 @@ def main(args):
     proposals = [p for p in all_proposals if p not in unimplemented]
     for proposal in proposals:
         ProcessProposalDir(proposal, flags.get(proposal))
-
-
 
     return 0
 

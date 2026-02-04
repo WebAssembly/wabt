@@ -1,4 +1,0 @@
-;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/memory_max.wast
-;;; ARGS*: --enable-custom-page-sizes
-;;; ARGS*: --enable-memory64

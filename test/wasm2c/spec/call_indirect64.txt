@@ -1,2 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/call_indirect64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)

@@ -1,2 +1,7 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/binary_leb128_64.wast
+;;; ARGS*: --enable-multi-memory
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+0/0 tests passed.
+;;; STDOUT ;;)

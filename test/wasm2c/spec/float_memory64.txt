@@ -1,6 +1,7 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/float_memory64.wast
 ;;; ARGS*: --enable-memory64
+;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 60/60 tests passed.
 ;;; STDOUT ;;)

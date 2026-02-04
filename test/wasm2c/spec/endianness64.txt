@@ -1,2 +1,6 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/endianness64.wast
+;;; ARGS*: --enable-memory64
+(;; STDOUT ;;;
+68/68 tests passed.
+;;; STDOUT ;;)
