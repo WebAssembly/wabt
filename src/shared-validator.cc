@@ -1897,4 +1897,1469 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   return result;
 }
 
+SharedComponentValidator::SharedComponentValidator(
+    Errors* errors,
+    std::string_view filename,
+    const ValidateOptions& options)
+    : core_func_other_(TypeDef::CoreFunc),
+      core_func_i32x4_i32_(TypeDef::CoreFunc),
+      core_func_i64x4_i64_(TypeDef::CoreFunc),
+      core_memory32_(TypeDef::CoreMemory),
+      core_memory64_(TypeDef::CoreMemory),
+      options_(options),
+      errors_(errors),
+      filename_(filename),
+      string_table_(&string_list_) {
+  auto component = std::make_unique<Component>(nullptr);
+  current_ = component.get();
+  objects_.push_back(std::move(component));
+}
+
+Result WABT_PRINTF_FORMAT(3, 4)
+    SharedComponentValidator::PrintError(const Location& loc,
+                                         const char* format,
+                                         ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  errors_->emplace_back(ErrorLevel::Error, loc, filename_, buffer);
+  return Result::Error;
+}
+
+Result SharedComponentValidator::OnCoreModule() {
+  Component* component = CurrentAsComponent();
+  auto module = std::make_unique<CoreModule>();
+  component->core_modules.push_back(module.get());
+  objects_.push_back(std::move(module));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::BeginComponent() {
+  Component* component = CurrentAsComponent();
+  auto new_component = std::make_unique<Component>(component);
+  component->components.push_back(new_component.get());
+  current_ = new_component.get();
+  objects_.push_back(std::move(new_component));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndComponent() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCoreInstance(
+    const ComponentIndexLoc& module_index,
+    uint32_t argument_count) {
+  TypeBase* type_base = nullptr;
+  Result result =
+      CheckIndex(ComponentSort::CoreModule, module_index, &type_base);
+  CurrentAsComponent()->core_instances.push_back(type_base);
+  assert(caseful_names_.empty());
+  argument_count_ = argument_count;
+  return result;
+}
+
+Result SharedComponentValidator::OnCoreInstanceArg(
+    const ComponentStringLoc& name,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  Result result = Result::Ok;
+  const std::string* import_name = string_table_.Append(name.str);
+
+  std::map<const std::string*, Index>::iterator it =
+      caseful_names_.find(import_name);
+  if (it != caseful_names_.end()) {
+    if (it->second == kInvalidIndex) {
+      result |=
+          PrintError(name.loc, "with \"" PRIstringview "\" assigned twice.",
+                     WABT_PRINTF_STRING_VIEW_ARG(name.str));
+    }
+    it->second = kInvalidIndex;
+  } else {
+    // First assignment is ignored even if the name is not needed.
+    caseful_names_[import_name] = kInvalidIndex;
+  }
+
+  argument_count_--;
+  if (argument_count_ == 0) {
+    caseful_names_.clear();
+  }
+  return result;
+}
+
+Result SharedComponentValidator::OnInlineCoreInstance(uint32_t argument_count) {
+  Component* component = CurrentAsComponent();
+  auto module = std::make_unique<CoreModule>();
+  component->core_instances.push_back(module.get());
+  objects_.push_back(std::move(module));
+  assert(caseful_names_.empty());
+  argument_count_ = argument_count;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineCoreInstanceArg(
+    const ComponentStringLoc& name,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  Result result = Result::Ok;
+  const std::string* import_name = string_table_.Append(name.str);
+
+  std::map<const std::string*, Index>::iterator it =
+      caseful_names_.find(import_name);
+  if (it != caseful_names_.end()) {
+    result |=
+        PrintError(name.loc, "export \"" PRIstringview "\" assigned twice.",
+                   WABT_PRINTF_STRING_VIEW_ARG(name.str));
+  } else {
+    caseful_names_[import_name] = kInvalidIndex;
+  }
+
+  argument_count_--;
+  if (argument_count_ == 0) {
+    caseful_names_.clear();
+  }
+  return result;
+}
+
+Result SharedComponentValidator::OnInstance(
+    const ComponentIndexLoc& component_index,
+    uint32_t argument_count) {
+  TypeBase* type_base = nullptr;
+  Result result =
+      CheckIndex(ComponentSort::Component, component_index, &type_base);
+
+  argument_count_ = argument_count;
+  current_loc_ = component_index.loc;
+
+  if (type_base != nullptr) {
+    assert(caseful_names_.empty());
+    TypeExternalList* external_list = type_base->AsTypeExternalList();
+    Index size = static_cast<Index>(external_list->imports.size());
+    not_found_count_ = size;
+
+    if (argument_count == 0) {
+      if (not_found_count_ > 0) {
+        result |= PrintError(current_loc_, "not all imports are satisfied.");
+      }
+    } else {
+      for (Index i = 0; i < size; i++) {
+        caseful_names_[external_list->imports[i].name] = i;
+      }
+    }
+  } else {
+    not_found_count_ = 0;
+  }
+
+  CurrentAsComponent()->instances.push_back(type_base);
+  return result;
+}
+
+Result SharedComponentValidator::OnInstanceArg(const ComponentStringLoc& name,
+                                               ComponentSort sort,
+                                               const ComponentIndexLoc& index) {
+  Result result = Result::Ok;
+  const std::string* import_name = string_table_.Append(name.str);
+  Index import_index = kInvalidIndex;
+
+  std::map<const std::string*, Index>::iterator it =
+      caseful_names_.find(import_name);
+  if (it != caseful_names_.end()) {
+    import_index = it->second;
+    if (import_index == kInvalidIndex) {
+      result |=
+          PrintError(name.loc, "with \"" PRIstringview "\" assigned twice.",
+                     WABT_PRINTF_STRING_VIEW_ARG(name.str));
+    }
+    it->second = kInvalidIndex;
+  } else {
+    // First assignment is ignored even if the name is not needed.
+    caseful_names_[import_name] = kInvalidIndex;
+  }
+
+  if (import_index != kInvalidIndex) {
+    not_found_count_--;
+
+    TypeExternalList* external_list =
+        CurrentAsComponent()->instances.back()->AsTypeExternalList();
+    ComponentSort import_sort = external_list->imports[import_index].sort;
+
+    if (sort != import_sort) {
+      result |= PrintError(index.loc,
+                           "expected import sort (%s) does not match to (%s)",
+                           import_sort.GetName(), sort.GetName());
+    }
+  }
+
+  argument_count_--;
+  if (argument_count_ == 0) {
+    if (not_found_count_ > 0) {
+      result |= PrintError(current_loc_, "not all imports are satisfied.");
+    }
+    caseful_names_.clear();
+  }
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineInstance(uint32_t argument_count) {
+  auto type_value = std::make_unique<TypeExternalList>(TypeDef::Instance);
+  CurrentAsComponent()->instances.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineInstanceArg(
+    const ComponentStringLoc& name,
+    std::string_view* version_suffix,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  const std::string* export_name = string_table_.Append(name.str);
+  TypeBase* type_base = nullptr;
+  CheckMode mode = sort == ComponentSort::Instance ? ExcludeLast : IncludeLast;
+  Result result = CheckIndex(index.loc, sort, index.index, mode, &type_base);
+  TypeExternalList* instance =
+      CurrentAsComponent()->instances.back()->AsTypeExternalList();
+  instance->exports.push_back(
+      TypeExternalList::External{export_name, sort, type_base});
+  return result;
+}
+
+Result SharedComponentValidator::OnAliasExport(
+    const Location& loc,
+    ComponentSort sort,
+    const ComponentIndexLoc& instance_index,
+    const ComponentStringLoc& name) {
+  if (sort != ComponentSort::Type && sort != ComponentSort::Instance &&
+      ((current_->info_bits & IsObject) == 0 ||
+       (sort != ComponentSort::CoreModule && sort != ComponentSort::Func &&
+        sort != ComponentSort::Value && sort != ComponentSort::Component))) {
+    return PrintError(loc, "invalid alias export sort (%s)", sort.GetName());
+  }
+
+  TypeBase* type_base = nullptr;
+  Result result =
+      CheckIndex(ComponentSort::Instance, instance_index, &type_base);
+
+  bool found = false;
+  if (type_base != nullptr) {
+    TypeExternalList* instance = type_base->AsTypeExternalList();
+    const std::string* export_name = string_table_.Find(name.str);
+    type_base = nullptr;
+    if (export_name != nullptr) {
+      for (auto& item : instance->exports) {
+        if (item.sort == sort && item.name == export_name) {
+          found = true;
+          type_base = item.type_base;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!found) {
+    result |= PrintError(name.loc, "export \"" PRIstringview "\" not found.",
+                         WABT_PRINTF_STRING_VIEW_ARG(name.str));
+  }
+
+  TypeBaseVector* type_vector = GetSort(current_, sort);
+  if (type_vector != nullptr) {
+    type_vector->push_back(type_base);
+  }
+  return result;
+}
+
+Result SharedComponentValidator::OnAliasCoreExport(
+    const Location& loc,
+    ComponentSort sort,
+    const ComponentIndexLoc& core_instance_index,
+    const ComponentStringLoc& name) {
+  if ((current_->info_bits & IsObject) == 0 ||
+      (sort != ComponentSort::CoreFunc && sort != ComponentSort::CoreTable &&
+       sort != ComponentSort::CoreMemory && sort != ComponentSort::CoreGlobal &&
+       sort != ComponentSort::CoreTag)) {
+    return PrintError(loc, "invalid alias core export sort (%s)",
+                      sort.GetName());
+  }
+
+  TypeBase* type_base = nullptr;
+  Result result =
+      CheckIndex(ComponentSort::CoreInstance, core_instance_index, &type_base);
+
+  bool found = false;
+  if (type_base != nullptr) {
+    TypeExternalList* core_instance = type_base->AsTypeExternalList();
+    const std::string* export_name = string_table_.Find(name.str);
+    type_base = nullptr;
+    if (export_name != nullptr) {
+      for (auto& item : core_instance->exports) {
+        if (item.sort == sort && item.name == export_name) {
+          found = true;
+          type_base = item.type_base;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!found) {
+    result |= PrintError(name.loc, "export \"" PRIstringview "\" not found.",
+                         WABT_PRINTF_STRING_VIEW_ARG(name.str));
+  }
+
+  switch (sort) {
+    case ComponentSort::CoreTable:
+      CurrentAsComponent()->core_tables++;
+      break;
+    case ComponentSort::CoreGlobal:
+      CurrentAsComponent()->core_globals++;
+      break;
+    case ComponentSort::CoreTag:
+      CurrentAsComponent()->core_tags++;
+      break;
+    default: {
+      TypeBaseVector* type_vector = GetSort(current_, sort);
+      assert(type_vector != nullptr);
+      type_vector->push_back(type_base);
+    }
+  }
+  return result;
+}
+
+Result SharedComponentValidator::OnAliasOuter(const Location& loc,
+                                              ComponentSort sort,
+                                              uint32_t counter,
+                                              uint32_t index) {
+  if (sort != ComponentSort::Type && ((current_->info_bits & IsObject) == 0 ||
+                                      (sort != ComponentSort::CoreModule &&
+                                       sort != ComponentSort::Component))) {
+    return PrintError(loc, "invalid alias outer sort (%s)", sort.GetName());
+  }
+
+  TypeDefList* target = current_;
+  bool exclude_last = false;
+  bool cross_component = false;
+  while (counter > 0 && target != nullptr) {
+    if ((target->info_bits & IsObject) != 0) {
+      cross_component = true;
+      exclude_last = (sort == ComponentSort::Component);
+    } else {
+      exclude_last = (sort == ComponentSort::Type);
+    }
+    target = target->parent;
+    counter--;
+  }
+
+  TypeBaseVector* current_sort_vector = GetSort(current_, sort);
+  if (target == nullptr) {
+    if (current_sort_vector != nullptr) {
+      current_sort_vector->push_back(nullptr);
+    }
+
+    return PrintError(loc, "invalid outer target");
+  }
+
+  TypeBaseVector* target_sort_vector = GetSort(target, sort);
+  if (target_sort_vector == nullptr) {
+    return Result::Ok;
+  }
+
+  size_t size = target_sort_vector->size();
+  if (exclude_last) {
+    assert(size > 0);
+    size--;
+  }
+
+  Result result = Result::Ok;
+  TypeBase* type_base;
+
+  if (index >= size) {
+    result |= PrintError(
+        loc, "alias outer index (%" PRIindex ") must be less than %" PRIindex,
+        index, static_cast<Index>(size));
+    type_base = nullptr;
+  } else {
+    type_base = (*target_sort_vector)[index];
+    if (sort == ComponentSort::Type && cross_component &&
+        type_base != nullptr && (type_base->info_bits & HasResource) != 0) {
+      result |= PrintError(loc, "resource type is rejected by outer alias");
+      type_base = nullptr;
+    }
+  }
+
+  assert(current_sort_vector != nullptr);
+  current_sort_vector->push_back(type_base);
+  return result;
+}
+
+Result SharedComponentValidator::OnPrimitiveType(const ComponentType& type) {
+  assert(!type.IsIndex() && !type.IsNone());
+  auto type_value =
+      std::make_unique<ValueType>(TypeDef::ValueType, type.GetType());
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnRecordType(const Location& loc,
+                                              uint32_t field_count) {
+  Result result = Result::Ok;
+  if (field_count == 0) {
+    result |= PrintError(loc, "record type must have at least one field.");
+  }
+  auto type_value = std::make_unique<TypeItems>(TypeDef::Record);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnRecordField(
+    const ComponentStringLoc& field_name,
+    const ComponentTypeLoc& field_type) {
+  TypeRef type_ref;
+  Result result = CheckType(field_type, ExcludeLast, &type_ref);
+  TypeItems::Item item{string_table_.Append(field_name.str), type_ref};
+  UpdateTypeInfo(type_ref);
+  current_->types.back()->AsTypeItems()->items.push_back(item);
+  return result;
+}
+
+Result SharedComponentValidator::OnVariantType(const Location& loc,
+                                               uint32_t case_count) {
+  Result result = Result::Ok;
+  if (case_count == 0) {
+    result |= PrintError(loc, "variant type must have at least one case.");
+  }
+  auto type_value = std::make_unique<TypeItems>(TypeDef::Variant);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnVariantCase(
+    const ComponentStringLoc& case_name,
+    const ComponentTypeLoc& case_type) {
+  TypeRef type_ref;
+  Result result = CheckType(case_type, ExcludeLast, &type_ref);
+  TypeItems::Item item{string_table_.Append(case_name.str), type_ref};
+  UpdateTypeInfo(type_ref);
+  current_->types.back()->AsTypeItems()->items.push_back(item);
+  return result;
+}
+
+Result SharedComponentValidator::OnListType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, IncludeLast, &type_ref);
+  auto type_value = std::make_unique<ValueType>(TypeDef::List, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnListFixedType(const Location& loc,
+                                                 const ComponentTypeLoc& type,
+                                                 uint32_t size) {
+  TypeRef type_ref;
+  Result result = Result::Ok;
+  if (size == 0) {
+    result |= PrintError(loc, "size of fixed list must be greater than 0.");
+  }
+  result |= CheckType(type, IncludeLast, &type_ref);
+  auto type_value = std::make_unique<TypeListFixed>(type_ref, size);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnTupleType(const Location& loc,
+                                             uint32_t type_count) {
+  Result result = Result::Ok;
+  if (type_count == 0) {
+    result |= PrintError(loc, "tuple type must have at least one item.");
+  }
+  auto type_value = std::make_unique<TypeTuple>();
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnTupleItem(const ComponentTypeLoc& item) {
+  TypeRef type_ref;
+  Result result = CheckType(item, ExcludeLast, &type_ref);
+  UpdateTypeInfo(type_ref);
+  current_->types.back()->AsTypeTuple()->items.push_back(type_ref);
+  return result;
+}
+
+Result SharedComponentValidator::OnFlagsType(const Location& loc,
+                                             uint32_t flag_count) {
+  Result result = Result::Ok;
+  if (flag_count == 0 || flag_count > 32) {
+    result |=
+        PrintError(loc, "number of labels must be within the 1..32 range.");
+  }
+  auto type_value = std::make_unique<TypeLabels>(TypeDef::Flags);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFlagsLabel(const ComponentStringLoc& label) {
+  const std::string* item = string_table_.Append(label.str);
+  current_->types.back()->AsTypeLabels()->items.push_back(item);
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnEnumType(const Location& loc,
+                                            uint32_t enum_count) {
+  Result result = Result::Ok;
+  if (enum_count == 0) {
+    result |= PrintError(loc, "enum type must have at least one label.");
+  }
+  auto type_value = std::make_unique<TypeLabels>(TypeDef::Enum);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnEnumLabel(const ComponentStringLoc& label) {
+  const std::string* item = string_table_.Append(label.str);
+  current_->types.back()->AsTypeLabels()->items.push_back(item);
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnOptionType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, IncludeLast, &type_ref);
+  auto type_value = std::make_unique<ValueType>(TypeDef::Option, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnResultType(
+    const ComponentTypeLoc& result_type,
+    const ComponentTypeLoc& error_type) {
+  TypeRef result_ref, error_ref;
+  Result result = CheckType(result_type, IncludeLast, &result_ref);
+  result |= CheckType(error_type, IncludeLast, &error_ref);
+  auto type_value =
+      std::make_unique<ValueTypePair>(TypeDef::Result, result_ref, error_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnOwnType(const ComponentIndexLoc& index) {
+  TypeBase* type_base = nullptr;
+  Result result = CheckIndex(index.loc, ComponentSort::Type, index.index,
+                             IncludeLast, &type_base);
+  result |= CheckResource(index.loc, &type_base);
+  auto type_value =
+      std::make_unique<ValueType>(TypeDef::Own, TypeRef(type_base));
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnBorrowType(const ComponentIndexLoc& index) {
+  TypeBase* type_base = nullptr;
+  Result result = CheckIndex(index.loc, ComponentSort::Type, index.index,
+                             IncludeLast, &type_base);
+  result |= CheckResource(index.loc, &type_base);
+  auto type_value =
+      std::make_unique<ValueType>(TypeDef::Borrow, TypeRef(type_base));
+  type_value->info_bits |= HasBorrow;
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnStreamType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, IncludeLast, &type_ref);
+  result |= CheckBorrow(type.loc, &type_ref, "stream");
+  auto type_value = std::make_unique<ValueType>(TypeDef::Stream, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFutureType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, IncludeLast, &type_ref);
+  result |= CheckBorrow(type.loc, &type_ref, "future");
+  auto type_value = std::make_unique<ValueType>(TypeDef::Future, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFuncType(ComponentTypeDef type,
+                                            uint32_t param_count) {
+  TypeDef func_type =
+      type == ComponentTypeDef::Func ? TypeDef::Func : TypeDef::AsyncFunc;
+  auto type_value = std::make_unique<TypeFunc>(func_type);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnFuncParam(const ComponentStringLoc& name,
+                                             const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, ExcludeLast, &type_ref);
+  TypeFunc::Param param{string_table_.Append(name.str), type_ref};
+  UpdateTypeInfo(type_ref);
+  current_->types.back()->AsTypeFunc()->params.push_back(param);
+  return result;
+}
+
+Result SharedComponentValidator::OnFuncResult(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, ExcludeLast, &type_ref);
+  result |= CheckBorrow(type.loc, &type_ref, "func result");
+  UpdateTypeInfo(type_ref);
+  current_->types.back()->AsTypeFunc()->result = type_ref;
+  return result;
+}
+
+Result SharedComponentValidator::OnResourceType(const Location& loc,
+                                                ComponentResourceRep rep,
+                                                const ComponentIndexLoc& dtor) {
+  Result result = Result::Ok;
+  if ((current_->info_bits & IsObject) == 0) {
+    result |=
+        PrintError(loc, "resources can only be defined in concrete components");
+  }
+  auto type_value = std::make_unique<TypeResource>(TypeResource::Local);
+  type_value->info_bits |= HasResource;
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnResourceAsyncType(
+    const Location& loc,
+    ComponentResourceRep rep,
+    const ComponentIndexLoc& dtor,
+    const ComponentIndexLoc& callback) {
+  Result result = Result::Ok;
+  if ((current_->info_bits & IsObject) == 0) {
+    result |=
+        PrintError(loc, "resources can only be defined in concrete components");
+  }
+  auto type_value = std::make_unique<TypeResource>(TypeResource::LocalAsync);
+  type_value->info_bits |= HasResource;
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::BeginInstanceType(uint32_t count) {
+  auto new_instance =
+      std::make_unique<TypeDefList>(TypeDef::Instance, current_);
+  TypeDefList* parent = current_;
+  current_ = new_instance.get();
+  parent->types.push_back(current_);
+  objects_.push_back(std::move(new_instance));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndInstanceType() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::BeginComponentType(uint32_t count) {
+  auto new_component =
+      std::make_unique<TypeDefList>(TypeDef::Component, current_);
+  TypeDefList* parent = current_;
+  current_ = new_component.get();
+  parent->types.push_back(current_);
+  objects_.push_back(std::move(new_component));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndComponentType() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCanonLift(
+    const ComponentIndexLoc& core_func_index,
+    uint32_t option_count,
+    const ComponentCanonOption* options,
+    const ComponentIndexLoc& type_index) {
+  TypeBase* core_func = nullptr;
+  TypeBase* type_base = nullptr;
+  uint32_t info = 0;
+  Result result = CheckIndex(ComponentSort::Type, type_index, &type_base);
+  result |= CheckIndex(ComponentSort::CoreFunc, core_func_index, &core_func);
+  result |= CheckCanonOptions(option_count, options, &info);
+  if (result == Result::Ok) {
+    uint32_t lower_info = 0;
+    GetLoweredFunctionType(type_index.index, (info & HasMemory64Option) != 0,
+                           &lower_info);
+    if ((lower_info & RequireMemory) != 0 &&
+        (info & (HasMemory32Option | HasMemory64Option)) == 0) {
+      result |= PrintError(type_index.loc, "memory option must be present.");
+    }
+  }
+  auto type_value = std::make_unique<TypeBase>(TypeDef::Func);
+  CurrentAsComponent()->funcs.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnCanonLower(
+    const ComponentIndexLoc& func_index,
+    uint32_t option_count,
+    const ComponentCanonOption* options) {
+  TypeBase* func = nullptr;
+  uint32_t info = 0;
+  Result result = CheckIndex(ComponentSort::Func, func_index, &func);
+  result |= CheckCanonOptions(option_count, options, &info);
+  if (result == Result::Ok) {
+    uint32_t lower_info = 0;
+    GetLoweredFunctionType(func_index.index, (info & HasMemory64Option) != 0,
+                           &lower_info);
+    if ((lower_info & RequireMemory) != 0 &&
+        (info & (HasMemory32Option | HasMemory64Option)) == 0) {
+      result |= PrintError(func_index.loc, "memory option must be present.");
+    }
+    if ((lower_info & RequireRealloc) != 0) {
+      if ((info & HasReallocOption) == 0) {
+        result |= PrintError(func_index.loc, "realloc option must be present.");
+      } else if ((info & HasMemory32Option) != 0 &&
+                 (info & ReallocSignature32) == 0) {
+        result |= PrintError(func_index.loc,
+                             "unexpected 32 bit realloc function signature");
+      } else if ((info & HasMemory64Option) != 0 &&
+                 (info & ReallocSignature64) == 0) {
+        result |= PrintError(func_index.loc,
+                             "unexpected 64 bit realloc function signature");
+      }
+    }
+  }
+  auto type_value = std::make_unique<TypeBase>(TypeDef::CoreFunc);
+  CurrentAsComponent()->core_funcs.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnCanonType(
+    ComponentCanon canon,
+    const ComponentIndexLoc& type_index) {
+  Result result = Result::Ok;
+  switch (canon) {
+    case ComponentCanon::ResourceNew:
+    case ComponentCanon::ResourceDrop:
+    case ComponentCanon::ResourceRep: {
+      TypeBase* type_base = nullptr;
+      result |= CheckIndex(type_index.loc, ComponentSort::Type,
+                           type_index.index, IncludeLast, &type_base);
+      result |= CheckResource(type_index.loc, &type_base);
+      // The type_base is set to nullptr on error.
+      if (canon != ComponentCanon::ResourceDrop && type_base != nullptr &&
+          type_base->AsTypeResource()->type == TypeResource::Imported) {
+        result |=
+            PrintError(type_index.loc, "resource must be defined locally");
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  auto type_value = std::make_unique<TypeBase>(TypeDef::CoreFunc);
+  CurrentAsComponent()->core_funcs.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnImport(
+    const ComponentStringLoc& name,
+    std::string_view* version_suffix,
+    const ComponentExternalInfo& external_info) {
+  Result result = Result::Ok;
+  const std::string* import_name = string_table_.Append(name.str);
+  TypeBase* type_base = nullptr;
+  ComponentSort sort = external_info.sort;
+
+  result |= CheckExternalInfo(external_info, &type_base);
+
+  std::vector<TypeBase*>* sort_vector = GetSort(current_, sort);
+  if (sort_vector != nullptr) {
+    sort_vector->push_back(type_base);
+  }
+  current_->imports.push_back(
+      TypeExternalList::External{import_name, sort, type_base});
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnExport(const ComponentStringLoc& name,
+                                          std::string_view* version_suffix,
+                                          ComponentExternalInfo* external_info,
+                                          ComponentExportInfo* export_info) {
+  Result result = Result::Ok;
+  const std::string* export_name = string_table_.Append(name.str);
+  TypeBase* type_base = nullptr;
+  ComponentSort sort;
+
+  if (external_info != nullptr) {
+    sort = external_info->sort;
+    if (export_info != nullptr && sort != export_info->sort) {
+      result |= PrintError(export_info->index.loc,
+                           "expected export sort (%s) does not match to (%s)",
+                           export_info->sort.GetName(), sort.GetName());
+    }
+    result |= CheckExternalInfo(*external_info, &type_base);
+  } else {
+    sort = export_info->sort;
+    result |= CheckIndex(export_info->index.loc, sort, export_info->index.index,
+                         IncludeLast, &type_base);
+  }
+
+  std::vector<TypeBase*>* sort_vector = GetSort(current_, sort);
+  if (sort_vector != nullptr) {
+    sort_vector->push_back(type_base);
+  }
+  current_->exports.push_back(
+      TypeExternalList::External{export_name, sort, type_base});
+  return Result::Ok;
+}
+
+void SharedComponentValidator::CoreModuleAddFunctionExport(
+    std::string_view name,
+    CoreFuncSignature signature) {
+  TypeExternalList* module =
+      CurrentAsComponent()->core_modules.back()->AsTypeExternalList();
+  TypeBase* func_type;
+  switch (signature) {
+    case FunctionParamI32x4ResultI32:
+      func_type = &core_func_i32x4_i32_;
+      break;
+    case FunctionParamI64x4ResultI64:
+      func_type = &core_func_i64x4_i64_;
+      break;
+    default:
+      func_type = &core_func_other_;
+      break;
+  }
+
+  const std::string* export_name = string_table_.Append(name);
+  module->exports.push_back(TypeExternalList::External{
+      export_name, ComponentSort::CoreFunc, func_type});
+}
+
+void SharedComponentValidator::CoreModuleAddTableExport(std::string_view name) {
+  TypeExternalList* module =
+      CurrentAsComponent()->core_modules.back()->AsTypeExternalList();
+  const std::string* export_name = string_table_.Append(name);
+  module->exports.push_back(TypeExternalList::External{
+      export_name, ComponentSort::CoreTable, nullptr});
+}
+
+void SharedComponentValidator::CoreModuleAddGlobalExport(
+    std::string_view name) {
+  TypeExternalList* module =
+      CurrentAsComponent()->core_modules.back()->AsTypeExternalList();
+  const std::string* export_name = string_table_.Append(name);
+  module->exports.push_back(TypeExternalList::External{
+      export_name, ComponentSort::CoreGlobal, nullptr});
+}
+
+void SharedComponentValidator::CoreModuleAddMemoryExport(std::string_view name,
+                                                         bool is_64) {
+  TypeExternalList* module =
+      CurrentAsComponent()->core_modules.back()->AsTypeExternalList();
+  TypeBase* memory = is_64 ? &core_memory64_ : &core_memory32_;
+  const std::string* export_name = string_table_.Append(name);
+  module->exports.push_back(TypeExternalList::External{
+      export_name, ComponentSort::CoreMemory, memory});
+}
+
+void SharedComponentValidator::CoreModuleAddTagExport(std::string_view name) {
+  TypeExternalList* module =
+      CurrentAsComponent()->core_modules.back()->AsTypeExternalList();
+  const std::string* export_name = string_table_.Append(name);
+  module->exports.push_back(
+      TypeExternalList::External{export_name, ComponentSort::CoreTag, nullptr});
+}
+
+const SharedComponentValidator::CoreFuncType*
+SharedComponentValidator::GetLoweredFunctionType(uint32_t func_index,
+                                                 bool is_ptr64,
+                                                 uint32_t* out_info) {
+  *out_info = 0;
+  if ((current_->info_bits & IsObject) == 0) {
+    return nullptr;
+  }
+
+  Component* component = reinterpret_cast<Component*>(current_);
+
+  if (func_index >= component->funcs.size()) {
+    return nullptr;
+  }
+
+  TypeFunc* func = component->funcs[func_index]->AsTypeFunc();
+
+  if ((func->ltype_status & TypeFunc::LoweredTypeError) != 0) {
+    return nullptr;
+  }
+
+  if (!is_ptr64) {
+    if ((func->ltype_status & TypeFunc::LoweredType32Available) != 0) {
+      *out_info = func->ltype_info;
+      return &func->ltype32;
+    }
+
+    func->ltype_status |= TypeFunc::LoweredType32Available;
+  } else {
+    if ((func->ltype_status & TypeFunc::LoweredType64Available) != 0) {
+      *out_info = func->ltype_info;
+      return &func->ltype64;
+    }
+
+    func->ltype_status |= TypeFunc::LoweredType64Available;
+  }
+
+  uint8_t core_params[16] = {0};
+  CoreTypeList param_list(core_params, 16, is_ptr64);
+
+  for (auto& param : func->params) {
+    param_list.Append(param.type);
+  }
+
+  if (param_list.IsError()) {
+    func->ltype_status |= TypeFunc::LoweredTypeError;
+    return nullptr;
+  }
+
+  uint8_t core_result[1] = {0};
+  CoreTypeList result_list(core_result, 1, is_ptr64);
+
+  if (func->result.type != ComponentType::TypeNone) {
+    result_list.Append(func->result);
+  }
+
+  if (result_list.IsError()) {
+    func->ltype_status |= TypeFunc::LoweredTypeError;
+    return nullptr;
+  }
+
+  CoreFuncType* lowered_type = is_ptr64 ? &func->ltype64 : &func->ltype32;
+
+  if (param_list.ReallocNeeded()) {
+    func->ltype_info |= RequireMemory;
+  }
+
+  if (result_list.ReallocNeeded()) {
+    func->ltype_info |= RequireRealloc | RequireMemory;
+  }
+
+  uint32_t param_count = param_list.End();
+  uint32_t result_count = result_list.End();
+
+  if (param_count == CoreTypeList::TooManyTypes) {
+    func->ltype_info |= ParamsInMemory | RequireMemory;
+    param_count = 1;
+  }
+
+  if (result_count == CoreTypeList::TooManyTypes) {
+    func->ltype_info |= ResultsInMemory | RequireMemory;
+    param_count += 1;
+    result_count = 0;
+  }
+
+  lowered_type->params.resize(param_count);
+  lowered_type->results.resize(result_count);
+
+  param_count = param_list.End();
+  if (param_count == CoreTypeList::TooManyTypes) {
+    lowered_type->params[0] = is_ptr64 ? Type::I64 : Type::I32;
+    param_count = 1;
+  } else {
+    for (uint32_t i = 0; i < param_count; i++) {
+      lowered_type->params[i] = CoreTypeList::GetValueType(core_params[i]);
+    }
+  }
+
+  result_count = result_list.End();
+  if (result_count == CoreTypeList::TooManyTypes) {
+    lowered_type->params[param_count] = is_ptr64 ? Type::I64 : Type::I32;
+  } else if (result_count > 0) {
+    assert(result_count == 1);
+    lowered_type->results[0] = CoreTypeList::GetValueType(core_result[0]);
+  }
+
+  *out_info = func->ltype_info;
+  return lowered_type;
+}
+
+void SharedComponentValidator::CoreTypeList::Append(TypeRef& ref) {
+  assert(ref.type != ComponentType::TypeNone);
+
+  if (current_index_ >= max_index_) {
+    current_index_ = TooManyTypes;
+    return;
+  }
+
+  ComponentType::Enum ref_type = ref.type;
+  if (ref_type == ComponentType::TypeIndex) {
+    if (ref.ref == nullptr) {
+      max_index_ = 0;
+      current_index_ = TooManyTypes;
+      return;
+    }
+    if (ref.ref->type_def == TypeDef::ValueType) {
+      ref_type = ref.ref->AsValueType()->type.type;
+      assert(ref_type != ComponentType::TypeIndex);
+    }
+  }
+
+  switch (ref_type) {
+    case ComponentType::S64:
+    case ComponentType::U64:
+      list_[current_index_++] |= TypeI64;
+      return;
+    case ComponentType::F32:
+      list_[current_index_++] |= TypeF32;
+      return;
+    case ComponentType::F64:
+      list_[current_index_++] |= TypeF64;
+      return;
+    case ComponentType::String:
+      list_[current_index_++] |= ptr_type_;
+      realloc_needed = true;
+      if (current_index_ < max_index_) {
+        list_[current_index_++] |= ptr_type_;
+      } else {
+        current_index_ = TooManyTypes;
+      }
+      return;
+    case ComponentType::TypeIndex:
+      break;
+    default:
+      assert(ref_type == ComponentType::Bool || ref_type == ComponentType::S8 ||
+             ref_type == ComponentType::U8 || ref_type == ComponentType::S16 ||
+             ref_type == ComponentType::U16 || ref_type == ComponentType::S32 ||
+             ref_type == ComponentType::U32 ||
+             ref_type == ComponentType::Char ||
+             ref_type == ComponentType::ErrorContext);
+      list_[current_index_++] |= TypeI32;
+      return;
+  }
+
+  TypeBase* target = ref.ref;
+
+  switch (target->type_def) {
+    case TypeDef::Record:
+      for (auto& item : target->AsTypeItems()->items) {
+        Append(item.type);
+        if (current_index_ == TooManyTypes) {
+          break;
+        }
+      }
+      break;
+    case TypeDef::Variant: {
+      list_[current_index_++] |= TypeI32;
+      uint32_t start_index = current_index_;
+      uint32_t max_index = current_index_;
+
+      for (auto& item : target->AsTypeItems()->items) {
+        if (item.type.type == ComponentType::TypeNone) {
+          continue;
+        }
+        current_index_ = start_index;
+        Append(item.type);
+        if (max_index < current_index_) {
+          max_index = current_index_;
+        }
+        if (current_index_ == TooManyTypes) {
+          assert(max_index == TooManyTypes);
+          break;
+        }
+      }
+      current_index_ = max_index;
+      break;
+    }
+    case TypeDef::List: {
+      list_[current_index_++] |= ptr_type_;
+      realloc_needed = true;
+      if (current_index_ < max_index_) {
+        list_[current_index_++] |= ptr_type_;
+      } else {
+        current_index_ = TooManyTypes;
+      }
+      break;
+    }
+    case TypeDef::ListFixed: {
+      TypeRef& item = target->AsTypeListFixed()->type;
+      uint32_t count = target->AsTypeListFixed()->size;
+      while (count > 0) {
+        Append(item);
+        if (current_index_ == TooManyTypes) {
+          break;
+        }
+        count--;
+      }
+      break;
+    }
+    case TypeDef::Tuple:
+      for (auto& item : target->AsTypeTuple()->items) {
+        Append(item);
+        if (current_index_ == TooManyTypes) {
+          break;
+        }
+      }
+      break;
+    case TypeDef::Option:
+      list_[current_index_++] |= TypeI32;
+      if (current_index_ < max_index_) {
+        Append(target->AsValueType()->type);
+      } else {
+        current_index_ = TooManyTypes;
+      }
+      break;
+    case TypeDef::Result: {
+      list_[current_index_++] |= TypeI32;
+      uint32_t start_index = current_index_;
+      ValueTypePair* result = target->AsValueTypePair();
+      if (result->first.type != ComponentType::TypeNone) {
+        Append(result->first);
+        if (current_index_ == TooManyTypes) {
+          break;
+        }
+      }
+
+      uint32_t max_index = current_index_;
+      if (result->second.type != ComponentType::TypeNone) {
+        current_index_ = start_index;
+        Append(result->second);
+        if (current_index_ < max_index) {
+          assert(current_index_ != TooManyTypes);
+          current_index_ = max_index;
+        }
+      }
+      break;
+    }
+    case TypeDef::Flags:
+    case TypeDef::Enum:
+    case TypeDef::Own:
+    case TypeDef::Borrow:
+    case TypeDef::Stream:
+    case TypeDef::Future:
+      break;
+    default:
+      max_index_ = 0;
+      current_index_ = TooManyTypes;
+      break;
+  }
+}
+
+Type::Enum SharedComponentValidator::CoreTypeList::GetValueType(uint8_t type) {
+  assert(type != 0);
+
+  if (type == TypeF32) {
+    return Type::F32;
+  }
+  if (type == TypeF64) {
+    return Type::F64;
+  }
+  if ((type & (TypeI64 | TypeF64)) == 0) {
+    return Type::I32;
+  }
+  return Type::I64;
+}
+
+SharedComponentValidator::TypeBaseVector* SharedComponentValidator::GetSort(
+    TypeDefList* def_list,
+    ComponentSort sort) {
+  if (sort == ComponentSort::Type) {
+    return &def_list->types;
+  }
+
+  if (sort == ComponentSort::Instance) {
+    return &def_list->instances;
+  }
+
+  if ((def_list->info_bits & IsObject) == 0) {
+    return nullptr;
+  }
+
+  Component* component = reinterpret_cast<Component*>(def_list);
+
+  switch (sort) {
+    case ComponentSort::CoreFunc:
+      return &component->core_funcs;
+    case ComponentSort::CoreMemory:
+      return &component->core_memories;
+    case ComponentSort::CoreInstance:
+      return &component->core_instances;
+    case ComponentSort::CoreModule:
+      return &component->core_modules;
+    case ComponentSort::Func:
+      return &component->funcs;
+    case ComponentSort::Component:
+      return &component->components;
+    default:
+      // TODO: implement more checks.
+      return nullptr;
+  }
+}
+
+Result SharedComponentValidator::CheckIndex(const Location& loc,
+                                            ComponentSort sort,
+                                            Index index,
+                                            CheckMode mode,
+                                            TypeBase** out_type) {
+  std::vector<TypeBase*>* sort_vector = GetSort(current_, sort);
+  Index max;
+
+  if (sort_vector == nullptr) {
+    assert(mode == IncludeLast);
+    Component* component = CurrentAsComponent();
+    switch (sort) {
+      case ComponentSort::CoreTable:
+        max = component->core_tables;
+        break;
+      case ComponentSort::CoreGlobal:
+        max = component->core_globals;
+        break;
+      case ComponentSort::CoreTag:
+        max = component->core_tags;
+        break;
+      case ComponentSort::CoreType:
+        max = component->core_types;
+        break;
+      default:
+        return Result::Ok;
+    }
+  } else {
+    max = static_cast<Index>(sort_vector->size());
+    if (mode == ExcludeLast) {
+      assert(max > 0);
+      max--;
+    }
+  }
+
+  if (index >= max) {
+    return PrintError(loc,
+                      "type index (%" PRIindex ") must be less than %" PRIindex,
+                      index, max);
+  }
+  *out_type = (*sort_vector)[index];
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckIndex(ComponentSort sort,
+                                            const ComponentIndexLoc& index,
+                                            TypeBase** out_type) {
+  return CheckIndex(index.loc, sort, index.index, IncludeLast, out_type);
+}
+
+Result SharedComponentValidator::CheckIndex(const ComponentIndexLoc& index,
+                                            TypeRef* out_type_ref) {
+  TypeBase* type_base;
+  CHECK_RESULT(CheckIndex(index.loc, ComponentSort::Type, index.index,
+                          IncludeLast, &type_base));
+  Result result = CheckDefValType(index.loc, type_base);
+  *out_type_ref = TypeRef(type_base);
+  return result;
+}
+
+Result SharedComponentValidator::CheckType(const ComponentTypeLoc& type,
+                                           CheckMode mode,
+                                           TypeRef* out_type_ref) {
+  if (!type.type.IsIndex()) {
+    *out_type_ref = TypeRef(type.type.GetType());
+    return Result::Ok;
+  }
+  TypeBase* type_base;
+  CHECK_RESULT(CheckIndex(type.loc, ComponentSort::Type, type.type.GetIndex(),
+                          mode, &type_base));
+  Result result = CheckDefValType(type.loc, type_base);
+  *out_type_ref = TypeRef(type_base);
+  return result;
+}
+
+Result SharedComponentValidator::CheckDefValType(const Location& loc,
+                                                 const TypeBase* type) {
+  if (type != nullptr && !type->IsValueType() && !type->IsTypeItems() &&
+      !type->IsTypeLabels() && type->type_def != TypeDef::Tuple &&
+      type->type_def != TypeDef::Result) {
+    return PrintError(loc, "Type must be defined value type");
+  }
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckResource(const Location& loc,
+                                               TypeBase** type) {
+  if (*type != nullptr && (*type)->type_def != TypeDef::Resource) {
+    *type = nullptr;
+    return PrintError(loc, "type must be resource");
+  }
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckBorrow(const Location& loc,
+                                             TypeRef* type_ref,
+                                             const char* desc) {
+  if (type_ref->ref != nullptr && (type_ref->ref->info_bits & HasBorrow) != 0) {
+    type_ref->ref = nullptr;
+    return PrintError(loc, "resource borrow is not allowed in %s", desc);
+  }
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckCanonOptions(
+    uint32_t option_count,
+    const ComponentCanonOption* options,
+    uint32_t* info) {
+  bool seen_string_encoding = false;
+  const ComponentCanonOption* memory = nullptr;
+  const ComponentCanonOption* realloc = nullptr;
+  const ComponentCanonOption* post_return = nullptr;
+  bool seen_async = false;
+  const ComponentCanonOption* callback = nullptr;
+
+  while (option_count > 0) {
+    switch (options->option) {
+      case ComponentCanonOption::StrEncUtf8:
+      case ComponentCanonOption::StrEncUtf16:
+      case ComponentCanonOption::StrEncLatin1Utf16:
+        if (seen_string_encoding) {
+          return PrintError(options->loc, "duplicated string encoding option.");
+        }
+        seen_string_encoding = true;
+        break;
+      case ComponentCanonOption::Memory:
+        if (memory != nullptr) {
+          return PrintError(options->loc, "duplicated memory option.");
+        }
+        memory = options;
+        break;
+      case ComponentCanonOption::Realloc:
+        if (realloc != nullptr) {
+          return PrintError(options->loc, "duplicated realloc option.");
+        }
+        realloc = options;
+        break;
+      case ComponentCanonOption::PostReturn:
+        if (post_return != nullptr) {
+          return PrintError(options->loc, "duplicated post-return option.");
+        }
+        post_return = options;
+        break;
+      case ComponentCanonOption::Async:
+        if (seen_async) {
+          return PrintError(options->loc, "duplicated async option.");
+        }
+        seen_async = true;
+        break;
+      case ComponentCanonOption::Callback:
+        if (callback != nullptr) {
+          return PrintError(options->loc, "duplicated callback option.");
+        }
+        callback = options;
+        break;
+    }
+    options++;
+    option_count--;
+  }
+
+  if (realloc != nullptr && memory == nullptr) {
+    return PrintError(realloc->loc,
+                      "realloc option is present without memory option.");
+  }
+  if (callback != nullptr && !seen_async) {
+    return PrintError(callback->loc,
+                      "callback option is present without async option.");
+  }
+  if (seen_async && post_return != nullptr) {
+    return PrintError(post_return->loc,
+                      "both async and post-return options cannot be present.");
+  }
+
+  Result result = Result::Ok;
+  TypeBase* type_base;
+  if (memory != nullptr) {
+    type_base = nullptr;
+    result |= CheckIndex(memory->loc, ComponentSort::CoreMemory, memory->index,
+                         IncludeLast, &type_base);
+    assert(type_base == nullptr || type_base == &core_memory32_ ||
+           type_base == &core_memory64_);
+    if (type_base == &core_memory64_) {
+      *info |= HasMemory64Option;
+    } else {
+      *info |= HasMemory32Option;
+    }
+  }
+  if (realloc != nullptr) {
+    type_base = nullptr;
+    result |= CheckIndex(realloc->loc, ComponentSort::CoreFunc, realloc->index,
+                         IncludeLast, &type_base);
+    if (type_base == &core_func_i32x4_i32_) {
+      *info |= ReallocSignature32;
+    } else if (type_base == &core_func_i64x4_i64_) {
+      *info |= ReallocSignature64;
+    }
+
+    *info |= HasReallocOption;
+  }
+  if (callback != nullptr) {
+    type_base = nullptr;
+    result |= CheckIndex(callback->loc, ComponentSort::CoreFunc,
+                         callback->index, IncludeLast, &type_base);
+  }
+  return result;
+}
+
+Result SharedComponentValidator::CheckExternalInfo(
+    const ComponentExternalInfo& external_info,
+    TypeBase** out_type_base) {
+  ComponentSort sort = external_info.sort;
+  if (sort == ComponentSort::Type &&
+      external_info.external == ComponentExternalDesc::TypeSubRes) {
+    auto type_value = std::make_unique<TypeResource>(TypeResource::Imported);
+    type_value->info_bits |= HasResource;
+    *out_type_base = type_value.get();
+    objects_.push_back(std::move(type_value));
+    return Result::Ok;
+  }
+
+  TypeBase* type_base = nullptr;
+  Result result =
+      CheckIndex(external_info.index.loc, ComponentSort::Type,
+                 external_info.index.index, IncludeLast, &type_base);
+  *out_type_base = type_base;
+
+  if (type_base != nullptr) {
+    switch (sort) {
+      case ComponentSort::Func:
+        if (!type_base->IsTypeFunc()) {
+          result |=
+              PrintError(external_info.index.loc, "type is not a function");
+        }
+        break;
+      case ComponentSort::Component:
+        if (type_base->type_def != TypeDef::Component) {
+          result |=
+              PrintError(external_info.index.loc, "type is not a component");
+        }
+        break;
+      case ComponentSort::Instance:
+        if (type_base->type_def != TypeDef::Instance) {
+          result |=
+              PrintError(external_info.index.loc, "type is not an instance");
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  return result;
+}
+
 }  // namespace wabt
