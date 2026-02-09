@@ -23,6 +23,7 @@
 
 #include "wabt/binary.h"
 #include "wabt/common.h"
+#include "wabt/component.h"
 #include "wabt/error.h"
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
@@ -558,10 +559,134 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
+class ComponentBinaryReaderDelegate {
+ public:
+  virtual ~ComponentBinaryReaderDelegate() {}
+
+  virtual bool OnError(const Error&) = 0;
+  virtual void OnSetState(const BinaryReaderDelegate::State* s) { state = s; }
+
+  virtual Result OnCoreModule(const void* data,
+                              size_t size,
+                              const ReadBinaryOptions& options) = 0;
+  virtual Result BeginComponent(uint32_t version, size_t depth) = 0;
+  virtual Result EndComponent() = 0;
+
+  virtual Result BeginCoreInstanceSection(uint32_t count) = 0;
+  virtual Result EndCoreInstanceSection() = 0;
+  virtual Result OnCoreInstance(const ComponentIndexLoc& module_index,
+                                uint32_t argument_count) = 0;
+  virtual Result OnCoreInstanceArg(const ComponentStringLoc& name,
+                                   ComponentSort sort,
+                                   const ComponentIndexLoc& index) = 0;
+  virtual Result OnInlineCoreInstance(uint32_t argument_count) = 0;
+  virtual Result OnInlineCoreInstanceArg(const ComponentStringLoc& name,
+                                         ComponentSort sort,
+                                         const ComponentIndexLoc& index) = 0;
+
+  virtual Result BeginInstanceSection(uint32_t count) = 0;
+  virtual Result EndInstanceSection() = 0;
+  virtual Result OnInstance(const ComponentIndexLoc& component_index,
+                            uint32_t argument_count) = 0;
+  virtual Result OnInstanceArg(const ComponentStringLoc& name,
+                               ComponentSort sort,
+                               const ComponentIndexLoc& index) = 0;
+  virtual Result OnInlineInstance(uint32_t argument_count) = 0;
+  virtual Result OnInlineInstanceArg(const ComponentStringLoc& name,
+                                     std::string_view* version_suffix,
+                                     ComponentSort sort,
+                                     const ComponentIndexLoc& index) = 0;
+
+  virtual Result BeginAliasSection(uint32_t count) = 0;
+  virtual Result EndAliasSection() = 0;
+  virtual Result OnAliasExport(ComponentSort sort,
+                               const ComponentIndexLoc& instance_index,
+                               const ComponentStringLoc& name) = 0;
+  virtual Result OnAliasCoreExport(ComponentSort sort,
+                                   const ComponentIndexLoc& core_instance_index,
+                                   const ComponentStringLoc& name) = 0;
+  virtual Result OnAliasOuter(ComponentSort sort,
+                              uint32_t counter,
+                              uint32_t index) = 0;
+
+  virtual Result BeginTypeSection(uint32_t count) = 0;
+  virtual Result EndTypeSection() = 0;
+  virtual Result OnPrimitiveType(const ComponentType& type) = 0;
+  virtual Result OnRecordType(uint32_t field_count) = 0;
+  virtual Result OnRecordField(const ComponentStringLoc& field_name,
+                               const ComponentTypeLoc& field_type) = 0;
+  virtual Result OnVariantType(uint32_t case_count) = 0;
+  virtual Result OnVariantCase(const ComponentStringLoc& case_name,
+                               const ComponentTypeLoc& case_type) = 0;
+  virtual Result OnListType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnListFixedType(const ComponentTypeLoc& type,
+                                 uint32_t size) = 0;
+  virtual Result OnTupleType(uint32_t item_count) = 0;
+  virtual Result OnTupleItem(const ComponentTypeLoc& item) = 0;
+  virtual Result OnFlagsType(uint32_t label_count) = 0;
+  virtual Result OnFlagsLabel(const ComponentStringLoc& label) = 0;
+  virtual Result OnEnumType(uint32_t label_count) = 0;
+  virtual Result OnEnumLabel(const ComponentStringLoc& label) = 0;
+  virtual Result OnOptionType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnResultType(const ComponentTypeLoc& result_type,
+                              const ComponentTypeLoc& error_type) = 0;
+  virtual Result OnOwnType(const ComponentIndexLoc& index) = 0;
+  virtual Result OnBorrowType(const ComponentIndexLoc& index) = 0;
+  virtual Result OnStreamType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnFutureType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnFuncType(ComponentTypeDef type,
+                            uint32_t param_count) = 0;
+  virtual Result OnFuncParam(ComponentStringLoc name,
+                             ComponentTypeLoc type) = 0;
+  virtual Result OnFuncResult(const ComponentTypeLoc& type) = 0;
+  virtual Result OnResourceType(ComponentResourceRep rep,
+                                const ComponentIndexLoc& dtor) = 0;
+  virtual Result OnResourceAsyncType(ComponentResourceRep rep,
+                                     const ComponentIndexLoc& dtor,
+                                     const ComponentIndexLoc& callback) = 0;
+  virtual Result BeginInstanceType(uint32_t count) = 0;
+  virtual Result EndInstanceType() = 0;
+  virtual Result BeginComponentType(uint32_t count) = 0;
+  virtual Result EndComponentType() = 0;
+
+  virtual Result BeginCanonSection(uint32_t count) = 0;
+  virtual Result EndCanonSection() = 0;
+  virtual Result OnCanonLift(const ComponentIndexLoc& core_func_index,
+                             uint32_t option_count,
+                             ComponentCanonOption* options,
+                             const ComponentIndexLoc& type_index) = 0;
+  virtual Result OnCanonLower(const ComponentIndexLoc& func_index,
+                              uint32_t option_count,
+                              ComponentCanonOption* options) = 0;
+  virtual Result OnCanonType(ComponentCanon canon,
+                             const ComponentIndexLoc& type_index) = 0;
+
+  virtual Result BeginImportSection(uint32_t count) = 0;
+  virtual Result EndImportSection() = 0;
+  virtual Result OnImport(const ComponentStringLoc& name,
+                          std::string_view* version_suffix,
+                          const ComponentExternalInfo& external_info) = 0;
+
+  virtual Result BeginExportSection(uint32_t count) = 0;
+  virtual Result EndExportSection() = 0;
+  virtual Result OnExport(const ComponentStringLoc& name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info,
+                          ComponentExportInfo* export_info) = 0;
+  const BinaryReaderDelegate::State* state = nullptr;
+};
+
 Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
+
+Result ReadBinaryComponent(const void* data,
+                           size_t size,
+                           ComponentBinaryReaderDelegate* component_delegate,
+                           const ReadBinaryOptions& options);
+
+bool ReadBinaryIsComponent(const void* data, size_t size);
 
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,

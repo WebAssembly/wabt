@@ -96,7 +96,8 @@ class WatWriter : ModuleContext {
             const Module& module)
       : ModuleContext(module), options_(options), stream_(stream) {}
 
-  Result WriteModule();
+  Result WriteModule(bool is_core_module = false);
+  Result WriteComponent(const ComponentData* component);
 
  private:
   void Indent();
@@ -165,6 +166,13 @@ class WatWriter : ModuleContext {
   void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
   void WriteCustom(const Custom& custom);
+
+  void WriteComponentValueType(const ComponentType& type);
+  void WriteComponentInstance(const ComponentDef* instance);
+  void WriteComponentAlias(const ComponentDef* alias);
+  void WriteComponentType(const ComponentDef* type);
+  void WriteComponentCanon(const ComponentDef* canon);
+  void WriteComponentExternal(const ComponentExternal* external);
 
   class ExprVisitorDelegate;
 
@@ -1954,15 +1962,489 @@ void WatWriter::WriteCustom(const Custom& custom) {
   WriteCloseNewline();
 }
 
-Result WatWriter::WriteModule() {
+void WatWriter::WriteComponentValueType(const ComponentType& type) {
+  if (!type.IsNone()) {
+    if (type.IsIndex()) {
+      Writef("%" PRIindex, type.GetIndex());
+    } else {
+      WritePuts(type.GetName(), NextChar::Space);
+    }
+  }
+}
+
+void WatWriter::WriteComponentInstance(const ComponentDef* instance) {
+  bool is_core = instance->section() == ComponentSection::CoreInstance;
+  WriteOpenSpace(is_core ? "core instance" : "instance");
+
+  if (instance->instance() == ComponentDef::Instance::Inline) {
+    if (is_core) {
+      const ComponentInstance::ArgumentVector& arguments =
+          instance->AsInstance()->Arguments();
+
+      for (const ComponentInstance::Argument& argument : arguments) {
+        WriteOpenSpace("export");
+        WriteQuotedString(*argument.name.str, NextChar::Space);
+        WriteOpenSpace(argument.sort.GetCoreName());
+        Writef("%" PRIindex, argument.index.index);
+        WriteCloseSpace();
+        WriteCloseNewline();
+      }
+      WriteCloseNewline();
+      return;
+    }
+
+    const ComponentInlineInstance::ArgumentVector& arguments =
+        instance->AsInlineInstance()->Arguments();
+
+    for (const ComponentInlineInstance::Argument& argument : arguments) {
+      WriteOpenSpace("export");
+      WriteQuotedString(*argument.name.str, NextChar::Space);
+      if (argument.version_suffix != nullptr) {
+        WriteOpenSpace("versionsuffix");
+        WriteQuotedString(*argument.version_suffix, NextChar::Space);
+        WriteCloseSpace();
+      }
+      WriteOpenSpace(argument.sort.GetName());
+      Writef("%" PRIindex, argument.index.index);
+      WriteCloseSpace();
+      WriteCloseNewline();
+    }
+
+    WriteCloseNewline();
+    return;
+  }
+
+  WriteOpenNewline("instantiate");
+  Writef("%" PRIindex, instance->AsInstance()->FromIndex());
+
+  const ComponentInstance::ArgumentVector& arguments =
+      instance->AsInstance()->Arguments();
+
+  for (const ComponentInstance::Argument& argument : arguments) {
+    WriteOpenSpace("with");
+    WriteQuotedString(*argument.name.str, NextChar::Space);
+
+    WriteOpenSpace(is_core ? "instance" : argument.sort.GetName());
+    Writef("%" PRIindex, argument.index.index);
+    WriteCloseSpace();
+    WriteCloseNewline();
+  }
+  WriteCloseSpace();
+  WriteCloseNewline();
+}
+
+void WatWriter::WriteComponentAlias(const ComponentDef* alias) {
+  switch (alias->alias()) {
+    case ComponentDef::Alias::Outer: {
+      const ComponentAliasOuter* outer_alias = alias->AsAliasOuter();
+      WriteOpenSpace("alias outer");
+      Writef("%" PRIindex, outer_alias->GetCounter());
+      Writef("%" PRIindex, outer_alias->GetIndex());
+
+      WriteOpenSpace(outer_alias->sort().GetName());
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+    }
+    case ComponentDef::Alias::Export:
+    case ComponentDef::Alias::CoreExport: {
+      const ComponentAliasExport* export_alias = alias->AsAliasExport();
+      bool is_core = alias->alias() == ComponentDef::Alias::CoreExport;
+      WriteOpenSpace(is_core ? "alias core export" : "alias export");
+      Writef("%" PRIindex, export_alias->InstanceIndex());
+      WriteQuotedString(*export_alias->ExportName(), NextChar::Space);
+
+      WriteOpenSpace(export_alias->sort().GetName());
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+    }
+    default:
+      assert(0);
+      break;
+  }
+}
+
+void WatWriter::WriteComponentType(const ComponentDef* type) {
+  std::vector<size_t> type_stack;
+  const ComponentDefList* def_list = nullptr;
+
+  WriteOpenSpace("type");
+
+  while (true) {
+    assert(type != nullptr);
+
+    switch (type->type()) {
+      case ComponentTypeDef::ValueType:
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        break;
+      case ComponentTypeDef::Record:
+      case ComponentTypeDef::Variant: {
+        bool is_variant = type->type() == ComponentTypeDef::Variant;
+        const char* descriptor = is_variant ? "case" : "field";
+        WriteOpenSpace(is_variant ? "variant" : "record");
+        for (auto& item : type->AsTypeItems()->Items()) {
+          WriteOpenSpace(descriptor);
+          WriteQuotedString(*item.name.str, NextChar::Space);
+          WriteComponentValueType(item.type.type);
+          WriteCloseSpace();
+        }
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentTypeDef::List:
+        WriteOpenSpace("list");
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::ListFixed:
+        WriteOpenSpace("list");
+        WriteComponentValueType(type->AsTypeListFixed()->ValueType());
+        Writef("%" PRIu32, type->AsTypeListFixed()->Size());
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::Tuple:
+        WriteOpenSpace("tuple");
+        for (auto& item : type->AsTypeTuple()->Items()) {
+          WriteComponentValueType(item.type);
+        }
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::Flags:
+      case ComponentTypeDef::Enum:
+        WriteOpenSpace(type->type() == ComponentTypeDef::Flags ? "flags"
+                                                               : "enum");
+        for (auto& label : type->AsTypeLabels()->Labels()) {
+          WriteQuotedString(*label.str, NextChar::Space);
+        }
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::Option:
+        WriteOpenSpace("option");
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::Result: {
+        const ComponentTypeResult* result = type->AsTypeResult();
+        WriteOpenSpace("result");
+        WriteComponentValueType(result->Result());
+
+        if (!result->Error().IsNone()) {
+          WriteOpenSpace("error");
+          WriteComponentValueType(result->Error());
+          WriteCloseSpace();
+        }
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentTypeDef::Own:
+      case ComponentTypeDef::Borrow:
+        WriteOpenSpace(type->type() == ComponentTypeDef::Own ? "own"
+                                                             : "borrow");
+        Writef("%" PRIindex, type->AsTypeIndex()->GetIndex());
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::Stream:
+      case ComponentTypeDef::Future:
+        WriteOpenSpace(type->type() == ComponentTypeDef::Own ? "stream"
+                                                             : "future");
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        WriteCloseSpace();
+        break;
+      case ComponentTypeDef::AsyncFunc:
+      case ComponentTypeDef::Func: {
+        const ComponentTypeFunc* func = type->AsTypeFunc();
+
+        WriteOpenSpace("func");
+
+        for (auto& param : func->Params()) {
+          WriteOpenSpace("param");
+          WriteQuotedString(*param.name.str, NextChar::Space);
+          WriteComponentValueType(param.type.type);
+          WriteCloseSpace();
+        }
+
+        if (!func->Result().IsNone()) {
+          WriteOpenSpace("result");
+          WriteComponentValueType(func->Result());
+          WriteCloseSpace();
+        }
+
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentTypeDef::Instance:
+      case ComponentTypeDef::Component: {
+        const ComponentDefList* type_data = type->AsInterfaceType();
+        WriteOpenNewline(type_data->IsInstanceType() ? "instance"
+                                                     : "component");
+        if (type_data->Size() == 0) {
+          WriteCloseSpace();
+          break;
+        }
+
+        // The (type already indents.
+        Dedent();
+
+        def_list = type_data;
+        type_stack.push_back(0);
+        break;
+      }
+      case ComponentTypeDef::Resource:
+      case ComponentTypeDef::ResourceAsync: {
+        const ComponentTypeResource* resource = type->AsTypeResource();
+        WriteOpenSpace("resource");
+        WriteOpenSpace("rep");
+        WritePutsSpace(resource->Rep() == ComponentResourceRep::I32 ? "i32"
+                                                                    : "i64");
+        WriteCloseSpace();
+
+        Index dtor = resource->Dtor();
+
+        if (type->type() == ComponentTypeDef::Resource) {
+          if (dtor != kInvalidIndex) {
+            WriteOpenSpace("dtor");
+            WriteOpenSpace("func");
+            Writef("%" PRIindex, dtor);
+            WriteCloseSpace();
+            WriteCloseSpace();
+          }
+        } else {
+          Index callback = resource->Callback();
+
+          WriteOpenSpace("dtor");
+          WritePutsSpace("async");
+          WriteOpenSpace("func");
+          Writef("%" PRIindex, dtor);
+          WriteCloseSpace();
+          WriteCloseSpace();
+
+          if (callback != kInvalidIndex) {
+            WriteOpenSpace("callback");
+            Writef("%" PRIindex, dtor);
+            WriteCloseSpace();
+          }
+        }
+        WriteCloseSpace();
+        break;
+      }
+      default:
+        assert(0);
+        break;
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        WriteCloseNewline();
+        return;
+      }
+
+      size_t i = type_stack.back();
+      if (i > 0 && def_list->Get(i - 1)->section() == ComponentSection::Type) {
+        WriteCloseNewline();
+      }
+
+      if (i < def_list->Size()) {
+        switch (def_list->Get(i)->section()) {
+          case ComponentSection::Type:
+            WriteOpenSpace("type");
+            type = def_list->Get(i);
+            break;
+          case ComponentSection::Alias:
+            WriteComponentAlias(def_list->Get(i));
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentSection::Import:
+          case ComponentSection::Export:
+            WriteComponentExternal(def_list->Get(i)->AsExternal());
+            type_stack.back() = i + 1;
+            continue;
+          default:
+            assert(0);
+            break;
+        }
+        type_stack.back() = i + 1;
+        break;
+      }
+
+      def_list = def_list->GetParent();
+      type_stack.pop_back();
+      // Revert the Dedent() call in Instance/Component case.
+      Indent();
+      WriteCloseSpace();
+    }
+  }
+}
+
+void WatWriter::WriteComponentCanon(const ComponentDef* canon) {
+  const ComponentCanonOpts* options = nullptr;
+
+  switch (canon->canon()) {
+    case ComponentCanon::Lift: {
+      const ComponentCanonLift* lift = canon->AsCanonLift();
+      WriteOpenSpace("func");
+      WriteOpenSpace("type");
+      Writef("%" PRIindex, lift->TypeIndex());
+      WriteCloseSpace();
+      WriteOpenSpace("canon lift");
+      WriteOpenSpace("core func");
+      Writef("%" PRIindex, lift->CoreFuncIndex());
+      WriteCloseSpace();
+      options = lift;
+      break;
+    }
+    case ComponentCanon::Lower: {
+      const ComponentCanonLower* lower = canon->AsCanonLower();
+      WriteOpenSpace("core func");
+      WriteOpenSpace("canon lower");
+      WriteOpenSpace("func");
+      Writef("%" PRIindex, lower->FuncIndex());
+      WriteCloseSpace();
+      options = lower;
+      break;
+    }
+    case ComponentCanon::ResourceNew:
+    case ComponentCanon::ResourceDrop:
+    case ComponentCanon::ResourceRep:
+      WriteOpenSpace("core func");
+      WriteOpenSpace("canon");
+      const char* func_name = "resource.new";
+      if (canon->canon() == ComponentCanon::ResourceDrop) {
+        func_name = "resource.drop";
+      } else if (canon->canon() == ComponentCanon::ResourceRep) {
+        func_name = "resource.rep";
+      }
+      WriteOpenSpace(func_name);
+      Writef("%" PRIindex, canon->AsCanonType()->TypeIndex());
+      WriteCloseSpace();
+      WriteCloseSpace();
+      WriteCloseNewline();
+      return;
+  }
+
+  assert(options != nullptr);
+  for (const ComponentCanonOption& option : options->Options()) {
+    switch (option.option) {
+      case ComponentCanonOption::StrEncUtf8:
+        WritePutsSpace("string-encoding=utf8");
+        continue;
+      case ComponentCanonOption::StrEncUtf16:
+        WritePutsSpace("string-encoding=utf16");
+        continue;
+      case ComponentCanonOption::StrEncLatin1Utf16:
+        WritePutsSpace("string-encoding=latin1+utf16");
+        continue;
+      case ComponentCanonOption::Memory:
+        WriteOpenSpace("memory");
+        break;
+      case ComponentCanonOption::Realloc:
+        WriteOpenSpace("realloc");
+        break;
+      case ComponentCanonOption::PostReturn:
+        WriteOpenSpace("post-return");
+        break;
+      case ComponentCanonOption::Async:
+        WritePutsSpace("async");
+        continue;
+      case ComponentCanonOption::Callback:
+        WriteOpenSpace("callback");
+        break;
+    }
+    Writef("%" PRIindex, option.index);
+    WriteCloseSpace();
+  }
+
+  WriteCloseSpace();
+  WriteCloseNewline();
+}
+
+void WatWriter::WriteComponentExternal(const ComponentExternal* external) {
+  bool is_import = external->section() == ComponentSection::Import;
+  WriteOpenSpace(is_import ? "import" : "export");
+
+  WriteQuotedString(*external->ExternalName(), NextChar::Space);
+
+  if (external->VersionSuffix() != nullptr) {
+    WriteOpenSpace("versionsuffix");
+    WriteQuotedString(*external->VersionSuffix(), NextChar::Space);
+    WriteCloseSpace();
+  }
+
+  if (external->ExportIndex() != kInvalidIndex) {
+    WriteOpenSpace(external->sort().GetName());
+    Writef("%" PRIindex, external->ExportIndex());
+    WriteCloseSpace();
+  }
+
+  if (external->external() != ComponentDef::ExternalDescriptor::Unused) {
+    const char* str1 = nullptr;
+    const char* str2 = nullptr;
+    bool print_index = true;
+
+    switch (external->external()) {
+      case ComponentDef::ExternalDescriptor::Func:
+        str1 = "func";
+        str2 = "type";
+        break;
+      case ComponentDef::ExternalDescriptor::ValueEq:
+        str1 = "value";
+        str2 = "eq";
+        break;
+      case ComponentDef::ExternalDescriptor::ValueType:
+        str1 = "value";
+        break;
+      case ComponentDef::ExternalDescriptor::TypeEq:
+        str1 = "type";
+        str2 = "eq";
+        break;
+      case ComponentDef::ExternalDescriptor::TypeSubResource:
+        str1 = "type";
+        str2 = "sub resource";
+        print_index = false;
+        break;
+      case ComponentDef::ExternalDescriptor::Component:
+        str1 = "component";
+        str2 = "type";
+        break;
+      case ComponentDef::ExternalDescriptor::Instance:
+        str1 = "instance";
+        str2 = "type";
+        break;
+      default:
+        assert(0);
+        break;
+    }
+
+    WriteOpenSpace(str1);
+    if (str2 != nullptr) {
+      WriteOpenSpace(str2);
+    }
+    if (print_index) {
+      Writef("%" PRIindex, external->TypeIndex());
+    }
+    if (str2 != nullptr) {
+      WriteCloseSpace();
+    }
+    WriteCloseSpace();
+  }
+
+  WriteCloseNewline();
+}
+
+Result WatWriter::WriteModule(bool is_core_module) {
   BuildInlineExportMap();
   BuildInlineImportMap();
-  WriteOpenSpace("module");
-  if (module.name.empty()) {
-    WriteNewline(NO_FORCE_NEWLINE);
-  } else {
-    WriteName(module.name, NextChar::Newline);
+
+  if (!is_core_module) {
+    WriteOpenSpace("module");
+
+    if (module.name.empty()) {
+      WriteNewline(NO_FORCE_NEWLINE);
+    } else {
+      WriteName(module.name, NextChar::Newline);
+    }
   }
+
   for (const ModuleField& field : module.fields) {
     switch (field.type()) {
       case ModuleFieldType::Func:
@@ -2006,6 +2488,80 @@ Result WatWriter::WriteModule() {
     }
   }
   WriteCloseNewline();
+  /* force the newline to be written */
+  WriteNextChar();
+  return result_;
+}
+
+Result WatWriter::WriteComponent(const ComponentData* component) {
+  std::vector<size_t> parent_i;
+  size_t i = 0;
+
+  WriteOpenSpace("component");
+  WriteNewline(NO_FORCE_NEWLINE);
+
+  while (true) {
+    while (i < component->Size()) {
+      const ComponentDef* definition = component->Get(i++);
+
+      switch (definition->section()) {
+        case ComponentSection::CoreModule: {
+          WriteOpenSpace("core module");
+
+          WatWriter wat_writer(stream_, options_,
+                               *definition->AsCoreModule()->module());
+
+          wat_writer.indent_ = indent_;
+          wat_writer.next_char_ = next_char_;
+          wat_writer.WriteModule("core module");
+          indent_ = wat_writer.indent_;
+          next_char_ = wat_writer.next_char_;
+          break;
+        }
+        case ComponentSection::CoreInstance:
+        case ComponentSection::Instance: {
+          WriteComponentInstance(definition);
+          break;
+        }
+        case ComponentSection::Component:
+          parent_i.push_back(i);
+          WriteOpenSpace("component");
+          WriteNewline(FORCE_NEWLINE);
+          component = definition->AsComponent();
+          i = 0;
+          break;
+        case ComponentSection::Alias:
+          WriteComponentAlias(definition);
+          break;
+        case ComponentSection::Type:
+          WriteComponentType(definition);
+          break;
+        case ComponentSection::Canon:
+          WriteComponentCanon(definition);
+          break;
+        case ComponentSection::Import:
+        case ComponentSection::Export:
+          WriteComponentExternal(definition->AsExternal());
+          break;
+        default:
+          assert(0);
+          break;
+      }
+    }
+
+    WriteCloseNewline();
+
+    if (component->GetParent() == nullptr) {
+      assert(parent_i.size() == 0);
+      break;
+    }
+
+    assert(parent_i.size() > 0);
+    component = component->GetParentComponent();
+    i = parent_i.back();
+    parent_i.pop_back();
+  }
+
   /* force the newline to be written */
   WriteNextChar();
   return result_;
@@ -2138,6 +2694,15 @@ Result WriteWat(Stream* stream,
                 const WriteWatOptions& options) {
   WatWriter wat_writer(stream, options, *module);
   return wat_writer.WriteModule();
+}
+
+Result WriteComponentWat(Stream* stream,
+                         const Component* component,
+                         const WriteWatOptions& options) {
+  // Dummy module, which is used for core type printing.
+  Module module;
+  WatWriter wat_writer(stream, options, module);
+  return wat_writer.WriteComponent(component);
 }
 
 }  // namespace wabt
