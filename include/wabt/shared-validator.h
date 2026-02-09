@@ -412,6 +412,16 @@ class SharedValidator {
   std::vector<Var> check_declared_funcs_;
 };
 
+class SharedComponentValidator {
+ public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(SharedComponentValidator);
+  SharedComponentValidator(Errors*, const ValidateOptions& options);
+
+ private:
+  ValidateOptions options_;
+  Errors* errors_;
+};
+
 }  // namespace wabt
 
 #endif  // WABT_SHARED_VALIDATOR_H_

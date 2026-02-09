@@ -1897,4 +1897,9 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   return result;
 }
 
+SharedComponentValidator::SharedComponentValidator(
+    Errors* errors,
+    const ValidateOptions& options)
+    : options_(options), errors_(errors) {}
+
 }  // namespace wabt

@@ -202,6 +202,21 @@ class Validator : public ExprVisitor::Delegate {
   Result result_ = Result::Ok;
 };
 
+class ComponentValidator {
+ public:
+  ComponentValidator(Errors*,
+                     const Component* component,
+                     const ValidateOptions& options);
+
+  Result CheckComponent();
+
+ private:
+  const ValidateOptions& options_;
+  Errors* errors_ = nullptr;
+  SharedComponentValidator validator_;
+  const Component* current_component_ = nullptr;
+};
+
 ScriptValidator::ScriptValidator(Errors* errors,
                                  const Script* script,
                                  const ValidateOptions& options)
@@ -1363,6 +1378,66 @@ Result ScriptValidator::CheckScript() {
   return result_;
 }
 
+ComponentValidator::ComponentValidator(Errors* errors,
+                                       const Component* component,
+                                       const ValidateOptions& options)
+    : options_(options),
+      errors_(errors),
+      validator_(errors_, options_),
+      current_component_(component) {}
+
+Result ComponentValidator::CheckComponent() {
+  const ComponentData* component = current_component_;
+  std::vector<size_t> parent_data;
+  size_t i = 0;
+
+  while (true) {
+    while (i < component->Size()) {
+      const ComponentDef* definition = component->Get(i++);
+      ComponentSection section = definition->section();
+
+      switch (section) {
+        case ComponentSection::CoreModule:
+          CHECK_RESULT(ValidateModule(definition->AsCoreModule()->module(),
+                                      errors_, options_));
+          break;
+        case ComponentSection::CoreInstance:
+        case ComponentSection::Instance:
+          break;
+        case ComponentSection::Component:
+          parent_data.push_back(i);
+          component = definition->AsComponent();
+          i = 0;
+          break;
+        case ComponentSection::Alias:
+          break;
+        case ComponentSection::Type:
+          break;
+        case ComponentSection::Canon:
+          break;
+        case ComponentSection::Import:
+        case ComponentSection::Export:
+          break;
+        default:
+          assert(0);
+          break;
+      }
+    }
+
+    if (component->GetParent() == nullptr) {
+      assert(parent_data.empty());
+      break;
+    }
+
+    assert(parent_data.size() > 0);
+    component = component->GetParentComponent();
+    i = parent_data.back();
+    parent_data.pop_back();
+  }
+
+  return Result::Ok;
+}
+
 }  // end anonymous namespace
 
 Result ValidateScript(const Script* script,
@@ -1379,6 +1454,14 @@ Result ValidateModule(const Module* module,
   Validator validator(errors, module, options);
 
   return validator.CheckModule();
+}
+
+Result ValidateComponent(const Component* component,
+                         Errors* errors,
+                         const ValidateOptions& options) {
+  ComponentValidator validator(errors, component, options);
+
+  return validator.CheckComponent();
 }
 
 }  // namespace wabt
