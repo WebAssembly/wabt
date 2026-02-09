@@ -412,6 +412,324 @@ class SharedValidator {
   std::vector<Var> check_declared_funcs_;
 };
 
+class SharedComponentValidator {
+ public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(SharedComponentValidator);
+  SharedComponentValidator(Errors* errors,
+                           std::string_view filename,
+                           const ValidateOptions& options);
+
+  Result WABT_PRINTF_FORMAT(3, 4)
+      PrintError(const Location& loc, const char* format, ...);
+
+  Result BeginComponent();
+  Result EndComponent();
+
+  Result OnCoreInstance(const ComponentIndexLoc& module_index);
+  Result OnCoreInstanceArg(const ComponentStringLoc& name,
+                           ComponentSort sort,
+                           const ComponentIndexLoc& index);
+  Result OnInlineCoreInstance();
+  Result OnInlineCoreInstanceArg(const ComponentStringLoc& name,
+                                 ComponentSort sort,
+                                 const ComponentIndexLoc& index);
+
+  Result OnInstance(const ComponentIndexLoc& module_index);
+  Result OnInstanceArg(const ComponentStringLoc& name,
+                       ComponentSort sort,
+                       const ComponentIndexLoc& index);
+  Result OnInlineInstance();
+  Result OnInlineInstanceArg(const ComponentStringLoc& name,
+                             bool has_version_suffix,
+                             std::string_view version_suffix,
+                             ComponentSort sort,
+                             const ComponentIndexLoc& index);
+
+  Result OnAliasExport(ComponentSort sort,
+                       const ComponentIndexLoc& instance_index,
+                       const ComponentStringLoc& name);
+  Result OnAliasCoreExport(ComponentSort sort,
+                           const ComponentIndexLoc& core_instance_index,
+                           const ComponentStringLoc& name);
+  Result OnAliasOuter(const Location& loc,
+                      ComponentSort sort,
+                      uint32_t counter,
+                      uint32_t index);
+
+  Result OnPrimitiveType(const ComponentType& type);
+  Result OnRecordType(const Location& loc, uint32_t field_count);
+  Result OnRecordField(const ComponentStringLoc& field_name,
+                       const ComponentTypeLoc& field_type);
+  Result OnVariantType(const Location& loc, uint32_t case_count);
+  Result OnVariantCase(const ComponentStringLoc& case_name,
+                       const ComponentTypeLoc& case_type);
+  Result OnListType(const ComponentTypeLoc& type);
+  Result OnListFixedType(const Location& loc,
+                         const ComponentTypeLoc& type,
+                         uint32_t size);
+  Result OnTupleType(const Location& loc, uint32_t type_count);
+  Result OnTupleItem(const ComponentTypeLoc& item);
+  Result OnFlagsType(const Location& loc, uint32_t flag_count);
+  Result OnFlagsLabel(const ComponentStringLoc& label);
+  Result OnEnumType(const Location& loc, uint32_t enum_count);
+  Result OnEnumLabel(const ComponentStringLoc& label);
+  Result OnOptionType(const ComponentTypeLoc& type);
+  Result OnResultType(const ComponentTypeLoc& result,
+                      const ComponentTypeLoc& error);
+  Result OnOwnType(const ComponentIndexLoc& index);
+  Result OnBorrowType(const ComponentIndexLoc& index);
+  Result OnStreamType(const ComponentTypeLoc& type);
+  Result OnFutureType(const ComponentTypeLoc& type);
+  Result OnFuncType(ComponentTypeDef type,
+                    uint32_t param_count);
+  Result OnFuncParam(ComponentStringLoc name,
+                     ComponentTypeLoc type);
+  Result OnFuncResult(const ComponentTypeLoc& result);
+  Result OnResourceType(const ComponentIndexLoc& dtor);
+  Result OnResourceAsyncType(const ComponentIndexLoc& dtor,
+                             const ComponentIndexLoc& callback);
+  Result BeginInstanceType(uint32_t count);
+  Result EndInstanceType();
+  Result BeginComponentType(uint32_t count);
+  Result EndComponentType();
+
+  Result OnCanonLift(const ComponentIndexLoc& core_func_index,
+                     uint32_t option_count,
+                     const ComponentCanonOption* options,
+                     const ComponentIndexLoc& type_index);
+  Result OnCanonLower(const ComponentIndexLoc& func_index,
+                      uint32_t option_count,
+                      const ComponentCanonOption* options);
+  Result OnCanonType(ComponentCanon canon,
+                     const ComponentIndexLoc& type_index);
+
+  Result OnImport(const ComponentStringLoc& external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info);
+  Result OnExport(const ComponentStringLoc& external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info,
+                  ComponentExportInfo* export_info);
+
+ private:
+  struct ObjectBase {
+    virtual ~ObjectBase() {}
+  };
+
+  struct ValueType;
+  struct ValueTypePair;
+  struct TypeItems;
+  struct TypeTuple;
+  struct TypeLabels;
+  struct TypeFunc;
+
+  struct TypeBase : public ObjectBase {
+    TypeBase(ComponentTypeDef type_def)
+        : type_def(type_def) {}
+
+    bool IsValueType() const {
+      return type_def == ComponentTypeDef::ValueType ||
+             type_def == ComponentTypeDef::List ||
+             type_def == ComponentTypeDef::Option ||
+             type_def == ComponentTypeDef::Own ||
+             type_def == ComponentTypeDef::Borrow ||
+             type_def == ComponentTypeDef::Stream ||
+             type_def == ComponentTypeDef::Future ||
+             type_def == ComponentTypeDef::Resource;
+    }
+
+    ValueType* AsValueType() {
+      assert(IsValueType());
+      return reinterpret_cast<ValueType*>(this);
+    }
+
+    bool IsValueTypePair() const {
+      return type_def == ComponentTypeDef::Result ||
+             type_def == ComponentTypeDef::ResourceAsync;
+    }
+
+    ValueTypePair* AsValueTypePair() {
+      assert(IsValueTypePair());
+      return reinterpret_cast<ValueTypePair*>(this);
+    }
+
+    bool IsTypeItems() const {
+      return type_def == ComponentTypeDef::Record ||
+             type_def == ComponentTypeDef::Variant;
+    }
+
+    TypeItems* AsTypeItems() {
+      assert(IsTypeItems());
+      return reinterpret_cast<TypeItems*>(this);
+    }
+
+    TypeTuple* AsTypeTuple() {
+      assert(type_def == ComponentTypeDef::Tuple);
+      return reinterpret_cast<TypeTuple*>(this);
+    }
+
+    bool IsTypeLabels() const {
+      return type_def == ComponentTypeDef::Flags ||
+             type_def == ComponentTypeDef::Enum;
+    }
+
+    TypeLabels* AsTypeLabels() {
+      assert(IsTypeLabels());
+      return reinterpret_cast<TypeLabels*>(this);
+    }
+
+    bool IsTypeFunc() const {
+      return type_def == ComponentTypeDef::Func ||
+             type_def == ComponentTypeDef::AsyncFunc;
+    }
+
+    TypeFunc* AsTypeFunc() {
+      assert(IsTypeFunc());
+      return reinterpret_cast<TypeFunc*>(this);
+    }
+
+    ComponentTypeDef type_def;
+  };
+
+  struct TypeRef {
+    TypeRef()
+        : type(ComponentType::TypeNone), ref(nullptr) {}
+
+    TypeRef(const TypeBase* ref)
+        : type(ComponentType::TypeIndex), ref(ref) {}
+
+    TypeRef(ComponentType::Enum type)
+        : type(type), ref(nullptr) {}
+
+    ComponentType::Enum type;
+    const TypeBase* ref;
+  };
+
+  struct ValueType : public TypeBase {
+    ValueType(ComponentTypeDef type_def, const TypeRef& type)
+        : TypeBase(type_def), type(type) {
+      assert(IsValueType());
+    }
+
+    TypeRef type;
+  };
+
+  struct ValueTypePair : public TypeBase {
+    ValueTypePair(ComponentTypeDef type_def,
+                  const TypeRef& first,
+                  const TypeRef& second)
+        : TypeBase(type_def), first(first), second(second) {
+      assert(IsValueTypePair());
+    }
+
+    TypeRef first;
+    TypeRef second;
+  };
+
+  struct TypeItems : public TypeBase {
+    struct Item {
+      const std::string* name;
+      TypeRef type;
+    };
+
+    TypeItems(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeItems());
+    }
+
+    std::vector<Item> items;
+  };
+
+  struct TypeListFixed : public TypeBase {
+    TypeListFixed(const TypeRef& type, uint32_t size)
+        : TypeBase(ComponentTypeDef::ListFixed), type(type), size(size) {
+      assert(IsValueType());
+    }
+
+    TypeRef type;
+    uint32_t size;
+  };
+
+  struct TypeTuple : public TypeBase {
+    TypeTuple()
+        : TypeBase(ComponentTypeDef::Tuple) {}
+
+    std::vector<TypeRef> items;
+  };
+
+  struct TypeLabels : public TypeBase {
+    TypeLabels(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeLabels());
+    }
+
+    std::vector<const std::string*> items;
+  };
+
+  struct TypeFunc : public TypeBase {
+    struct Param {
+      const std::string* name;
+      TypeRef type;
+    };
+
+    TypeFunc(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeFunc());
+    }
+
+    std::vector<Param> params;
+    TypeRef result;
+  };
+
+  struct SharedData : public TypeBase {
+    SharedData(ComponentTypeDef type, SharedData* parent, bool is_object)
+        : TypeBase(type), parent(parent), is_object(is_object) {
+      assert(type == ComponentTypeDef::Instance
+             || type == ComponentTypeDef::Component);
+    }
+
+    SharedData* parent;
+    // When is_object is false, only the descriptor is known.
+    bool is_object;
+
+    // Sorts.
+    std::vector<TypeBase*> types;
+  };
+
+  struct Component : public SharedData {
+    Component(SharedData* parent)
+        : SharedData(ComponentTypeDef::Component, parent, true) {}
+
+    // Sorts.
+    std::vector<Component*> components;
+  };
+
+  Component* currentAsComponent() {
+    assert(current_->type_def == ComponentTypeDef::Component &&
+           current_->is_object);
+    return reinterpret_cast<Component*>(current_);
+  }
+
+  Result CheckIndex(const Location& loc,
+                    Index index,
+                    Index max,
+                    TypeRef* out_type_ref);
+  Result CheckIndex(const ComponentIndexLoc& index,
+                    TypeRef* out_type_ref);
+  Result CheckType(const ComponentTypeLoc& type,
+                   TypeRef* out_type_ref);
+  Result CheckTypeIgnoreLast(const ComponentTypeLoc& type,
+                             TypeRef* out_type_ref);
+
+  std::vector<std::unique_ptr<ObjectBase>> objects_;
+  SharedData* current_;
+  ValidateOptions options_;
+  Errors* errors_;
+  std::string_view filename_;
+  std::vector<std::unique_ptr<std::string>> string_list_;
+  wabt::Component::StringTable string_table_;
+};
+
 }  // namespace wabt
 
 #endif  // WABT_SHARED_VALIDATOR_H_

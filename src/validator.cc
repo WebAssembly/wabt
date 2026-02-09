@@ -1363,6 +1363,415 @@ Result ScriptValidator::CheckScript() {
   return result_;
 }
 
+class ComponentValidator {
+ public:
+  ComponentValidator(Errors*,
+                     const Component* component,
+                     const ValidateOptions& options);
+
+  Result CheckComponent();
+
+ private:
+  Result CheckAlias(const ComponentDef* definition);
+  Result CheckType(const ComponentDef* type);
+  Result CheckExternal(const ComponentExternal* external);
+
+  const ValidateOptions& options_;
+  Errors* errors_ = nullptr;
+  SharedComponentValidator validator_;
+  const Component* current_component_ = nullptr;
+};
+
+ComponentValidator::ComponentValidator(Errors* errors,
+                                       const Component* component,
+                                       const ValidateOptions& options)
+    : options_(options),
+      errors_(errors),
+      validator_(errors_, component->Filename(), options_),
+      current_component_(component) {}
+
+Result ComponentValidator::CheckComponent() {
+  const ComponentSharedData* shared_data = current_component_;
+  std::vector<size_t> parent_data;
+  size_t i = 0;
+
+  while (true) {
+    while (i < shared_data->Size()) {
+      const ComponentDef* definition = shared_data->Get(i++);
+      ComponentSection section = definition->section();
+
+      switch (section) {
+        case ComponentSection::CoreModule:
+          CHECK_RESULT(ValidateModule(definition->AsCoreModule()->module(),
+                                      errors_, options_));
+          break;
+        case ComponentSection::CoreInstance:
+        case ComponentSection::Instance: {
+          if (section == ComponentSection::Instance &&
+              definition->instance() == ComponentDef::Instance::Inline) {
+            const ComponentInlineInstance* instance =
+                definition->AsInlineInstance();
+            CHECK_RESULT(validator_.OnInlineInstance());
+
+            for (auto& arg : instance->Arguments()) {
+              bool has_suffix = arg.version_suffix != nullptr;
+              std::string_view version_suffix(has_suffix ? *arg.version_suffix
+                                                         : std::string_view());
+              CHECK_RESULT(validator_.OnInlineInstanceArg(
+                  arg.name.ToStringLoc(), has_suffix, version_suffix, arg.sort,
+                  arg.index));
+            }
+            break;
+          }
+
+          const ComponentInstance* instance = definition->AsInstance();
+          if (definition->instance() == ComponentDef::Instance::Inline) {
+            CHECK_RESULT(validator_.OnInlineCoreInstance());
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnInlineCoreInstanceArg(
+                  arg.name.ToStringLoc(), arg.sort, arg.index));
+            }
+          } else if (section == ComponentSection::Instance) {
+            CHECK_RESULT(validator_.OnInstance(instance->FromIndexLoc()));
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnInstanceArg(arg.name.ToStringLoc(),
+                                                    arg.sort, arg.index));
+            }
+          } else {
+            CHECK_RESULT(validator_.OnCoreInstance(instance->FromIndexLoc()));
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnCoreInstanceArg(arg.name.ToStringLoc(),
+                                                        arg.sort, arg.index));
+            }
+          }
+          break;
+        }
+        case ComponentSection::Component:
+          parent_data.push_back(i);
+          shared_data = definition->AsComponent();
+          i = 0;
+          validator_.BeginComponent();
+          continue;
+        case ComponentSection::Alias:
+          CHECK_RESULT(CheckAlias(definition));
+          break;
+        case ComponentSection::Type:
+          CHECK_RESULT(CheckType(definition));
+          break;
+        case ComponentSection::Canon:
+          switch (definition->canon()) {
+            case ComponentCanon::Lift: {
+              const ComponentCanonLift* lift = definition->AsCanonLift();
+              CHECK_RESULT(validator_.OnCanonLift(
+                  lift->CoreFuncIndexLoc(), lift->OptionsSize(),
+                  lift->Options().data(), lift->TypeIndexLoc()));
+              break;
+            }
+            case ComponentCanon::Lower: {
+              const ComponentCanonLower* lower = definition->AsCanonLower();
+              CHECK_RESULT(validator_.OnCanonLower(lower->FuncIndexLoc(),
+                                                   lower->OptionsSize(),
+                                                   lower->Options().data()));
+              break;
+            }
+            case ComponentCanon::ResourceDrop: {
+              CHECK_RESULT(validator_.OnCanonType(
+                  definition->canon(),
+                  definition->AsCanonType()->TypeIndexLoc()));
+              break;
+            }
+          }
+          break;
+        case ComponentSection::Import:
+        case ComponentSection::Export:
+          CHECK_RESULT(CheckExternal(definition->AsExternal()));
+          break;
+        default:
+          assert(0);
+          break;
+      }
+    }
+
+    if (shared_data->GetParent() == nullptr) {
+      assert(parent_data.empty());
+      break;
+    }
+
+    if (shared_data->section() == ComponentSection::Component) {
+      validator_.EndComponent();
+    } else if (shared_data->type() == ComponentTypeDef::Instance) {
+      validator_.EndInstanceType();
+    } else {
+      assert(shared_data->type() == ComponentTypeDef::Component);
+      validator_.EndComponentType();
+    }
+
+    assert(parent_data.size() > 0);
+    shared_data = shared_data->GetParent();
+    i = parent_data.back();
+    parent_data.pop_back();
+  }
+
+  return Result::Ok;
+}
+
+Result ComponentValidator::CheckAlias(const ComponentDef* definition) {
+  if (definition->alias() == ComponentDef::Alias::Outer) {
+    const ComponentAliasOuter* alias = definition->AsAliasOuter();
+    return validator_.OnAliasOuter(alias->GetLocation(), alias->sort(),
+                                   alias->GetCounter(), alias->GetIndex());
+  }
+
+  const ComponentAliasExport* alias = definition->AsAliasExport();
+  if (definition->alias() == ComponentDef::Alias::Export) {
+    return validator_.OnAliasExport(alias->sort(), alias->InstanceIndexLoc(),
+                                    alias->ExportNameLoc().ToStringLoc());
+  }
+
+  return validator_.OnAliasCoreExport(alias->sort(), alias->InstanceIndexLoc(),
+                                      alias->ExportNameLoc().ToStringLoc());
+}
+
+Result ComponentValidator::CheckType(const ComponentDef* type) {
+  std::vector<size_t> type_stack;
+  const ComponentSharedData* shared_data = nullptr;
+
+  while (true) {
+    assert(type != nullptr);
+
+    switch (type->type()) {
+      case ComponentTypeDef::ValueType:
+        CHECK_RESULT(
+            validator_.OnPrimitiveType(type->AsValueType()->ValueType()));
+        break;
+      case ComponentTypeDef::Record: {
+        const ComponentTypeItems* record = type->AsTypeItems();
+        uint32_t field_count = static_cast<uint32_t>(record->Items().size());
+        CHECK_RESULT(
+            validator_.OnRecordType(record->GetLocation(), field_count));
+        for (auto& item : record->Items()) {
+          ComponentStringLoc field_name = item.name.ToStringLoc();
+          CHECK_RESULT(validator_.OnRecordField(field_name, item.type));
+        }
+        break;
+      }
+      case ComponentTypeDef::Variant: {
+        const ComponentTypeItems* variant = type->AsTypeItems();
+        uint32_t case_count = static_cast<uint32_t>(variant->Items().size());
+        CHECK_RESULT(
+            validator_.OnVariantType(variant->GetLocation(), case_count));
+        for (auto& item : variant->Items()) {
+          ComponentStringLoc case_name = item.name.ToStringLoc();
+          CHECK_RESULT(validator_.OnRecordField(case_name, item.type));
+        }
+        break;
+      }
+      case ComponentTypeDef::List:
+        CHECK_RESULT(
+            validator_.OnListType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::ListFixed: {
+        const ComponentTypeListFixed* list = type->AsTypeListFixed();
+        CHECK_RESULT(validator_.OnListFixedType(
+            list->GetLocation(), list->ValueTypeLoc(), list->Size()));
+        break;
+      }
+      case ComponentTypeDef::Tuple: {
+        const ComponentTypeTuple* tuple = type->AsTypeTuple();
+        uint32_t item_count = static_cast<uint32_t>(tuple->Items().size());
+        CHECK_RESULT(validator_.OnTupleType(tuple->GetLocation(), item_count));
+        for (auto& item : tuple->Items()) {
+          CHECK_RESULT(validator_.OnTupleItem(item));
+        }
+        break;
+      }
+      case ComponentTypeDef::Flags: {
+        const ComponentTypeLabels* flags = type->AsTypeLabels();
+        uint32_t label_count = static_cast<uint32_t>(flags->Labels().size());
+        CHECK_RESULT(validator_.OnFlagsType(flags->GetLocation(), label_count));
+        for (auto& label : flags->Labels()) {
+          ComponentStringLoc label_name = label.ToStringLoc();
+          CHECK_RESULT(validator_.OnFlagsLabel(label_name));
+        }
+        break;
+      }
+      case ComponentTypeDef::Enum: {
+        const ComponentTypeLabels* enum_ = type->AsTypeLabels();
+        uint32_t label_count = static_cast<uint32_t>(enum_->Labels().size());
+        CHECK_RESULT(validator_.OnEnumType(enum_->GetLocation(), label_count));
+        for (auto& label : enum_->Labels()) {
+          ComponentStringLoc label_name = label.ToStringLoc();
+          CHECK_RESULT(validator_.OnEnumLabel(label_name));
+        }
+        break;
+      }
+      case ComponentTypeDef::Option:
+        CHECK_RESULT(
+            validator_.OnOptionType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::Result: {
+        const ComponentTypeResult* result = type->AsTypeResult();
+        CHECK_RESULT(
+            validator_.OnResultType(result->ResultLoc(), result->ErrorLoc()));
+        break;
+      }
+      case ComponentTypeDef::Own:
+        CHECK_RESULT(validator_.OnOwnType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::Borrow:
+        CHECK_RESULT(
+            validator_.OnBorrowType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::Stream:
+        CHECK_RESULT(
+            validator_.OnStreamType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::Future:
+        CHECK_RESULT(
+            validator_.OnFutureType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::AsyncFunc:
+      case ComponentTypeDef::Func: {
+        const ComponentTypeFunc* func = type->AsTypeFunc();
+        uint32_t param_count = static_cast<uint32_t>(func->Params().size());
+        CHECK_RESULT(validator_.OnFuncType(func->type(), param_count));
+
+        for (auto& param : func->Params()) {
+          CHECK_RESULT(
+              validator_.OnFuncParam(param.name.ToStringLoc(), param.type));
+        }
+
+        CHECK_RESULT(validator_.OnFuncResult(func->ResultLoc()));
+        break;
+      }
+      case ComponentTypeDef::Instance:
+      case ComponentTypeDef::Component: {
+        const ComponentSharedData* type_data = type->AsInterfaceType();
+        if (type_data->IsInstanceType()) {
+          CHECK_RESULT(validator_.BeginInstanceType(type_data->Size()));
+        } else {
+          CHECK_RESULT(validator_.BeginComponentType(type_data->Size()));
+        }
+
+        if (type_data->Size() == 0) {
+          if (type_data->IsInstanceType()) {
+            CHECK_RESULT(validator_.EndInstanceType());
+          } else {
+            CHECK_RESULT(validator_.EndComponentType());
+          }
+          break;
+        }
+
+        shared_data = type_data;
+        type_stack.push_back(0);
+        break;
+      }
+      case ComponentTypeDef::Resource:
+        CHECK_RESULT(
+            validator_.OnResourceType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::ResourceAsync: {
+        const ComponentTypeResourceAsync* resource =
+            type->AsTypeResourceAsync();
+        CHECK_RESULT(validator_.OnResourceAsyncType(resource->DtorLoc(),
+                                                    resource->CallbackLoc()));
+        break;
+      }
+      default:
+        assert(0);
+        break;
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        return Result::Ok;
+      }
+
+      size_t i = type_stack.back();
+
+      if (i < shared_data->Size()) {
+        switch (shared_data->Get(i)->section()) {
+          case ComponentSection::Type:
+            type = shared_data->Get(i);
+            break;
+          case ComponentSection::Alias:
+            CHECK_RESULT(CheckAlias(shared_data->Get(i)));
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentSection::Import:
+          case ComponentSection::Export:
+            CHECK_RESULT(CheckExternal(shared_data->Get(i)->AsExternal()));
+            type_stack.back() = i + 1;
+            continue;
+          default:
+            assert(0);
+            break;
+        }
+        type_stack.back() = i + 1;
+        break;
+      }
+
+      if (shared_data->IsInstanceType()) {
+        CHECK_RESULT(validator_.EndInstanceType());
+      } else {
+        CHECK_RESULT(validator_.EndComponentType());
+      }
+      shared_data = shared_data->GetParent();
+      type_stack.pop_back();
+    }
+  }
+}
+
+Result ComponentValidator::CheckExternal(const ComponentExternal* external) {
+  ComponentStringLoc name = external->ExternalNameLoc().ToStringLoc();
+  std::string_view version_suffix_data;
+  ComponentExternalInfo external_info_data;
+  ComponentExportInfo export_info_data;
+  std::string_view* version_suffix = nullptr;
+  ComponentExternalInfo* external_info = nullptr;
+  if (external->VersionSuffix() != nullptr) {
+    version_suffix_data = std::string_view(*external->VersionSuffix());
+    version_suffix = &version_suffix_data;
+  }
+
+  if (external->external() != ComponentDef::External::Unused) {
+    external_info_data.sort = external->sort();
+    switch (external->external()) {
+      case ComponentDef::External::ValueEq:
+        external_info_data.external = ComponentExternalDesc::ValueEq;
+        break;
+      case ComponentDef::External::ValueType:
+        external_info_data.external = ComponentExternalDesc::ValueType;
+        break;
+      case ComponentDef::External::TypeEq:
+        external_info_data.external = ComponentExternalDesc::TypeEq;
+        break;
+      case ComponentDef::External::TypeSubResource:
+        external_info_data.external = ComponentExternalDesc::TypeSubRes;
+        break;
+      default:
+        external_info_data.external = ComponentExternalDesc::Unused;
+        break;
+    }
+    external_info_data.index = external->TypeIndexLoc();
+    external_info = &external_info_data;
+  }
+
+  if (external->section() == ComponentSection::Export) {
+    export_info_data.sort = external->sort();
+    export_info_data.index = external->ExportIndexLoc();
+
+    return validator_.OnExport(name, version_suffix, external_info,
+                               &export_info_data);
+  }
+
+  assert(external_info != nullptr);
+  return validator_.OnImport(name, version_suffix, external_info);
+}
+
 }  // end anonymous namespace
 
 Result ValidateScript(const Script* script,
@@ -1379,6 +1788,14 @@ Result ValidateModule(const Module* module,
   Validator validator(errors, module, options);
 
   return validator.CheckModule();
+}
+
+Result ValidateComponent(const Component* component,
+                         Errors* errors,
+                         const ValidateOptions& options) {
+  ComponentValidator validator(errors, component, options);
+
+  return validator.CheckComponent();
 }
 
 }  // namespace wabt

@@ -47,6 +47,8 @@ class WastParser {
   void WABT_PRINTF_FORMAT(3, 4) Error(Location, const char* format, ...);
   Result ParseModule(std::unique_ptr<Module>* out_module);
   Result ParseScript(std::unique_ptr<Script>* out_script);
+  Result ParseComponent(std::unique_ptr<Component>* out_component);
+  bool IsComponent();
 
   std::unique_ptr<Script> ReleaseScript();
 
@@ -291,6 +293,56 @@ class WastParser {
   Result ParseMemoryBinaryExpr(Location, std::unique_ptr<Expr>*);
   Result ParseSimdLane(Location, uint64_t*);
 
+  Result ParseComponentCoreSort(ComponentSort* out_sort);
+  Result ParseComponentSort(ComponentSort* out_sort);
+  Result ParseComponentFindVar(Token&,
+                               Component::StringTable*,
+                               const std::string** out_text);
+  Result ParseComponentAppendVar(Token&,
+                                 Component::StringTable*,
+                                 const std::string** out_text);
+  Result ParseComponentName(ComponentSharedData*,
+                            Component::StringTable*,
+                            ComponentSort,
+                            const std::string** out_name);
+  Result ParseComponentIndex(ComponentSharedData*,
+                             Component::StringTable*,
+                             ComponentSort,
+                             ComponentIndexLoc* out_index);
+  Result ParseComponentString(Component::StringTable*,
+                              ComponentDef::StringLoc* out_string);
+  Result ParseComponentCanonOpts(ComponentSharedData*,
+                                 Component::StringTable*,
+                                 ComponentCanonOpts::OptionVector* out_options);
+  Result ParseComponentAlias(ComponentSharedData*, Component::StringTable*);
+  Result ParseComponentExtern(ComponentSharedData*, Component::StringTable*);
+  Result ParseComponentDefValType(ComponentSharedData*,
+                                  Component::StringTable*,
+                                  ComponentTypeLoc* out_type);
+  Result ParseComponentValType(ComponentSharedData*,
+                               Component::StringTable*,
+                               ComponentTypeLoc* out_type);
+  Result ParseComponentFuncType(ComponentSharedData*, Component::StringTable*);
+  Result ParseComponentResourceType(ComponentSharedData*, Component::StringTable*);
+  Result ParseComponentInstanceType(ComponentSharedData*,
+                                    Component::StringTable*);
+  Result ParseComponentType(ComponentSharedData*, Component::StringTable*);
+  Result ParseComponentCoreInstance(ComponentData*, Component::StringTable*);
+  Result ParseComponentInlineCoreInstance(const std::string* name,
+                                          ComponentData*,
+                                          Component::StringTable*);
+  Result ParseComponentInlineInstance(const std::string* name,
+                                      ComponentData*,
+                                      Component::StringTable*);
+  Result ParseComponentInstance(bool is_core,
+                                ComponentData*,
+                                Component::StringTable*);
+  Result ParseComponentCoreFunc(ComponentData*,
+                                Component::StringTable*);
+  Result ParseComponentFunc(ComponentData*,
+                            Component::StringTable*);
+  Result ParseComponent(ComponentData*, Component::StringTable*);
+
   Result ParseCommandList(Script*, CommandPtrVector*);
   Result ParseCommand(Script*, CommandPtr*);
   Result ParseAssertExceptionCommand(CommandPtr*);
@@ -379,6 +431,14 @@ Result ParseWastScript(WastLexer* lexer,
                        std::unique_ptr<Script>* out_script,
                        Errors*,
                        WastParseOptions* options);
+
+// The out_module is optional. If it is non null, and the input does not
+// starts with "(component", the parsing falls back to module parsing.
+Result ParseWatComponent(WastLexer* lexer,
+                         std::unique_ptr<Component>* out_component,
+                         std::unique_ptr<Module>* out_module,
+                         Errors*,
+                         WastParseOptions* options);
 
 }  // namespace wabt
 
