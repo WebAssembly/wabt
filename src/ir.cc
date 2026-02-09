@@ -831,4 +831,104 @@ uint8_t DataSegment::GetFlags(const Module* module) const {
   return flags;
 }
 
+const ComponentDef* ComponentDefList::Find(ComponentSort sort,
+                                           const std::string* name,
+                                           Index* out_index) const {
+  if (out_index != nullptr) {
+    *out_index = kInvalidIndex;
+  }
+
+  if (sort == ComponentSort::Type) {
+    size_t size = type_list_.size();
+    for (size_t i = 0; i < size; i++) {
+      const ComponentDef* definition = type_list_[i];
+      if (definition->Name() == name) {
+        if (out_index != nullptr) {
+          *out_index = static_cast<Index>(i);
+        }
+        return definition;
+      }
+    }
+    return nullptr;
+  }
+
+  size_t size = list_.size();
+  Index index = 0;
+  for (size_t i = 0; i < size; i++) {
+    const ComponentDef* definition = list_[i].get();
+    if (definition->sort() == sort) {
+      if (definition->Name() == name) {
+        if (out_index != nullptr) {
+          *out_index = index;
+        }
+        return definition;
+      }
+      index++;
+    }
+  }
+  return nullptr;
+}
+
+const ComponentDef* ComponentDefList::Find(ComponentSort sort,
+                                           Index index) const {
+  if (sort == ComponentSort::Type) {
+    if (type_list_.size() <= index) {
+      return nullptr;
+    }
+    return type_list_[index];
+  }
+
+  size_t size = list_.size();
+  for (size_t i = 0; i < size; i++) {
+    const ComponentDef* definition = list_[i].get();
+    if (definition->sort() == sort) {
+      if (index == 0) {
+        return definition;
+      }
+      index--;
+    }
+  }
+  return nullptr;
+}
+
+Index ComponentDefList::SortSize(ComponentSort sort) const {
+  if (sort == ComponentSort::Type) {
+    return static_cast<Index>(type_list_.size());
+  }
+
+  size_t size = list_.size();
+  Index count = 0;
+  for (size_t i = 0; i < size; i++) {
+    if (list_[i].get()->sort() == sort) {
+      count++;
+    }
+  }
+  return count;
+}
+
+const std::string* Component::StringTable::Find(
+    const std::string_view& name) const {
+  auto str = std::make_unique<std::string>(name);
+
+  std::set<std::string*>::iterator it = string_map_.find(str.get());
+  if (it != string_map_.end()) {
+    return *it;
+  }
+  return nullptr;
+}
+
+const std::string* Component::StringTable::Append(
+    const std::string_view& name) {
+  auto str = std::make_unique<std::string>(name);
+
+  auto it = string_map_.insert(str.get());
+  if (!it.second) {
+    return *it.first;
+  }
+
+  std::string* ref = str.get();
+  string_table_->push_back(std::move(str));
+  return ref;
+}
+
 }  // namespace wabt

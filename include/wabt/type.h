@@ -316,6 +316,78 @@ class Type {
   Index type_index_;
 };
 
+class ComponentType {
+ public:
+  // Matches binary format, do not change.
+  enum Enum : uint8_t {
+    Bool = 0x7f,
+    S8 = 0x7e,
+    U8 = 0x7d,
+    S16 = 0x7c,
+    U16 = 0x7b,
+    S32 = 0x7a,
+    U32 = 0x79,
+    S64 = 0x78,
+    U64 = 0x77,
+    F32 = 0x76,
+    F64 = 0x75,
+    Char = 0x74,
+    String = 0x73,
+    ErrorContext = 0x64,
+
+    TypeIndex = 0,
+    TypeNone = 1,
+  };
+
+  ComponentType()
+      : type_(Enum::TypeNone), type_index_(0) {}
+
+  ComponentType(Enum type)
+      : type_(type), type_index_(0) {
+    assert(type != Enum::TypeIndex && type != Enum::TypeNone);
+  }
+
+  ComponentType(Index index)
+      : type_(Enum::TypeIndex), type_index_(index) {}
+
+  bool IsNone() const {
+    return type_ == Enum::TypeNone;
+  }
+
+  bool IsIndex() const {
+    return type_ == Enum::TypeIndex;
+  }
+
+  Enum GetType() const {
+    return type_;
+  }
+
+  Index GetIndex() const {
+    assert(IsIndex());
+    return type_index_;
+  }
+
+  const char* GetName() const;
+
+  static bool IsPrimitiveType(uint8_t code) {
+    Enum type = static_cast<Enum>(code);
+    return type == Bool || type == S8 || type == U8 || type == S16 ||
+           type == U16 || type == S32 || type == U32 || type == S64 ||
+           type == U64 || type == F32 || type == F64 || type == Char ||
+           type == String || type == ErrorContext;
+  }
+
+  static bool IsPrimitiveTypeS64(int64_t code) {
+    int8_t mask = 0x7f;
+    return (code | mask) == ~static_cast<int64_t>(0) &&
+           IsPrimitiveType(static_cast<uint8_t>(code & mask));
+  }
+
+ private:
+  Enum type_;
+  Index type_index_;
+};
+
 }  // namespace wabt
 
 #endif  // WABT_TYPE_H_
