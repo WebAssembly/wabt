@@ -400,6 +400,7 @@ class BinaryWriter {
                const Module* module);
 
   Result WriteModule();
+  Result WriteComponent(const ComponentData* component);
 
  private:
   void WriteHeader(const char* name, int index);
@@ -452,6 +453,15 @@ class BinaryWriter {
   template <typename T>
   void WriteNames(const std::vector<T*>& elems, NameSectionSubsection type);
   void WriteCodeMetadataSections();
+  void WriteComponentHeader();
+  void WriteComponentSort(ComponentDef::Sort sort, bool core_only = false);
+  void WriteComponentInstance(const ComponentDef* instance);
+  void WriteComponentAlias(const ComponentDef* alias);
+  void WriteComponentValueType(const ComponentType& type, bool optional);
+  void WriteComponentType(const ComponentDef* type);
+  void WriteComponentCanonOpts(const ComponentCanonOpts* canon);
+  void WriteComponentCanon(const ComponentDef* canon);
+  void WriteComponentExtern(const ComponentExternal* external);
 
   Stream* stream_;
   const WriteBinaryOptions& options_;
@@ -2142,6 +2152,536 @@ void BinaryWriter::WriteCodeMetadataSections() {
   last_section_type_ = BinarySection::Code;
 }
 
+struct WriteComponentData {
+  Offset offset;
+  size_t i;
+};
+
+void BinaryWriter::WriteComponentHeader() {
+  stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
+  stream_->WriteU32(
+      WABT_BINARY_COMPONENT_VERSION | (WABT_BINARY_LAYER_COMPONENT << 16),
+      "WASM_BINARY_COMPONENT_VERSION");
+}
+
+void BinaryWriter::WriteComponentSort(ComponentDef::Sort sort, bool core_only) {
+  ComponentBinarySort code = ComponentBinarySort::Core;
+  ComponentBinaryCoreSort core_code = ComponentBinaryCoreSort::NonCore;
+
+  switch (sort) {
+    case ComponentDef::Sort::CoreFunc:
+      core_code = ComponentBinaryCoreSort::Func;
+      break;
+    case ComponentDef::Sort::CoreTable:
+      core_code = ComponentBinaryCoreSort::Table;
+      break;
+    case ComponentDef::Sort::CoreMemory:
+      core_code = ComponentBinaryCoreSort::Memory;
+      break;
+    case ComponentDef::Sort::CoreGlobal:
+      core_code = ComponentBinaryCoreSort::Global;
+      break;
+    case ComponentDef::Sort::CoreType:
+      core_code = ComponentBinaryCoreSort::Type;
+      break;
+    case ComponentDef::Sort::CoreModule:
+      core_code = ComponentBinaryCoreSort::Module;
+      break;
+    case ComponentDef::Sort::CoreInstance:
+      core_code = ComponentBinaryCoreSort::Instance;
+      break;
+    case ComponentDef::Sort::Func:
+      code = ComponentBinarySort::Func;
+      break;
+    case ComponentDef::Sort::Value:
+      code = ComponentBinarySort::Value;
+      break;
+    case ComponentDef::Sort::Type:
+      code = ComponentBinarySort::Type;
+      break;
+    case ComponentDef::Sort::Component:
+      code = ComponentBinarySort::Component;
+      break;
+    default:
+      assert(sort == ComponentDef::Sort::Instance);
+      code = ComponentBinarySort::Instance;
+      break;
+  }
+
+  assert(!core_only || code == ComponentBinarySort::Core);
+
+  if (!core_only) {
+    stream_->WriteU8Enum(code, "sort type");
+  }
+
+  if (code == ComponentBinarySort::Core) {
+    stream_->WriteU8Enum(core_code, "core sort type");
+  }
+}
+
+void BinaryWriter::WriteComponentInstance(const ComponentDef* instance) {
+  bool is_core = instance->section() == ComponentDef::Section::CoreInstance;
+
+  if (instance->instance() == ComponentDef::Instance::Inline) {
+    stream_->WriteU8Enum(ComponentBinaryInstance::Inline, "instance type");
+
+    if (!is_core) {
+      const ComponentInlineInstance::ArgumentVector& arguments =
+          instance->AsInlineInstance()->Arguments();
+
+      WriteU32Leb128(stream_, static_cast<uint32_t>(arguments.size()),
+                     "argument count");
+      for (const ComponentInlineInstance::Argument& argument : arguments) {
+        if (argument.version_suffix != nullptr) {
+          stream_->WriteU8Enum(ComponentBinaryType::Some, "suffix type");
+          WriteStr(stream_, *argument.name, "name", PrintChars::Yes);
+          WriteStr(stream_, *argument.version_suffix, "version",
+                   PrintChars::Yes);
+        } else {
+          stream_->WriteU8Enum(ComponentBinaryType::None, "suffix type");
+          WriteStr(stream_, *argument.name, "name", PrintChars::Yes);
+        }
+
+        WriteComponentSort(argument.sort);
+        WriteU32Leb128(stream_, argument.index, "instance index");
+      }
+      return;
+    }
+  } else {
+    stream_->WriteU8Enum(ComponentBinaryInstance::Reference, "instance type");
+    WriteU32Leb128(stream_, instance->AsInstance()->FromIndex(), "from index");
+  }
+
+  const ComponentInstance::ArgumentVector& arguments =
+      instance->AsInstance()->Arguments();
+
+  WriteU32Leb128(stream_, static_cast<uint32_t>(arguments.size()),
+                 "argument count");
+  for (const ComponentInstance::Argument& argument : arguments) {
+    WriteStr(stream_, *argument.name, "name", PrintChars::Yes);
+    WriteComponentSort(argument.sort, is_core);
+    WriteU32Leb128(stream_, argument.index, "instance index");
+  }
+}
+
+void BinaryWriter::WriteComponentAlias(const ComponentDef* alias) {
+  WriteComponentSort(alias->sort());
+
+  if (alias->alias() == ComponentDef::Alias::Outer) {
+    const ComponentAliasOuter* outer_alias = alias->AsAliasOuter();
+
+    stream_->WriteU8Enum(ComponentBinaryAlias::Outer, "alias type");
+    WriteU32Leb128(stream_, outer_alias->GetCounter(), "count");
+    WriteU32Leb128(stream_, outer_alias->GetIndex(), "index");
+    return;
+  }
+
+  const ComponentAliasExport* export_alias = alias->AsAliasExport();
+  bool is_core = alias->alias() == ComponentDef::Alias::CoreExport;
+  ComponentBinaryAlias type =
+      is_core ? ComponentBinaryAlias::CoreExport : ComponentBinaryAlias::Export;
+  stream_->WriteU8Enum(type, "alias type");
+  WriteU32Leb128(stream_, export_alias->InstanceIndex(), "index");
+  WriteStr(stream_, *export_alias->ExportName(), "name", PrintChars::Yes);
+}
+
+void BinaryWriter::WriteComponentValueType(const ComponentType& type,
+                                           bool optional) {
+  if (type.IsNone()) {
+    assert(optional);
+    stream_->WriteU8Enum(ComponentBinaryType::None, "no type");
+    return;
+  }
+
+  assert(!type.IsNone());
+
+  if (optional) {
+    stream_->WriteU8Enum(ComponentBinaryType::Some, "some type");
+  }
+
+  if (type.IsIndex()) {
+    WriteU32Leb128(stream_, type.GetIndex(), "type index");
+  } else {
+    stream_->WriteU8Enum(type.GetType(), "primitive type");
+  }
+}
+
+void BinaryWriter::WriteComponentType(const ComponentDef* type) {
+  std::vector<size_t> type_stack;
+  const ComponentSharedData* type_data = nullptr;
+
+  while (true) {
+    assert(type != nullptr);
+
+    switch (type->type()) {
+      case ComponentDef::Type::AsyncFunc:
+      case ComponentDef::Type::Func: {
+        const ComponentTypeFunc* func = type->AsTypeFunc();
+
+        const ComponentTypeFunc::ParamVector& params = func->params();
+        uint32_t size = static_cast<uint32_t>(params.size());
+        stream_->WriteU8Enum(type->type(), "definition type");
+        WriteU32Leb128(stream_, size, "param count");
+
+        for (uint32_t i = 0; i < size; i++) {
+          const ComponentTypeFunc::Param& param = params[i];
+          WriteStr(stream_, *param.name, "label", PrintChars::Yes);
+          WriteComponentValueType(param.type, false);
+        }
+
+        if (func->result().IsNone()) {
+          stream_->WriteU8Enum(ComponentBinaryType::ResultNone, "result none");
+          stream_->WriteU8(0, "reserved value");
+        } else {
+          stream_->WriteU8Enum(ComponentBinaryType::ResultSome, "result some");
+          WriteComponentValueType(func->result(), false);
+        }
+        break;
+      }
+      case ComponentDef::Type::Instance:
+      case ComponentDef::Type::Component: {
+        const ComponentSharedData* next = type->AsComponentType();
+
+        uint32_t size = next->Size();
+
+        stream_->WriteU8Enum(type->type(), "definition type");
+        WriteU32Leb128(stream_, size, "type count");
+
+        if (size == 0) {
+          break;
+        }
+
+        type_data = next;
+        type_stack.push_back(0);
+        break;
+      }
+      case ComponentDef::Type::Record:
+      case ComponentDef::Type::Variant: {
+        bool is_variant = type->type() == ComponentDef::Type::Variant;
+        const char* descriptor = is_variant ? "field" : "case";
+        stream_->WriteU8Enum(type->type(), "definition type");
+
+        const ComponentTypeItems::ItemVector& items =
+            type->AsTypeItems()->Items();
+        WriteU32Leb128(stream_, static_cast<uint32_t>(items.size()),
+                       "type count");
+        for (const ComponentTypeItems::Item& item : items) {
+          WriteStr(stream_, *item.name, descriptor, PrintChars::Yes);
+          WriteComponentValueType(item.type, is_variant);
+          if (is_variant) {
+            stream_->WriteU8(0x00, "unused");
+          }
+        }
+        break;
+      }
+      case ComponentDef::Type::List:
+        stream_->WriteU8Enum(type->type(), "definition type");
+        WriteComponentValueType(type->AsTypeList()->ValueType(), false);
+        if (type->type() == ComponentDef::Type::ListFixed) {
+          WriteU32Leb128(stream_, type->AsTypeList()->Size(), "type count");
+        }
+        break;
+      case ComponentDef::Type::Option:
+        stream_->WriteU8Enum(type->type(), "definition type");
+        WriteComponentValueType(type->AsValueType()->ValueType(), false);
+        break;
+      case ComponentDef::Type::Result: {
+        const ComponentTypeResult* result = type->AsTypeResult();
+        stream_->WriteU8Enum(ComponentBinaryType::Result, "result type");
+        WriteComponentValueType(result->result(), true);
+        WriteComponentValueType(result->error(), true);
+        break;
+      }
+      case ComponentDef::Type::Own:
+      case ComponentDef::Type::Borrow:
+        stream_->WriteU8Enum(type->type(), "definition type");
+        WriteU32Leb128(stream_, type->AsTypeIndex()->GetIndex(), "type index");
+        break;
+      case ComponentDef::Type::ValueType:
+        WriteComponentValueType(type->AsValueType()->ValueType(), false);
+        break;
+      default:
+        assert(0);
+        break;
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        return;
+      }
+
+      size_t i = type_stack.back();
+
+      if (i < type_data->Size()) {
+        ComponentDef::Section section = type_data->Get(i)->section();
+        switch (section) {
+          case ComponentDef::Section::Type:
+            stream_->WriteU8Enum(ComponentBinaryInterface::Type, "type");
+            type = type_data->Get(i);
+            break;
+          case ComponentDef::Section::Alias:
+            stream_->WriteU8Enum(ComponentBinaryInterface::Alias, "type");
+            WriteComponentAlias(type_data->Get(i));
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentDef::Section::Import:
+            stream_->WriteU8Enum(ComponentBinaryInterface::Import, "type");
+            WriteComponentExtern(type_data->Get(i)->AsExternal());
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentDef::Section::Export:
+            stream_->WriteU8Enum(ComponentBinaryInterface::Export, "type");
+            WriteComponentExtern(type_data->Get(i)->AsExternal());
+            type_stack.back() = i + 1;
+            continue;
+          default:
+            assert(0);
+            break;
+        }
+        type_stack.back() = i + 1;
+        break;
+      }
+
+      type_data = type_data->GetParent();
+      type_stack.pop_back();
+    }
+  }
+}
+
+void BinaryWriter::WriteComponentCanonOpts(const ComponentCanonOpts* canon) {
+  WriteU32Leb128(stream_, static_cast<uint32_t>(canon->Options().size()),
+                 "option count");
+
+  for (const ComponentCanonOpts::OptionData& option : canon->Options()) {
+    ComponentBinaryCanonOption code;
+    bool has_index = false;
+
+    switch (option.option) {
+      case ComponentCanonOpts::Option::StrEncUtf8:
+        code = ComponentBinaryCanonOption::StrEncUtf8;
+        break;
+      case ComponentCanonOpts::Option::StrEncUtf16:
+        code = ComponentBinaryCanonOption::StrEncUtf16;
+        break;
+      case ComponentCanonOpts::Option::StrEncLatin1Utf16:
+        code = ComponentBinaryCanonOption::StrEncLatin1Utf16;
+        break;
+      case ComponentCanonOpts::Option::Memory:
+        code = ComponentBinaryCanonOption::Memory;
+        has_index = true;
+        break;
+      case ComponentCanonOpts::Option::Realloc:
+        code = ComponentBinaryCanonOption::Realloc;
+        has_index = true;
+        break;
+      case ComponentCanonOpts::Option::PostReturn:
+        code = ComponentBinaryCanonOption::PostReturn;
+        has_index = true;
+        break;
+      case ComponentCanonOpts::Option::Async:
+        code = ComponentBinaryCanonOption::Async;
+        break;
+      default:
+        assert(option.option == ComponentCanonOpts::Option::Callback);
+        code = ComponentBinaryCanonOption::Callback;
+        has_index = true;
+        break;
+    }
+
+    stream_->WriteU8Enum(code, "option");
+    if (has_index) {
+      WriteU32Leb128(stream_, option.index, "option argument");
+    }
+  }
+}
+
+void BinaryWriter::WriteComponentCanon(const ComponentDef* canon) {
+  switch (canon->canon()) {
+    case ComponentDef::Canon::Lift: {
+      stream_->WriteU8Enum(ComponentBinaryCanon::Lift, "canon type");
+      stream_->WriteU8(0x0, "reserved");
+
+      const ComponentCanonLift* lift = canon->AsCanonLift();
+      WriteU32Leb128(stream_, lift->CoreFuncIndex(), "core func index");
+      WriteComponentCanonOpts(lift);
+      WriteU32Leb128(stream_, lift->TypeIndex(), "type index");
+      break;
+    }
+    case ComponentDef::Canon::Lower: {
+      stream_->WriteU8Enum(ComponentBinaryCanon::Lower, "canon type");
+      stream_->WriteU8(0x0, "reserved");
+
+      const ComponentCanonLower* lower = canon->AsCanonLower();
+      WriteU32Leb128(stream_, lower->FuncIndex(), "func index");
+      WriteComponentCanonOpts(lower);
+      break;
+    }
+    case ComponentDef::Canon::ResourceDrop:
+      stream_->WriteU8Enum(ComponentBinaryCanon::ResourceDrop, "canon type");
+      WriteU32Leb128(stream_, canon->AsCanonType()->TypeIndex(), "type index");
+      break;
+    default:
+      assert(0);
+      break;
+  }
+}
+
+void BinaryWriter::WriteComponentExtern(const ComponentExternal* external) {
+  if (external->VersionSuffix() != nullptr) {
+    stream_->WriteU8Enum(ComponentBinaryType::Some, "suffix type");
+    WriteStr(stream_, *external->ExternalName(), "name", PrintChars::Yes);
+    WriteStr(stream_, *external->VersionSuffix(), "version", PrintChars::Yes);
+  } else {
+    stream_->WriteU8Enum(ComponentBinaryType::None, "suffix type");
+    WriteStr(stream_, *external->ExternalName(), "name", PrintChars::Yes);
+  }
+
+  if (external->ExportIndex() != kInvalidIndex) {
+    WriteComponentSort(external->sort());
+    WriteU32Leb128(stream_, external->ExportIndex(), "export index");
+
+    if (external->TypeIndex() == kInvalidIndex) {
+      stream_->WriteU8Enum(ComponentBinaryType::None, "no descriptor");
+      return;
+    }
+
+    stream_->WriteU8Enum(ComponentBinaryType::Some, "has descriptor");
+  }
+
+  switch (external->external()) {
+    case ComponentDef::External::CoreModule:
+      stream_->WriteU8Enum(ComponentBinarySort::Core, "extern type");
+      stream_->WriteU8Enum(ComponentBinaryCoreSort::Module, "extern core type");
+      break;
+    case ComponentDef::External::Func:
+      stream_->WriteU8Enum(ComponentBinarySort::Func, "extern type");
+      break;
+    case ComponentDef::External::ValueEq:
+      stream_->WriteU8Enum(ComponentBinarySort::Value, "extern type");
+      stream_->WriteU8Enum(ComponentBinaryExternal::ValueEq, "bound");
+      break;
+    case ComponentDef::External::ValueType:
+      stream_->WriteU8Enum(ComponentBinarySort::Value, "extern type");
+      stream_->WriteU8Enum(ComponentBinaryExternal::ValueType, "bound");
+      break;
+    case ComponentDef::External::TypeEq:
+      stream_->WriteU8Enum(ComponentBinarySort::Type, "extern type");
+      stream_->WriteU8Enum(ComponentBinaryExternal::TypeEq, "bound");
+      break;
+    case ComponentDef::External::TypeSubResource:
+      stream_->WriteU8Enum(ComponentBinarySort::Type, "extern type");
+      stream_->WriteU8Enum(ComponentBinaryExternal::TypeSubRes, "bound");
+      return;
+    case ComponentDef::External::Component:
+      stream_->WriteU8Enum(ComponentBinarySort::Component, "extern type");
+      break;
+    case ComponentDef::External::Instance:
+      stream_->WriteU8Enum(ComponentBinarySort::Instance, "extern type");
+      break;
+    default:
+      assert(0);
+      return;
+  }
+
+  WriteU32Leb128(stream_, external->TypeIndex(), "descriptor index");
+}
+
+Result BinaryWriter::WriteComponent(const ComponentData* component) {
+  std::vector<WriteComponentData> parent_data;
+  size_t i = 0;
+
+  WriteComponentHeader();
+
+  while (true) {
+    while (i < component->Size()) {
+      const ComponentDef* definition = component->Get(i++);
+
+      stream_->WriteU8Enum(definition->section(), "definition type");
+
+      ComponentDef::Section section = definition->section();
+      Offset offset =
+          WriteU32Leb128Space(LEB_SECTION_SIZE_GUESS, "section size (guess)");
+
+      if (section == ComponentDef::Section::Component) {
+        parent_data.push_back(WriteComponentData{offset, i});
+        component = definition->AsComponent();
+        i = 0;
+        WriteComponentHeader();
+        continue;
+      }
+
+      if (section == ComponentDef::Section::CoreModule) {
+        WriteBinaryModule(stream_, definition->AsCoreModule()->module(),
+                          options_);
+      } else {
+        size_t last = i;
+        while (last < component->Size() &&
+               component->Get(last)->section() == section) {
+          last++;
+        }
+
+        WriteU32Leb128(stream_, static_cast<uint32_t>(last + 1 - i), "count");
+        i--;
+
+        switch (section) {
+          case ComponentDef::Section::CoreInstance:
+          case ComponentDef::Section::Instance:
+            while (i < last) {
+              definition = component->Get(i++);
+              WriteComponentInstance(definition);
+            }
+            break;
+          case ComponentDef::Section::Alias:
+            while (i < last) {
+              definition = component->Get(i++);
+              WriteComponentAlias(definition);
+            }
+            break;
+          case ComponentDef::Section::Type:
+            while (i < last) {
+              definition = component->Get(i++);
+              WriteComponentType(definition);
+            }
+            break;
+          case ComponentDef::Section::Canon:
+            while (i < last) {
+              definition = component->Get(i++);
+              WriteComponentCanon(definition);
+            }
+            break;
+          case ComponentDef::Section::Import:
+          case ComponentDef::Section::Export:
+            while (i < last) {
+              definition = component->Get(i++);
+              WriteComponentExtern(definition->AsExternal());
+            }
+            break;
+          default:
+            assert(0);
+            break;
+        }
+      }
+
+      WriteFixupU32Leb128Size(offset, LEB_SECTION_SIZE_GUESS,
+                              "FIXUP section size");
+    }
+
+    if (component->GetParent() == nullptr) {
+      assert(parent_data.empty());
+      break;
+    }
+
+    assert(parent_data.size() > 0);
+    WriteFixupU32Leb128Size(parent_data.back().offset, LEB_SECTION_SIZE_GUESS,
+                            "FIXUP section size");
+    component = component->GetParentComponent();
+    i = parent_data.back().i;
+    parent_data.pop_back();
+  }
+
+  return stream_->result();
+}
+
 }  // end anonymous namespace
 
 Result WriteBinaryModule(Stream* stream,
@@ -2149,6 +2689,13 @@ Result WriteBinaryModule(Stream* stream,
                          const WriteBinaryOptions& options) {
   BinaryWriter binary_writer(stream, options, module);
   return binary_writer.WriteModule();
+}
+
+Result WriteBinaryComponent(Stream* stream,
+                            const Component* component,
+                            const WriteBinaryOptions& options) {
+  BinaryWriter binary_writer(stream, options, nullptr);
+  return binary_writer.WriteComponent(component);
 }
 
 }  // namespace wabt
