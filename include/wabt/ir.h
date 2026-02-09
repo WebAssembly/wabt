@@ -1704,6 +1704,533 @@ struct Script {
   BindingHash module_bindings;
 };
 
+class ComponentData;
+class ComponentTypeData;
+class ComponentCoreModule;
+class ComponentAliasExport;
+class ComponentAliasOuter;
+class ComponentValueType;
+class ComponentTypeIndex;
+class ComponentTypeItems;
+class ComponentTypeList;
+class ComponentTypeResult;
+class ComponentTypeFunc;
+class ComponentExternal;
+
+// Base class of all component definitions.
+class ComponentDef {
+ public:
+  // Component sections
+  enum class Section : uint8_t {
+    // Same as ComponentBinarySection in binary.h.
+    // Section types.
+    CoreModule = 1,
+    CoreInstance = 2,
+    CoreType = 3,
+    Component = 4,
+    Instance = 5,
+    Alias = 6,
+    Type = 7,
+    Import = 10,
+    Export = 11,
+  };
+
+  // Sort index space
+  enum class Sort : uint8_t {
+    CoreFunc,
+    CoreTable,
+    CoreMemory,
+    CoreGlobal,
+    CoreType,
+    CoreModule,
+    CoreInstance,
+    Func,
+    Value,
+    Type,
+    Component,
+    Instance,
+  };
+
+  // Subtype for Section::Type
+  enum class Type : uint8_t {
+    ValueType = 0,
+
+    // Types
+    Record = 0x72,
+    Variant = 0x71,
+    List = 0x70,
+    Option = 0x6b,
+    Result = 0x6a,
+    Own = 0x69,
+    Borrow = 0x68,
+    ListFixed = 0x67,
+    AsyncFunc = 0x43,
+    Instance = 0x42,
+    Component = 0x41,
+    Func = 0x40,
+  };
+
+  // Subtype for Section::Alias
+  enum class Alias : uint8_t {
+    Export,
+    CoreExport,
+    Outer,
+  };
+
+  // Subtype for Section::Import and Section::Export
+  enum class External : uint8_t {
+    CoreModule,
+    Func,
+    ValueEq,
+    ValueType,
+    TypeEq,
+    TypeSubResource,
+    Component,
+    Instance,
+    // Only allowed for Component Exports,
+    // where the descriptor is optional.
+    Unused,
+  };
+
+  virtual ~ComponentDef() {}
+
+  Section section() const {
+    return section_;
+  }
+
+  Sort sort() const {
+    return sort_;
+  }
+
+  Type type() const {
+    assert(section() == Section::Type);
+    return static_cast<Type>(sub_type_);
+  }
+
+  Alias alias() const {
+    assert(section() == Section::Alias);
+    return static_cast<Alias>(sub_type_);
+  }
+
+  External external() const {
+    assert(section() == Section::Import || section() == Section::Export);
+    return static_cast<External>(sub_type_);
+  }
+
+  const std::string* Name() const { return name_; }
+
+  void SetName(const std::string* name) {
+    name_ = name;
+  }
+
+  const ComponentData* AsComponent() const {
+    assert(section() == Section::Component);
+    return reinterpret_cast<const ComponentData*>(this);
+  }
+
+  const ComponentTypeData* AsComponentType() const {
+    assert(type() == Type::Instance || type() == Type::Component);
+    return reinterpret_cast<const ComponentTypeData*>(this);
+  }
+
+  const ComponentCoreModule* AsCoreModule() const {
+    assert(section() == Section::CoreModule);
+    return reinterpret_cast<const ComponentCoreModule*>(this);
+  }
+
+  const ComponentAliasExport* AsAliasExport() const {
+    assert(alias() == Alias::Export || alias() == Alias::CoreExport);
+    return reinterpret_cast<const ComponentAliasExport*>(this);
+  }
+
+  const ComponentAliasOuter* AsAliasOuter() const {
+    assert(alias() == Alias::Outer);
+    return reinterpret_cast<const ComponentAliasOuter*>(this);
+  }
+
+  const ComponentValueType* AsValueType() const {
+    assert(type() == Type::ValueType || type() == Type::Option);
+    return reinterpret_cast<const ComponentValueType*>(this);
+  }
+
+  const ComponentTypeIndex* AsTypeIndex() const {
+    assert(type() == Type::Own || type() == Type::Borrow);
+    return reinterpret_cast<const ComponentTypeIndex*>(this);
+  }
+
+  const ComponentTypeItems* AsTypeItems() const {
+    assert(type() == Type::Record || type() == Type::Variant);
+    return reinterpret_cast<const ComponentTypeItems*>(this);
+  }
+
+  const ComponentTypeList* AsTypeList() const {
+    assert(type() == Type::List || type() == Type::ListFixed);
+    return reinterpret_cast<const ComponentTypeList*>(this);
+  }
+
+  const ComponentTypeResult* AsTypeResult() const {
+    assert(type() == Type::Result);
+    return reinterpret_cast<const ComponentTypeResult*>(this);
+  }
+
+  const ComponentTypeFunc* AsTypeFunc() const {
+    assert(type() == Type::Func);
+    return reinterpret_cast<const ComponentTypeFunc*>(this);
+  }
+
+  const ComponentExternal* AsExternal() const {
+    assert(section() == Section::Import || section() == Section::Export);
+    return reinterpret_cast<const ComponentExternal*>(this);
+  }
+
+  static const char* GetSortName(Sort sort);
+
+ protected:
+  ComponentDef(Section section, Sort sort)
+      : section_(section), sort_(sort), sub_type_(0) {
+    assert(section != Section::Type);
+  }
+
+  ComponentDef(Type type)
+      : section_(Section::Type), sort_(Sort::Type),
+        sub_type_(static_cast<uint8_t>(type)) {}
+
+  ComponentDef(Alias alias, Sort sort)
+      : section_(Section::Alias), sort_(sort),
+        sub_type_(static_cast<uint8_t>(alias)) {}
+
+  ComponentDef(Section section, External external, Sort sort)
+      : section_(section), sort_(sort),
+        sub_type_(static_cast<uint8_t>(external)) {
+    assert(section == Section::Import || section == Section::Export);
+  }
+
+ private:
+  Section section_;
+  Sort sort_;
+  // Secondary, optional type field.
+  uint8_t sub_type_;
+  const std::string* name_ = nullptr;
+};
+
+class ComponentSharedData : public ComponentDef {
+ public:
+  const ComponentSharedData* GetParent() const { return parent_; }
+
+  bool IsComponent() const {
+    return section() == Section::Component;
+  }
+
+  bool IsInstanceType() const {
+    return section() == Section::Type && type() == Type::Instance;
+  }
+
+  bool IsComponentType() const {
+    return section() == Section::Type && type() == Type::Component;
+  }
+
+  uint32_t Size() const {
+    return static_cast<uint32_t>(list_.size());
+  }
+
+  const ComponentDef* Get(size_t idx) const {
+    return list_[idx].get();
+  }
+
+  void Append(std::unique_ptr<ComponentDef> type) {
+    assert(type->sort() != ComponentDef::Sort::Type);
+    list_.push_back(std::move(type));
+  }
+
+  void AppendType(std::unique_ptr<ComponentDef> type) {
+    assert(type->sort() == ComponentDef::Sort::Type);
+    type_list_.push_back(type.get());
+    list_.push_back(std::move(type));
+  }
+
+  void AppendAny(std::unique_ptr<ComponentDef> type) {
+    if (type->sort() == ComponentDef::Sort::Type) {
+      type_list_.push_back(type.get());
+    }
+    list_.push_back(std::move(type));
+  }
+
+  void SetLastTypeName(const std::string* name) {
+    assert(type_list_.size() > 0 && list_.back().get() == type_list_.back());
+    list_.back().get()->SetName(name);
+  }
+
+  Index TypeSize() const {
+    return static_cast<Index>(type_list_.size());
+  }
+
+  const ComponentDef* Find(Sort sort,
+                           const std::string* name,
+                           Index* out_index = nullptr) const;
+  const ComponentDef* Find(Sort sort, Index index) const;
+  Index SortSize(Sort sort) const;
+
+ protected:
+  ComponentSharedData(const ComponentSharedData* parent)
+      : ComponentDef(Section::Component, Sort::Component),
+        parent_(parent) {}
+
+  ComponentSharedData(const ComponentSharedData* parent, Type type)
+      : ComponentDef(type), parent_(parent) {
+    assert(IsInstanceType() || IsComponentType());
+  }
+
+ private:
+  const ComponentSharedData* parent_;
+  std::vector<std::unique_ptr<ComponentDef>> list_;
+  // Types and core types are frequently used.
+  std::vector<const ComponentDef*> type_list_;
+};
+
+class ComponentTypeData : public ComponentSharedData {
+ public:
+  ComponentTypeData(const ComponentSharedData* parent, bool is_component)
+      : ComponentSharedData(parent,
+                            is_component ? Type::Component : Type::Instance) {}
+};
+
+class ComponentCoreModule : public ComponentDef {
+ public:
+  ComponentCoreModule()
+      : ComponentDef(Section::CoreModule, Sort::CoreModule) {}
+
+  const Module* module() const {
+    return &module_;
+  }
+
+  Module* module() {
+    return &module_;
+  }
+
+ private:
+  Module module_;
+};
+
+class ComponentAliasExport : public ComponentDef {
+ public:
+  ComponentAliasExport(bool is_core,
+                       Index instance_index,
+                       const std::string* export_name,
+                       Sort sort)
+      : ComponentDef(is_core ? Alias::CoreExport : Alias::Export, sort),
+        instance_index_(instance_index), export_name_(export_name) {}
+
+  Index InstanceIndex() const { return instance_index_; }
+  const std::string* ExportName() const { return export_name_; }
+
+ private:
+  Index instance_index_;
+  const std::string* export_name_;
+};
+
+class ComponentAliasOuter : public ComponentDef {
+ public:
+  ComponentAliasOuter(Index counter,
+                      Index index,
+                      Sort sort,
+                      const ComponentDef* target,
+                      const ComponentDef* definition)
+      : ComponentDef(Alias::Outer, sort), counter_(counter), index_(index),
+        target_(target), definition_(definition) {
+    assert(sort == Sort::CoreModule || sort == Sort::Component ||
+           sort == Sort::Type);
+  }
+
+  Index GetCounter() const { return counter_; }
+  Index GetIndex() const { return index_; }
+  const ComponentDef* GetTarget() { return target_; }
+  // Definition is nullptr for invalid aliases.
+  const ComponentDef* GetDefinition() { return definition_; }
+
+ private:
+  Index counter_;
+  Index index_;
+  const ComponentDef* target_;
+  const ComponentDef* definition_;
+};
+
+class ComponentValueType : public ComponentDef {
+ public:
+  ComponentValueType(Type type, ComponentType value_type)
+      : ComponentDef(type), value_type_(value_type) {
+    assert((type == Type::ValueType || type == Type::Option) &&
+           !value_type_.IsNone());
+  }
+
+  const ComponentType& ValueType() const {
+    return value_type_;
+  }
+
+ private:
+  ComponentType value_type_;
+};
+
+class ComponentTypeIndex : public ComponentDef {
+ public:
+  ComponentTypeIndex(Type type, Index index)
+      : ComponentDef(type), index_(index) {
+    assert(type == Type::Own || type == Type::Borrow);
+  }
+
+  Index GetIndex() const {
+    return index_;
+  }
+
+ private:
+  Index index_;
+};
+
+class ComponentTypeItems : public ComponentDef {
+ public:
+  struct Item {
+    const std::string* name;
+    ComponentType type;
+  };
+
+  ComponentTypeItems(Type type, std::vector<Item>* items)
+      : ComponentDef(type) {
+    assert(type == Type::Record || type == Type::Variant);
+    items_ = std::move(*items);
+  }
+
+  const std::vector<Item>& Items() const { return items_; }
+
+ private:
+  std::vector<Item> items_;
+};
+
+class ComponentTypeList : public ComponentDef {
+ public:
+  ComponentTypeList(Type type, ComponentType value_type, uint32_t size)
+      : ComponentDef(type), value_type_(value_type), size_(size) {
+    assert((type == Type::List || type == Type::ListFixed) &&
+           !value_type_.IsNone());
+  }
+
+  const ComponentType& ValueType() const { return value_type_; }
+  uint32_t Size() const { return size_; }
+
+ private:
+  ComponentType value_type_;
+  uint32_t size_;
+};
+
+class ComponentTypeResult : public ComponentDef {
+ public:
+  ComponentTypeResult(ComponentType result, ComponentType error)
+      : ComponentDef(Type::Result), result_(result), error_(error) {}
+
+  const ComponentType& result() const { return result_; }
+  const ComponentType& error() const { return error_; }
+
+ private:
+  ComponentType result_;
+  ComponentType error_;
+};
+
+class ComponentTypeFunc : public ComponentDef {
+ public:
+  struct Param {
+    const std::string* name;
+    ComponentType type;
+  };
+
+  ComponentTypeFunc(bool is_async, std::vector<Param>* params,
+                    ComponentType& result)
+      : ComponentDef(is_async ? Type::AsyncFunc : Type::Func),
+        result_(result) {
+    params_ = std::move(*params);
+  }
+
+  const std::vector<Param>& params() const {
+    return params_;
+  }
+
+  const ComponentType& result() const {
+    return result_;
+  }
+
+ private:
+  std::vector<Param> params_;
+  ComponentType result_;
+};
+
+class ComponentExternal : public ComponentDef {
+ public:
+  ComponentExternal(bool is_import,
+                    const std::string* external_name,
+                    const std::string* version_suffix,
+                    External external,
+                    Sort sort,
+                    Index type_index,
+                    Index export_index)
+      : ComponentDef(is_import ? Section::Import : Section::Export,
+                     external, sort),
+        external_name_(external_name), version_suffix_(version_suffix),
+        type_index_(type_index), export_index_(export_index) {
+    assert(export_index == kInvalidIndex || !is_import);
+  }
+
+  const std::string* ExternalName() const { return external_name_; }
+  const std::string* VersionSuffix() const { return version_suffix_; }
+  // Optional for component exports
+  Index TypeIndex() const { return type_index_; }
+  // Only used by component exports
+  Index ExportIndex() const { return export_index_; }
+
+ private:
+  const std::string* external_name_;
+  const std::string* version_suffix_;
+  Index type_index_;
+  Index export_index_;
+};
+
+class ComponentData : public ComponentSharedData {
+ public:
+  ComponentData(const ComponentData* parent)
+      : ComponentSharedData(parent) {}
+
+  const ComponentData* GetParentComponent() const {
+    return GetParent()->AsComponent();
+  }
+};
+
+class Component : public ComponentData {
+ public:
+  // Helper class used by parsers.
+  class StringTable {
+   public:
+    StringTable(Component* owner)
+        : string_map_(Less), owner_(owner) {
+      assert(owner_->string_table_.empty());
+    }
+
+    const std::string* Find(const std::string_view& name) const;
+    const std::string* Append(const std::string_view& name);
+
+   private:
+    static bool Less(std::string* first, std::string* second) {
+      assert(first != nullptr && second != nullptr);
+      return *first < *second;
+    }
+
+    std::set<std::string*, decltype(Less)*> string_map_;
+    Component* owner_;
+  };
+
+  Component(const ComponentData* parent)
+      : ComponentData(parent) {}
+
+ private:
+  // Only these strings are used by the component
+  std::vector<std::unique_ptr<std::string>> string_table_;
+};
+
 void MakeTypeBindingReverseMapping(
     size_t num_types,
     const BindingHash& bindings,

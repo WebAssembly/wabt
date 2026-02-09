@@ -96,7 +96,8 @@ class WatWriter : ModuleContext {
             const Module& module)
       : ModuleContext(module), options_(options), stream_(stream) {}
 
-  Result WriteModule();
+  Result WriteModule(bool is_core_module = false);
+  Result WriteComponent(const ComponentData* component);
 
  private:
   void Indent();
@@ -165,6 +166,11 @@ class WatWriter : ModuleContext {
   void WriteField(const Field& field);
   void WriteStartFunction(const Var& start);
   void WriteCustom(const Custom& custom);
+
+  void WriteComponentValueType(const ComponentType& type);
+  void WriteComponentAlias(const ComponentDef* alias);
+  void WriteComponentType(const ComponentDef* type);
+  void WriteComponentExternal(const ComponentExternal* external);
 
   class ExprVisitorDelegate;
 
@@ -1954,15 +1960,287 @@ void WatWriter::WriteCustom(const Custom& custom) {
   WriteCloseNewline();
 }
 
-Result WatWriter::WriteModule() {
+void WatWriter::WriteComponentValueType(const ComponentType& type) {
+  if (!type.IsNone()) {
+    if (type.IsIndex()) {
+      Writef("%" PRIindex, type.GetIndex());
+    } else {
+      WritePuts(type.GetName(), NextChar::None);
+    }
+  }
+}
+
+void WatWriter::WriteComponentAlias(const ComponentDef* alias) {
+  switch (alias->alias()) {
+    case ComponentDef::Alias::Outer: {
+      const ComponentAliasOuter* outer_alias = alias->AsAliasOuter();
+      WriteOpenSpace("alias outer");
+      Writef("%" PRIindex, outer_alias->GetCounter());
+      Writef("%" PRIindex, outer_alias->GetIndex());
+
+      WriteOpenSpace(ComponentDef::GetSortName(outer_alias->sort()));
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+    }
+    case ComponentDef::Alias::Export: {
+      const ComponentAliasExport* export_alias = alias->AsAliasExport();
+      WriteOpenSpace("alias export");
+      Writef("%" PRIindex, export_alias->InstanceIndex());
+      WriteQuotedString(*export_alias->ExportName(), NextChar::Space);
+
+      WriteOpenSpace(ComponentDef::GetSortName(export_alias->sort()));
+      WriteCloseSpace();
+      WriteCloseNewline();
+      break;
+    }
+    default:
+      assert(0);
+      break;
+  }
+}
+
+void WatWriter::WriteComponentType(const ComponentDef* type) {
+  std::vector<size_t> type_stack;
+  const ComponentSharedData* shared_data = nullptr;
+
+  WriteOpenSpace("type");
+
+  while (true) {
+    assert(type != nullptr);
+
+    switch (type->type()) {
+      case ComponentDef::Type::ValueType:
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        break;
+      case ComponentDef::Type::Record:
+      case ComponentDef::Type::Variant: {
+        bool is_variant = type->type() == ComponentDef::Type::Variant;
+        const char* descriptor = is_variant ? "case" : "field";
+        WriteOpenSpace(is_variant ? "variant" : "record");
+
+        const std::vector<ComponentTypeItems::Item>& items =
+            type->AsTypeItems()->Items();
+        uint32_t size = static_cast<uint32_t>(items.size());
+
+        for (uint32_t i = 0; i < size; i++) {
+          const ComponentTypeItems::Item& item = items[i];
+          WriteOpenSpace(descriptor);
+          WriteQuotedString(*item.name, NextChar::Space);
+          WriteComponentValueType(item.type);
+          WriteCloseSpace();
+        }
+
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentDef::Type::List:
+      case ComponentDef::Type::ListFixed:
+        WriteOpenSpace("list");
+        WriteComponentValueType(type->AsTypeList()->ValueType());
+        if (type->type() == ComponentDef::Type::ListFixed) {
+          Writef("%" PRIu32, type->AsTypeList()->Size());
+        }
+        WriteCloseSpace();
+        break;
+      case ComponentDef::Type::Option:
+        WriteOpenSpace("option");
+        WriteComponentValueType(type->AsValueType()->ValueType());
+        WriteCloseSpace();
+        break;
+      case ComponentDef::Type::Result: {
+        const ComponentTypeResult* result = type->AsTypeResult();
+        WriteOpenSpace("result");
+        WriteComponentValueType(result->result());
+
+        if (!result->error().IsNone()) {
+          WriteOpenSpace("error");
+          WriteComponentValueType(result->error());
+          WriteCloseSpace();
+        }
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentDef::Type::Own:
+      case ComponentDef::Type::Borrow:
+        WriteOpenSpace(type->type() == ComponentDef::Type::Own ? "own"
+                                                               : "borrow");
+        Writef("%" PRIindex, type->AsTypeIndex()->GetIndex());
+        WriteCloseSpace();
+        break;
+      case ComponentDef::Type::AsyncFunc:
+      case ComponentDef::Type::Func: {
+        const ComponentTypeFunc* func = type->AsTypeFunc();
+
+        WriteOpenSpace("func");
+
+        const std::vector<ComponentTypeFunc::Param>& params = func->params();
+        uint32_t size = static_cast<uint32_t>(params.size());
+
+        for (uint32_t i = 0; i < size; i++) {
+          const ComponentTypeFunc::Param& param = params[i];
+          WriteOpenSpace("param");
+          WriteQuotedString(*param.name, NextChar::Space);
+          WriteComponentValueType(param.type);
+          WriteCloseSpace();
+        }
+
+        if (!func->result().IsNone()) {
+          WriteOpenSpace("result");
+          WriteComponentValueType(func->result());
+          WriteCloseSpace();
+        }
+
+        WriteCloseSpace();
+        break;
+      }
+      case ComponentDef::Type::Instance:
+      case ComponentDef::Type::Component: {
+        const ComponentSharedData* type_data = type->AsComponentType();
+        WriteOpenNewline(type_data->IsInstanceType() ? "instance"
+                                                     : "component");
+        if (type_data->Size() == 0) {
+          WriteCloseSpace();
+          break;
+        }
+
+        // The (type already indents.
+        Dedent();
+
+        shared_data = type_data;
+        type_stack.push_back(0);
+        break;
+      }
+      default:
+        assert(0);
+        break;
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        WriteCloseNewline();
+        return;
+      }
+
+      size_t i = type_stack.back();
+      if (i > 0 &&
+          shared_data->Get(i - 1)->section() == ComponentDef::Section::Type) {
+        WriteCloseNewline();
+      }
+
+      if (i < shared_data->Size()) {
+        switch (shared_data->Get(i)->section()) {
+          case ComponentDef::Section::Type:
+            WriteOpenSpace("type");
+            type = shared_data->Get(i);
+            break;
+          case ComponentDef::Section::Alias:
+            WriteComponentAlias(shared_data->Get(i));
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentDef::Section::Import:
+          case ComponentDef::Section::Export:
+            WriteComponentExternal(shared_data->Get(i)->AsExternal());
+            type_stack.back() = i + 1;
+            continue;
+          default:
+            assert(0);
+            break;
+        }
+        type_stack.back() = i + 1;
+        break;
+      }
+
+      shared_data = shared_data->GetParent();
+      type_stack.pop_back();
+      // Revert the Dedent() call in Instance/Component case.
+      Indent();
+      WriteCloseSpace();
+    }
+  }
+}
+
+void WatWriter::WriteComponentExternal(const ComponentExternal* external) {
+  bool is_import = external->section() == ComponentDef::Section::Import;
+  WriteOpenSpace(is_import ? "import" : "export");
+
+  WriteQuotedString(*external->ExternalName(), NextChar::Space);
+
+  if (external->ExportIndex() != kInvalidIndex) {
+    WriteOpenSpace(ComponentDef::GetSortName(external->sort()));
+    Writef("%" PRIindex, external->ExportIndex());
+    WriteCloseSpace();
+  }
+
+  if (external->external() != ComponentDef::External::Unused) {
+    const char* str1 = nullptr;
+    const char* str2 = nullptr;
+    bool print_index = true;
+
+    switch (external->external()) {
+      case ComponentDef::External::Func:
+        str1 = "func";
+        str2 = "type";
+        break;
+      case ComponentDef::External::ValueEq:
+        str1 = "value";
+        str2 = "eq";
+        break;
+      case ComponentDef::External::ValueType:
+        str1 = "value";
+        break;
+      case ComponentDef::External::TypeEq:
+        str1 = "type";
+        str2 = "eq";
+        break;
+      case ComponentDef::External::TypeSubResource:
+        str1 = "value";
+        str2 = "sub resource";
+        print_index = false;
+        break;
+      case ComponentDef::External::Component:
+        str1 = "component";
+        str2 = "type";
+        break;
+      case ComponentDef::External::Instance:
+        str1 = "instance";
+        str2 = "type";
+        break;
+      default:
+        assert(0);
+        break;
+    }
+
+    WriteOpenSpace(str1);
+    if (str2 != nullptr) {
+      WriteOpenSpace(str2);
+    }
+    if (print_index) {
+      Writef("%" PRIindex, external->TypeIndex());
+    }
+    if (str2 != nullptr) {
+      WriteCloseSpace();
+    }
+    WriteCloseSpace();
+  }
+
+  WriteCloseNewline();
+}
+
+Result WatWriter::WriteModule(bool is_core_module) {
   BuildInlineExportMap();
   BuildInlineImportMap();
-  WriteOpenSpace("module");
-  if (module.name.empty()) {
-    WriteNewline(NO_FORCE_NEWLINE);
-  } else {
-    WriteName(module.name, NextChar::Newline);
+
+  if (!is_core_module) {
+    WriteOpenSpace("module");
+
+    if (module.name.empty()) {
+      WriteNewline(NO_FORCE_NEWLINE);
+    } else {
+      WriteName(module.name, NextChar::Newline);
+    }
   }
+
   for (const ModuleField& field : module.fields) {
     switch (field.type()) {
       case ModuleFieldType::Func:
@@ -2006,6 +2284,71 @@ Result WatWriter::WriteModule() {
     }
   }
   WriteCloseNewline();
+  /* force the newline to be written */
+  WriteNextChar();
+  return result_;
+}
+
+Result WatWriter::WriteComponent(const ComponentData* component) {
+  std::vector<size_t> parent_i;
+  size_t i = 0;
+
+  WriteOpenSpace("component");
+  WriteNewline(NO_FORCE_NEWLINE);
+
+  while (true) {
+    while (i < component->Size()) {
+      const ComponentDef* definition = component->Get(i++);
+
+      switch (definition->section()) {
+        case ComponentDef::Section::CoreModule: {
+          WriteOpenSpace("core module");
+
+          WatWriter wat_writer(stream_, options_,
+                               *definition->AsCoreModule()->module());
+
+          wat_writer.indent_ = indent_;
+          wat_writer.next_char_ = next_char_;
+          wat_writer.WriteModule("core module");
+          indent_ = wat_writer.indent_;
+          next_char_ = wat_writer.next_char_;
+          break;
+        }
+        case ComponentDef::Section::Component:
+          parent_i.push_back(i);
+          WriteOpenSpace("component");
+          WriteNewline(FORCE_NEWLINE);
+          component = definition->AsComponent();
+          i = 0;
+          break;
+        case ComponentDef::Section::Alias:
+          WriteComponentAlias(definition);
+          break;
+        case ComponentDef::Section::Type:
+          WriteComponentType(definition);
+          break;
+        case ComponentDef::Section::Import:
+        case ComponentDef::Section::Export:
+          WriteComponentExternal(definition->AsExternal());
+          break;
+        default:
+          break;
+      }
+    }
+
+    WriteCloseNewline();
+
+    if (component->GetParent() == nullptr) {
+      assert(parent_i.size() == 0);
+      break;
+    }
+
+    assert(parent_i.size() > 0);
+    component = component->GetParentComponent();
+    i = parent_i.back();
+    parent_i.pop_back();
+  }
+
   /* force the newline to be written */
   WriteNextChar();
   return result_;
@@ -2138,6 +2481,15 @@ Result WriteWat(Stream* stream,
                 const WriteWatOptions& options) {
   WatWriter wat_writer(stream, options, *module);
   return wat_writer.WriteModule();
+}
+
+Result WriteComponentWat(Stream* stream,
+                         const Component* component,
+                         const WriteWatOptions& options) {
+  // Dummy module, which is used for core type printing.
+  Module module;
+  WatWriter wat_writer(stream, options, module);
+  return wat_writer.WriteComponent(component);
 }
 
 }  // namespace wabt

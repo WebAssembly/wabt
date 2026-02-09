@@ -78,6 +78,24 @@ enum class TableInitExprStatus {
   TableWithoutInitExpression,
 };
 
+struct ComponentNamedType {
+  std::string_view name;
+  ComponentType type;
+};
+
+struct ComponentExternalInfo {
+  ComponentBinarySort sort;
+  ComponentBinaryCoreSort core_sort;
+  ComponentBinaryExternal external;
+  Index index;
+};
+
+struct ComponentExportInfo {
+  ComponentBinarySort sort;
+  ComponentBinaryCoreSort core_sort;
+  Index index;
+};
+
 class BinaryReaderDelegate {
  public:
   struct State {
@@ -558,10 +576,75 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
+class ComponentBinaryReaderDelegate {
+ public:
+  virtual ~ComponentBinaryReaderDelegate() {}
+
+  virtual bool OnError(const Error&) = 0;
+  virtual void OnSetState(const BinaryReaderDelegate::State* s) { state = s; }
+
+  virtual Result OnCoreModule(const void* data,
+                              size_t size,
+                              const ReadBinaryOptions& options) = 0;
+  virtual Result BeginComponent(uint32_t version, size_t depth) = 0;
+  virtual Result EndComponent() = 0;
+
+  virtual Result BeginAliasSection(uint32_t count) = 0;
+  virtual Result EndAliasSection() = 0;
+  virtual Result OnAliasExport(ComponentBinarySort sort,
+                               ComponentBinaryCoreSort core_sort,
+                               uint32_t instance_index,
+                               std::string_view export_name) = 0;
+  virtual Result OnAliasOuter(ComponentBinarySort sort,
+                              ComponentBinaryCoreSort core_sort,
+                              uint32_t counter,
+                              uint32_t index) = 0;
+
+  virtual Result BeginTypeSection(uint32_t count) = 0;
+  virtual Result EndTypeSection() = 0;
+  virtual Result OnPrimitiveType(ComponentType type) = 0;
+  virtual Result OnRecordType(uint32_t field_count,
+                              ComponentNamedType* fields) = 0;
+  virtual Result OnVariantType(uint32_t case_count,
+                               ComponentNamedType* cases) = 0;
+  virtual Result OnListType(ComponentType type) = 0;
+  virtual Result OnListFixedType(ComponentType type, uint32_t size) = 0;
+  virtual Result OnOptionType(ComponentType type) = 0;
+  virtual Result OnResultType(ComponentType result, ComponentType error) = 0;
+  virtual Result OnOwnType(Index index) = 0;
+  virtual Result OnBorrowType(Index index) = 0;
+  virtual Result OnFuncType(ComponentBinaryType type,
+                            uint32_t param_count,
+                            ComponentNamedType* params,
+                            ComponentType result) = 0;
+  virtual Result BeginInstanceType(uint32_t count) = 0;
+  virtual Result EndInstanceType() = 0;
+  virtual Result BeginComponentType(uint32_t count) = 0;
+  virtual Result EndComponentType() = 0;
+
+  virtual Result BeginImportSection(uint32_t count) = 0;
+  virtual Result EndImportSection() = 0;
+  virtual Result BeginExportSection(uint32_t count) = 0;
+  virtual Result EndExportSection() = 0;
+  virtual Result OnImport(std::string_view external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info) = 0;
+  virtual Result OnExport(std::string_view external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info,
+                          ComponentExportInfo* export_info) = 0;
+  const BinaryReaderDelegate::State* state = nullptr;
+};
+
 Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
+
+Result ReadBinaryComponent(const void* data,
+                           size_t size,
+                           ComponentBinaryReaderDelegate* component_delegate,
+                           const ReadBinaryOptions& options);
 
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,

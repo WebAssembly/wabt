@@ -17,6 +17,8 @@ struct TokenInfo {
   };
 };
 %%
+after, TokenType::After
+alias, TokenType::Alias
 any, Type::AnyRef, TokenType::Any
 anyref, Type::AnyRef
 any.convert_extern, TokenType::GCUnary, Opcode::AnyConvertExtern
@@ -36,7 +38,6 @@ array.new_default, TokenType::ArrayNewDefault, Opcode::ArrayNewDefault
 array.new_elem, TokenType::ArrayNewElem, Opcode::ArrayNewElem
 array.new_fixed, TokenType::ArrayNewFixed, Opcode::ArrayNewFixed
 array.set, TokenType::ArraySet, Opcode::ArraySet
-after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
@@ -44,10 +45,13 @@ assert_malformed, TokenType::AssertMalformed
 assert_return, TokenType::AssertReturn
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
+async, TokenType::Async
 atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
 before, TokenType::Before
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
+bool, TokenType::Bool
+borrow, TokenType::Borrow
 br_if, TokenType::BrIf, Opcode::BrIf
 br_on_cast, TokenType::BrOnCast, Opcode::BrOnCast
 br_on_cast_fail, TokenType::BrOnCast, Opcode::BrOnCastFail
@@ -62,7 +66,11 @@ catch, TokenType::Catch, Opcode::Catch
 catch_all, TokenType::CatchAll, Opcode::CatchAll
 catch_ref, TokenType::CatchRef
 catch_all_ref, TokenType::CatchAllRef
+case, TokenType::Case
+char, TokenType::Char
 code, TokenType::Code
+component, TokenType::Component
+core, TokenType::Core
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
@@ -77,6 +85,8 @@ end, TokenType::End, Opcode::End
 tag, TokenType::Tag
 eq, Type::EqRef, TokenType::Eq
 eqref, Type::EqRef
+error, TokenType::Error
+error-context, TokenType::ErrorContext
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
 extern.convert_any, TokenType::GCUnary, Opcode::ExternConvertAny
@@ -567,8 +577,10 @@ i8x16, TokenType::I8X16
 if, TokenType::If, Opcode::If
 import, TokenType::Import
 input, TokenType::Input
+instance, TokenType::Instance
 invoke, TokenType::Invoke
 item, TokenType::Item
+list, TokenType::List
 local.get, TokenType::LocalGet, Opcode::LocalGet
 local.set, TokenType::LocalSet, Opcode::LocalSet
 local.tee, TokenType::LocalTee, Opcode::LocalTee
@@ -596,10 +608,14 @@ nullfuncref, Type::NullFuncRef
 nullexternref, Type::NullExternRef
 nullref, Type::NullRef
 offset, TokenType::Offset
+option, TokenType::Option
+outer, TokenType::Outer
 output, TokenType::Output
+own, TokenType::Own
 pagesize, TokenType::PageSize
 param, TokenType::Param
 rec, TokenType::Rec
+record, TokenType::Record
 ref, TokenType::Ref
 quote, TokenType::Quote
 ref.array, TokenType::RefArray
@@ -615,15 +631,21 @@ ref.null, TokenType::RefNull, Opcode::RefNull
 ref.struct, TokenType::RefStruct
 ref.test, TokenType::RefTest, Opcode::RefTest
 register, TokenType::Register
+resource, TokenType::Resource
 result, TokenType::Result
 rethrow, TokenType::Rethrow, Opcode::Rethrow
 return_call_indirect, TokenType::ReturnCallIndirect, Opcode::ReturnCallIndirect
 return_call_ref, TokenType::ReturnCallRef, Opcode::ReturnCallRef
 return_call, TokenType::ReturnCall, Opcode::ReturnCall
 return, TokenType::Return, Opcode::Return
+s8, TokenType::S8
+s16, TokenType::S16
+s32, TokenType::S32
+s64, TokenType::S64
 select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
+string, TokenType::String
 struct, Type::StructRef, TokenType::Struct
 structref, Type::StructRef
 struct.get, TokenType::StructGet, Opcode::StructGet
@@ -647,6 +669,10 @@ throw_ref, TokenType::ThrowRef, Opcode::ThrowRef
 try, TokenType::Try, Opcode::Try
 try_table, TokenType::TryTable, Opcode::TryTable
 type, TokenType::Type
+u8, TokenType::U8
+u16, TokenType::U16
+u32, TokenType::U32
+u64, TokenType::U64
 unreachable, TokenType::Unreachable, Opcode::Unreachable
 v128.andnot, TokenType::Binary, Opcode::V128Andnot
 v128.and, TokenType::Binary, Opcode::V128And
@@ -673,6 +699,8 @@ v128.store8_lane, TokenType::SimdStoreLane, Opcode::V128Store8Lane
 v128.store16_lane, TokenType::SimdStoreLane, Opcode::V128Store16Lane
 v128.store32_lane, TokenType::SimdStoreLane, Opcode::V128Store32Lane
 v128.store64_lane, TokenType::SimdStoreLane, Opcode::V128Store64Lane
+value, TokenType::Value
+variant, TokenType::Variant
 i8x16.shuffle, TokenType::SimdShuffleOp, Opcode::I8X16Shuffle
 i8x16.swizzle, TokenType::Binary, Opcode::I8X16Swizzle
 i64.add128, TokenType::Quaternary, Opcode::I64Add128
