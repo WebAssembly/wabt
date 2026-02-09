@@ -21,6 +21,7 @@
 
 #define WABT_BINARY_MAGIC 0x6d736100
 #define WABT_BINARY_VERSION 1
+#define WABT_BINARY_COMPONENT_VERSION 0xd
 #define WABT_BINARY_LAYER_MODULE 0
 #define WABT_BINARY_LAYER_COMPONENT 1
 #define WABT_BINARY_LIMITS_HAS_MAX_FLAG 0x1
@@ -103,6 +104,59 @@ enum class NameSectionSubsection {
   Last = Tag,
 };
 const char* GetNameSectionSubsectionName(NameSectionSubsection subsec);
+
+enum class ComponentBinarySort : uint8_t {
+  Core = 0x00,
+  Func = 0x01,
+  Value = 0x02,
+  Type = 0x03,
+  Component = 0x04,
+  Instance = 0x05,
+};
+
+enum class ComponentBinaryCoreSort : uint8_t {
+  Func = 0x00,
+  Table = 0x01,
+  Memory = 0x02,
+  Global = 0x03,
+  Type = 0x10,
+  Module = 0x11,
+  Instance = 0x12,
+  NonCore = 0xff,
+};
+
+enum class ComponentBinaryInstance : uint8_t {
+  Reference = 0x00,
+  Inline = 0x01,
+};
+
+enum class ComponentBinaryAlias : uint8_t {
+  Export = 0x00,
+  CoreExport = 0x01,
+  Outer = 0x02,
+};
+
+enum class ComponentBinaryType : uint8_t {
+  None = 0,
+  Some = 1,
+
+  ResultSome = 0,
+  ResultNone = 1,
+};
+
+enum class ComponentBinaryInterface : uint8_t {
+  CoreType = 0,
+  Type = 1,
+  Alias = 2,
+  Import = 3,
+  Export = 4,
+};
+
+enum class ComponentBinaryCanon : uint8_t {
+  Lift = 0x00,
+  Lower = 0x01,
+  ResourceDrop = 0x03,
+};
 
 }  // namespace wabt
 

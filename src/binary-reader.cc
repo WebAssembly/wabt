@@ -62,8 +62,16 @@
 #define CALLBACK0(member) \
   ERROR_UNLESS(Succeeded(delegate_->member()), #member " callback failed")
 
+#define COMPONENT_CALLBACK0(member)                      \
+  ERROR_UNLESS(Succeeded(component_delegate_->member()), \
+               #member " callback failed")
+
 #define CALLBACK(member, ...)                             \
   ERROR_UNLESS(Succeeded(delegate_->member(__VA_ARGS__)), \
+               #member " callback failed")
+
+#define COMPONENT_CALLBACK(member, ...)                             \
+  ERROR_UNLESS(Succeeded(component_delegate_->member(__VA_ARGS__)), \
                #member " callback failed")
 
 namespace wabt {
@@ -79,6 +87,7 @@ class BinaryReader {
   BinaryReader(const void* data,
                size_t size,
                BinaryReaderDelegate* delegate,
+               ComponentBinaryReaderDelegate* component_delegate,
                const ReadBinaryOptions& options);
 
   Result ReadModule(const ReadModuleOptions& options);
@@ -197,12 +206,29 @@ class BinaryReader {
   [[nodiscard]] Result ReadDataCountSection(Offset section_size);
   [[nodiscard]] Result ReadTagSection(Offset section_size);
   [[nodiscard]] Result ReadSections(const ReadSectionsOptions& options);
+  [[nodiscard]] Result ReadComponentCoreSort(ComponentSort* out_sort);
+  [[nodiscard]] Result ReadComponentSort(ComponentSort* out_sort);
+  [[nodiscard]] Result ReadComponentCoreInstance();
+  [[nodiscard]] Result ReadComponentInstance();
+  [[nodiscard]] Result ReadComponentInlineInstance();
+  [[nodiscard]] Result ReadComponentAlias();
+  [[nodiscard]] Result ReadComponentValType(ComponentType* type);
+  [[nodiscard]] Result ReadComponentValTypeOpt(ComponentType* type);
+  [[nodiscard]] Result ReadComponentType();
+  [[nodiscard]] Result ReadComponentCanonOptions(
+      std::vector<ComponentCanonOption>* out_options);
+  [[nodiscard]] Result ReadComponentCanon();
+  [[nodiscard]] Result ReadComponentExternal(bool is_import,
+                                             bool is_component_export);
+  [[nodiscard]] Result ReadComponent();
+
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0;  // Either the section end or data_size.
   BinaryReaderDelegate::State state_;
   BinaryReaderLogging logging_delegate_;
   BinaryReaderDelegate* delegate_ = nullptr;
+  ComponentBinaryReaderDelegate* component_delegate_ = nullptr;
   std::vector<Index> sub_types_;
   TypeVector param_types_;
   TypeVector result_types_;
@@ -230,14 +256,21 @@ class BinaryReader {
 BinaryReader::BinaryReader(const void* data,
                            size_t size,
                            BinaryReaderDelegate* delegate,
+                           ComponentBinaryReaderDelegate* component_delegate,
                            const ReadBinaryOptions& options)
     : read_end_(size),
       state_(static_cast<const uint8_t*>(data), size),
       logging_delegate_(options.log_stream, delegate),
       delegate_(options.log_stream ? &logging_delegate_ : delegate),
+      component_delegate_(component_delegate),
       options_(options),
       last_known_section_(BinarySection::Invalid) {
-  delegate->OnSetState(&state_);
+  if (delegate != nullptr) {
+    delegate->OnSetState(&state_);
+  }
+  if (component_delegate != nullptr) {
+    component_delegate->OnSetState(&state_);
+  }
 }
 
 void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
@@ -249,7 +282,12 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
 
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   Error error(error_level, Location(state_.offset), buffer);
-  bool handled = delegate_->OnError(error);
+  bool handled;
+  if (delegate_ != nullptr) {
+    handled = delegate_->OnError(error);
+  } else {
+    handled = component_delegate_->OnError(error);
+  }
 
   if (!handled) {
     // Not great to just print, but we don't want to eat the error either.
@@ -3504,6 +3542,856 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   return result;
 }
 
+Result BinaryReader::ReadComponentCoreSort(ComponentSort* out_sort) {
+  uint8_t sort_code;
+  CHECK_RESULT(ReadU8(&sort_code, "core sort type"));
+
+  switch (static_cast<ComponentBinaryCoreSort>(sort_code)) {
+    case ComponentBinaryCoreSort::Func:
+      *out_sort = ComponentSort::CoreFunc;
+      break;
+    case ComponentBinaryCoreSort::Table:
+      *out_sort = ComponentSort::CoreTable;
+      break;
+    case ComponentBinaryCoreSort::Memory:
+      *out_sort = ComponentSort::CoreMemory;
+      break;
+    case ComponentBinaryCoreSort::Global:
+      *out_sort = ComponentSort::CoreGlobal;
+      break;
+    case ComponentBinaryCoreSort::Type:
+      *out_sort = ComponentSort::CoreType;
+      break;
+    case ComponentBinaryCoreSort::Module:
+      *out_sort = ComponentSort::CoreModule;
+      break;
+    case ComponentBinaryCoreSort::Instance:
+      *out_sort = ComponentSort::CoreInstance;
+      break;
+    default:
+      ERROR("Unexpected core sort code: %" PRIx8, sort_code);
+      return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentSort(ComponentSort* out_sort) {
+  uint8_t sort_code;
+  CHECK_RESULT(ReadU8(&sort_code, "sort type"));
+
+  switch (static_cast<ComponentBinarySort>(sort_code)) {
+    case ComponentBinarySort::Core:
+      return ReadComponentCoreSort(out_sort);
+    case ComponentBinarySort::Func:
+      *out_sort = ComponentSort::Func;
+      break;
+    case ComponentBinarySort::Value:
+      *out_sort = ComponentSort::Value;
+      break;
+    case ComponentBinarySort::Type:
+      *out_sort = ComponentSort::Type;
+      break;
+    case ComponentBinarySort::Component:
+      *out_sort = ComponentSort::Component;
+      break;
+    case ComponentBinarySort::Instance:
+      *out_sort = ComponentSort::Instance;
+      break;
+    default:
+      ERROR("Unexpected sort code: %" PRIx8, sort_code);
+      return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentCoreInstance() {
+  uint8_t code;
+  CHECK_RESULT(ReadU8(&code, "instantiate type"));
+  bool is_inline = false;
+
+  switch (static_cast<ComponentBinaryInstance>(code)) {
+    case ComponentBinaryInstance::Reference:
+      break;
+    case ComponentBinaryInstance::Inline:
+      is_inline = true;
+      break;
+    default:
+      ERROR("Invalid instantiate type: %" PRIx8, code);
+      return Result::Error;
+  }
+
+  uint32_t from_index = 0, argument_count;
+  if (!is_inline) {
+    CHECK_RESULT(ReadU32Leb128(&from_index, "module index"));
+  }
+  CHECK_RESULT(ReadU32Leb128(&argument_count, "counter"));
+
+  std::vector<ComponentNamedSort> arguments;
+  arguments.reserve(argument_count);
+
+  for (uint32_t i = 0; i < argument_count; i++) {
+    std::string_view name;
+    uint32_t index;
+    ComponentSort sort = ComponentSort::CoreInstance;
+
+    CHECK_RESULT(ReadStr(&name, "name"));
+    if (is_inline) {
+      CHECK_RESULT(ReadComponentCoreSort(&sort));
+    } else {
+      CHECK_RESULT(ReadU8(&code, "sort"));
+      if (static_cast<ComponentBinaryCoreSort>(code) !=
+          ComponentBinaryCoreSort::Instance) {
+        ERROR("Invalid sort type: %" PRIx8, code);
+        return Result::Error;
+      }
+    }
+    CHECK_RESULT(ReadU32Leb128(&index, "index"));
+    arguments.push_back(ComponentNamedSort{name, sort, index});
+  }
+
+  if (is_inline) {
+    COMPONENT_CALLBACK(OnInlineCoreInstance, argument_count, arguments.data());
+  } else {
+    COMPONENT_CALLBACK(OnCoreInstance, from_index, argument_count,
+                       arguments.data());
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentInstance() {
+  uint8_t code;
+  CHECK_RESULT(ReadU8(&code, "instantiate type"));
+
+  switch (static_cast<ComponentBinaryInstance>(code)) {
+    case ComponentBinaryInstance::Reference:
+      break;
+    case ComponentBinaryInstance::Inline:
+      return ReadComponentInlineInstance();
+    default:
+      ERROR("Invalid instantiate type: %" PRIx8, code);
+      return Result::Error;
+  }
+
+  uint32_t from_index, argument_count;
+  CHECK_RESULT(ReadU32Leb128(&from_index, "component index"));
+  CHECK_RESULT(ReadU32Leb128(&argument_count, "counter"));
+
+  std::vector<ComponentNamedSort> arguments;
+  arguments.reserve(argument_count);
+
+  for (uint32_t i = 0; i < argument_count; i++) {
+    std::string_view name;
+    ComponentSort sort;
+    uint32_t index;
+
+    CHECK_RESULT(ReadStr(&name, "name"));
+    CHECK_RESULT(ReadComponentSort(&sort));
+    CHECK_RESULT(ReadU32Leb128(&index, "index"));
+    arguments.push_back(ComponentNamedSort{name, sort, index});
+  }
+
+  COMPONENT_CALLBACK(OnInstance, from_index, argument_count, arguments.data());
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentInlineInstance() {
+  uint32_t argument_count;
+  CHECK_RESULT(ReadU32Leb128(&argument_count, "counter"));
+
+  std::vector<ComponentNamedExportInfo> arguments;
+  arguments.reserve(argument_count);
+
+  for (uint32_t i = 0; i < argument_count; i++) {
+    std::string_view name;
+    std::string_view version_suffix;
+    bool has_version_suffix = false;
+    ComponentSort sort;
+    uint32_t index;
+
+    uint8_t code;
+    CHECK_RESULT(ReadU8(&code, "suffix type"));
+    switch (static_cast<ComponentBinaryType>(code)) {
+      case ComponentBinaryType::None:
+        break;
+      case ComponentBinaryType::Some:
+        has_version_suffix = true;
+        break;
+      default:
+        ERROR("Invalid suffix type: %" PRIx8, code);
+        return Result::Error;
+    }
+
+    CHECK_RESULT(ReadStr(&name, "name"));
+    if (has_version_suffix) {
+      CHECK_RESULT(ReadStr(&version_suffix, "name"));
+    }
+
+    CHECK_RESULT(ReadComponentSort(&sort));
+    CHECK_RESULT(ReadU32Leb128(&index, "index"));
+    arguments.push_back(ComponentNamedExportInfo{name, version_suffix, sort,
+                                                 has_version_suffix, index});
+  }
+
+  COMPONENT_CALLBACK(OnInlineInstance, argument_count, arguments.data());
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentAlias() {
+  ComponentSort sort;
+  CHECK_RESULT(ReadComponentSort(&sort));
+
+  uint8_t target_type;
+  CHECK_RESULT(ReadU8(&target_type, "target type"));
+
+  switch (static_cast<ComponentBinaryAlias>(target_type)) {
+    case ComponentBinaryAlias::Outer: {
+      if (sort != ComponentSort::CoreModule &&
+          sort != ComponentSort::Component && sort != ComponentSort::Type) {
+        ERROR("Not allowed sort type: %s", sort.GetName());
+        return Result::Error;
+      }
+      uint32_t counter, index;
+      CHECK_RESULT(ReadU32Leb128(&counter, "counter"));
+      CHECK_RESULT(ReadU32Leb128(&index, "index"));
+      COMPONENT_CALLBACK(OnAliasOuter, sort, counter, index);
+      break;
+    }
+    case ComponentBinaryAlias::Export:
+    case ComponentBinaryAlias::CoreExport: {
+      uint32_t instance_index;
+      std::string_view export_name;
+      CHECK_RESULT(ReadU32Leb128(&instance_index, "index"));
+      CHECK_RESULT(ReadStr(&export_name, "export name"));
+      if (static_cast<ComponentBinaryAlias>(target_type) ==
+          ComponentBinaryAlias::Export) {
+        COMPONENT_CALLBACK(OnAliasExport, sort, instance_index, export_name);
+      } else {
+        COMPONENT_CALLBACK(OnAliasCoreExport, sort, instance_index,
+                           export_name);
+      }
+      break;
+    }
+    default:
+      ERROR("Unexpected target type code: %" PRIx8, target_type);
+      return Result::Error;
+  }
+
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentValType(ComponentType* type) {
+  uint64_t unsigned_value;
+  CHECK_RESULT(ReadS64Leb128(&unsigned_value, "type code"));
+  int64_t value = static_cast<int64_t>(unsigned_value);
+
+  if (value >= 0) {
+    if (value < kInvalidIndex) {
+      *type = ComponentType(static_cast<Index>(value));
+      return Result::Ok;
+    }
+  } else if (ComponentType::IsPrimitiveTypeS64(value)) {
+    uint8_t mask = static_cast<uint8_t>(ComponentType::Bool);
+    *type = ComponentType(static_cast<ComponentType::Enum>(value & mask));
+    return Result::Ok;
+  }
+
+  ERROR("Unknown type code: %" PRIx64, value);
+  return Result::Error;
+}
+
+Result BinaryReader::ReadComponentValTypeOpt(ComponentType* type) {
+  uint8_t type_code;
+  CHECK_RESULT(ReadU8(&type_code, "type code"));
+
+  switch (static_cast<ComponentBinaryType>(type_code)) {
+    case ComponentBinaryType::None:
+      return Result::Ok;
+    case ComponentBinaryType::Some:
+      return ReadComponentValType(type);
+    default:
+      ERROR("Unexpected type code: %" PRIx8, type_code);
+      return Result::Error;
+  }
+}
+
+struct ReadComponentTypeData {
+  ComponentTypeDef type;
+  size_t i;
+};
+
+Result BinaryReader::ReadComponentType() {
+  std::vector<ReadComponentTypeData> type_stack;
+
+  while (true) {
+    uint8_t type_code;
+    CHECK_RESULT(ReadU8(&type_code, "type code"));
+
+    if (ComponentType::IsPrimitiveType(type_code)) {
+      ComponentType type(static_cast<ComponentType::Enum>(type_code));
+      COMPONENT_CALLBACK(OnPrimitiveType, type);
+    } else {
+      ComponentTypeDef def_type = static_cast<ComponentTypeDef>(type_code);
+
+      switch (def_type) {
+        case ComponentTypeDef::Record: {
+          uint32_t field_count;
+          std::vector<ComponentNamedType> fields;
+          CHECK_RESULT(ReadU32Leb128(&field_count, "field count"));
+          fields.reserve(field_count);
+
+          while (fields.size() < field_count) {
+            std::string_view name;
+            ComponentType type;
+            CHECK_RESULT(ReadStr(&name, "field name"));
+            CHECK_RESULT(ReadComponentValType(&type));
+
+            fields.push_back(ComponentNamedType{name, type});
+          }
+
+          COMPONENT_CALLBACK(OnRecordType, field_count, fields.data());
+          break;
+        }
+        case ComponentTypeDef::Variant: {
+          uint32_t case_count;
+          std::vector<ComponentNamedType> cases;
+          CHECK_RESULT(ReadU32Leb128(&case_count, "case count"));
+          cases.reserve(case_count);
+
+          while (cases.size() < case_count) {
+            std::string_view name;
+            ComponentType type;
+            uint8_t unused;
+            CHECK_RESULT(ReadStr(&name, "case name"));
+            CHECK_RESULT(ReadComponentValTypeOpt(&type));
+            CHECK_RESULT(ReadU8(&unused, "unused"));
+            ERROR_UNLESS(unused == 0, "only zero value is supported");
+            cases.push_back(ComponentNamedType{name, type});
+          }
+
+          COMPONENT_CALLBACK(OnVariantType, case_count, cases.data());
+          break;
+        }
+        case ComponentTypeDef::List:
+        case ComponentTypeDef::ListFixed: {
+          ComponentType type;
+          CHECK_RESULT(ReadComponentValType(&type));
+          if (def_type == ComponentTypeDef::List) {
+            COMPONENT_CALLBACK(OnListType, type);
+          } else {
+            uint32_t size;
+            CHECK_RESULT(ReadU32Leb128(&size, "size"));
+            COMPONENT_CALLBACK(OnListFixedType, type, size);
+          }
+          break;
+        }
+        case ComponentTypeDef::Tuple: {
+          uint32_t type_count;
+          std::vector<ComponentType> types;
+          CHECK_RESULT(ReadU32Leb128(&type_count, "type count"));
+          types.reserve(type_count);
+
+          while (types.size() < type_count) {
+            ComponentType type;
+            CHECK_RESULT(ReadComponentValType(&type));
+            types.push_back(type);
+          }
+
+          COMPONENT_CALLBACK(OnTupleType, type_count, types.data());
+          break;
+        }
+        case ComponentTypeDef::Flags:
+        case ComponentTypeDef::Enum: {
+          uint32_t name_count;
+          std::vector<std::string_view> names;
+          CHECK_RESULT(ReadU32Leb128(&name_count, "name count"));
+          names.reserve(name_count);
+
+          while (names.size() < name_count) {
+            std::string_view name;
+            CHECK_RESULT(ReadStr(&name, "name"));
+            names.push_back(name);
+          }
+
+          if (def_type == ComponentTypeDef::Flags) {
+            COMPONENT_CALLBACK(OnFlagsType, name_count, names.data());
+          } else {
+            COMPONENT_CALLBACK(OnEnumType, name_count, names.data());
+          }
+          break;
+        }
+        case ComponentTypeDef::Option: {
+          ComponentType type;
+          CHECK_RESULT(ReadComponentValType(&type));
+          COMPONENT_CALLBACK(OnOptionType, type);
+          break;
+        }
+        case ComponentTypeDef::Result: {
+          ComponentType result, error;
+          CHECK_RESULT(ReadComponentValTypeOpt(&result));
+          CHECK_RESULT(ReadComponentValTypeOpt(&error));
+          COMPONENT_CALLBACK(OnResultType, result, error);
+          break;
+        }
+        case ComponentTypeDef::Own: {
+          Index index;
+          CHECK_RESULT(ReadU32Leb128(&index, "type index"));
+          COMPONENT_CALLBACK(OnOwnType, index);
+          break;
+        }
+        case ComponentTypeDef::Borrow: {
+          Index index;
+          CHECK_RESULT(ReadU32Leb128(&index, "type index"));
+          COMPONENT_CALLBACK(OnBorrowType, index);
+          break;
+        }
+        case ComponentTypeDef::Stream: {
+          ComponentType type;
+          CHECK_RESULT(ReadComponentValTypeOpt(&type));
+          COMPONENT_CALLBACK(OnStreamType, type);
+          break;
+        }
+        case ComponentTypeDef::Future: {
+          ComponentType type;
+          CHECK_RESULT(ReadComponentValTypeOpt(&type));
+          COMPONENT_CALLBACK(OnFutureType, type);
+          break;
+        }
+        case ComponentTypeDef::AsyncFunc:
+        case ComponentTypeDef::Func: {
+          uint32_t param_count;
+          CHECK_RESULT(ReadU32Leb128(&param_count, "param count"));
+
+          std::vector<ComponentNamedType> params;
+          ComponentType result;
+          params.reserve(param_count);
+
+          while (params.size() < param_count) {
+            std::string_view name;
+            ComponentType type;
+            CHECK_RESULT(ReadStr(&name, "param name"));
+            CHECK_RESULT(ReadComponentValType(&type));
+
+            params.push_back(ComponentNamedType{name, type});
+          }
+
+          CHECK_RESULT(ReadU8(&type_code, "result code"));
+          switch (static_cast<ComponentBinaryType>(type_code)) {
+            case ComponentBinaryType::ResultSome:
+              CHECK_RESULT(ReadComponentValType(&result));
+              break;
+            case ComponentBinaryType::ResultNone:
+              CHECK_RESULT(ReadU8(&type_code, "reserved value"));
+              if (type_code != 0) {
+                ERROR("Unknown reserved code: %" PRIx8, type_code);
+              }
+              break;
+            default:
+              ERROR("Unknown result code: %" PRIx8, type_code);
+              return Result::Error;
+          }
+
+          COMPONENT_CALLBACK(OnFuncType, def_type, param_count, params.data(),
+                             result);
+          break;
+        }
+        case ComponentTypeDef::Instance:
+        case ComponentTypeDef::Component: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "definition count"));
+
+          if (def_type == ComponentTypeDef::Instance) {
+            COMPONENT_CALLBACK(BeginInstanceType, count);
+          } else {
+            COMPONENT_CALLBACK(BeginComponentType, count);
+          }
+
+          if (count == 0) {
+            if (def_type == ComponentTypeDef::Instance) {
+              COMPONENT_CALLBACK0(EndInstanceType);
+            } else {
+              COMPONENT_CALLBACK0(EndComponentType);
+            }
+          } else {
+            type_stack.push_back(ReadComponentTypeData{def_type, count});
+          }
+          break;
+        }
+        default:
+          ERROR("Unknown type code: %" PRIx8, type_code);
+          break;
+      }
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        return Result::Ok;
+      }
+
+      ReadComponentTypeData& back = type_stack.back();
+
+      assert(back.type == ComponentTypeDef::Instance ||
+             back.type == ComponentTypeDef::Component);
+
+      if (back.i == 0) {
+        if (back.type == ComponentTypeDef::Instance) {
+          COMPONENT_CALLBACK0(EndInstanceType);
+        } else {
+          COMPONENT_CALLBACK0(EndComponentType);
+        }
+        type_stack.pop_back();
+        continue;
+      }
+
+      back.i--;
+      CHECK_RESULT(ReadU8(&type_code, "type code"));
+
+      switch (static_cast<ComponentBinaryInterface>(type_code)) {
+        case ComponentBinaryInterface::Type:
+          break;
+        case ComponentBinaryInterface::Alias:
+          CHECK_RESULT(ReadComponentAlias());
+          continue;
+        case ComponentBinaryInterface::Import:
+          CHECK_RESULT(ReadComponentExternal(true, false));
+          continue;
+        case ComponentBinaryInterface::Export:
+          CHECK_RESULT(ReadComponentExternal(false, false));
+          continue;
+        default:
+          ERROR("Unknown instance code: %" PRIx8, type_code);
+          return Result::Error;
+      }
+      break;
+    }
+  }
+}
+
+Result BinaryReader::ReadComponentCanonOptions(
+    std::vector<ComponentCanonOption>* out_options) {
+  uint32_t option_count;
+  CHECK_RESULT(ReadU32Leb128(&option_count, "option count"));
+  while (option_count > 0) {
+    uint8_t option_value;
+    Index index = kInvalidIndex;
+    CHECK_RESULT(ReadU8(&option_value, "option"));
+    ComponentCanonOption::Option option =
+        static_cast<ComponentCanonOption::Option>(option_value);
+    switch (option) {
+      case ComponentCanonOption::StrEncUtf8:
+      case ComponentCanonOption::StrEncUtf16:
+      case ComponentCanonOption::StrEncLatin1Utf16:
+      case ComponentCanonOption::Async:
+        break;
+      case ComponentCanonOption::Memory:
+      case ComponentCanonOption::Realloc:
+      case ComponentCanonOption::PostReturn:
+      case ComponentCanonOption::Callback:
+        CHECK_RESULT(ReadU32Leb128(&index, "argument index"));
+        break;
+      default:
+        ERROR("Unknown canon option code: %" PRIx8, option_value);
+        return Result::Error;
+    }
+    out_options->push_back(ComponentCanonOption{option, index});
+    option_count--;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentCanon() {
+  uint8_t canon_value;
+  CHECK_RESULT(ReadU8(&canon_value, "canon type"));
+  ComponentBinaryCanon canon = static_cast<ComponentBinaryCanon>(canon_value);
+  switch (canon) {
+    case ComponentBinaryCanon::Lift: {
+      uint8_t reserved;
+      CHECK_RESULT(ReadU8(&reserved, "reserved"));
+      if (reserved != 0) {
+        ERROR("Unknown canon lift reserved value: %" PRIx8, reserved);
+        return Result::Error;
+      }
+
+      Index core_func_index, type_index;
+      std::vector<ComponentCanonOption> options;
+      CHECK_RESULT(ReadU32Leb128(&core_func_index, "core func index"));
+      CHECK_RESULT(ReadComponentCanonOptions(&options));
+      CHECK_RESULT(ReadU32Leb128(&type_index, "core func index"));
+      COMPONENT_CALLBACK(OnCanonLift, core_func_index,
+                         static_cast<uint32_t>(options.size()), options.data(),
+                         type_index);
+      break;
+    }
+    case ComponentBinaryCanon::Lower: {
+      uint8_t reserved;
+      CHECK_RESULT(ReadU8(&reserved, "reserved"));
+      if (reserved != 0) {
+        ERROR("Unknown canon lower reserved value: %" PRIx8, reserved);
+        return Result::Error;
+      }
+      Index func_index;
+      std::vector<ComponentCanonOption> options;
+      CHECK_RESULT(ReadU32Leb128(&func_index, "core func index"));
+      CHECK_RESULT(ReadComponentCanonOptions(&options));
+      COMPONENT_CALLBACK(OnCanonLower, func_index,
+                         static_cast<uint32_t>(options.size()), options.data());
+      break;
+    }
+    case ComponentBinaryCanon::ResourceDrop: {
+      Index type_index;
+      CHECK_RESULT(ReadU32Leb128(&type_index, "type index"));
+      COMPONENT_CALLBACK(OnCanonType, canon, type_index);
+      break;
+    }
+    default:
+      ERROR("Unknown canon code: %" PRIx8, canon_value);
+      return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponentExternal(bool is_import,
+                                           bool is_component_export) {
+  ComponentExternalInfo external_info_data;
+  ComponentExternalInfo* external_info = nullptr;
+  ComponentExportInfo export_info_data;
+  ComponentExportInfo* export_info = nullptr;
+
+  uint8_t type_code;
+  std::string_view external_name, version_suffix_data;
+  std::string_view* version_suffix = nullptr;
+
+  CHECK_RESULT(ReadU8(&type_code, "suffix type"));
+  ComponentBinaryType type = static_cast<ComponentBinaryType>(type_code);
+  if (type != ComponentBinaryType::Some && type != ComponentBinaryType::None) {
+    ERROR("Unknown suffix type code: %" PRIx8, type_code);
+    return Result::Error;
+  }
+
+  CHECK_RESULT(ReadStr(&external_name, "external name"));
+  if (type == ComponentBinaryType::Some) {
+    CHECK_RESULT(ReadStr(&version_suffix_data, "version suffix"));
+    version_suffix = &version_suffix_data;
+  }
+
+  type = ComponentBinaryType::Some;
+  if (is_component_export) {
+    export_info = &export_info_data;
+    CHECK_RESULT(ReadComponentSort(&export_info->sort));
+    CHECK_RESULT(ReadU32Leb128(&export_info->index, "export index"));
+
+    CHECK_RESULT(ReadU8(&type_code, "optional type"));
+    type = static_cast<ComponentBinaryType>(type_code);
+    if (type != ComponentBinaryType::Some &&
+        type != ComponentBinaryType::None) {
+      ERROR("Unknown optional code: %" PRIx8, type_code);
+      return Result::Error;
+    }
+  }
+
+  if (type == ComponentBinaryType::Some) {
+    external_info = &external_info_data;
+    external_info->external = ComponentExternalDesc::Unused;
+
+    CHECK_RESULT(ReadComponentSort(&external_info->sort));
+    bool read_index = true;
+    switch (external_info->sort) {
+      case ComponentSort::CoreModule:
+      case ComponentSort::Func:
+      case ComponentSort::Component:
+      case ComponentSort::Instance:
+        break;
+      case ComponentSort::Value:
+        CHECK_RESULT(ReadU8(&type_code, "extern core type"));
+        external_info->external = static_cast<ComponentExternalDesc>(type_code);
+        if (external_info->external != ComponentExternalDesc::ValueEq &&
+            external_info->external != ComponentExternalDesc::ValueType) {
+          ERROR("Unknown core type: %" PRIx8, type_code);
+          return Result::Error;
+        }
+        break;
+      case ComponentSort::Type:
+        CHECK_RESULT(ReadU8(&type_code, "extern core type"));
+        external_info->external = static_cast<ComponentExternalDesc>(type_code);
+        if (external_info->external == ComponentExternalDesc::TypeSubRes) {
+          read_index = false;
+        } else if (external_info->external != ComponentExternalDesc::TypeEq) {
+          ERROR("Unknown core type: %" PRIx8, type_code);
+          return Result::Error;
+        }
+        break;
+      default:
+        ERROR("not allowed export type: %s", external_info->sort.GetName());
+        return Result::Error;
+    }
+
+    if (read_index) {
+      CHECK_RESULT(ReadU32Leb128(&external_info->index, "descriptor index"));
+    }
+  }
+
+  if (is_import) {
+    assert(external_info != nullptr && export_info == nullptr);
+    COMPONENT_CALLBACK(OnImport, external_name, version_suffix, external_info);
+    return Result::Ok;
+  }
+
+  assert(external_info != nullptr || export_info != nullptr);
+  COMPONENT_CALLBACK(OnExport, external_name, version_suffix, external_info,
+                     export_info);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadComponent() {
+  std::vector<size_t> comp_ends;
+  size_t read_end = read_end_;
+
+  while (true) {
+    while (state_.offset < read_end) {
+      uint8_t section_code;
+      Offset section_size;
+      CHECK_RESULT(ReadU8(&section_code, "section code"));
+      CHECK_RESULT(ReadOffset(&section_size, "section size"));
+      ReadEndRestoreGuard guard(this);
+      read_end_ = state_.offset + section_size;
+      ERROR_UNLESS(read_end_ <= read_end,
+                   "invalid component section size: extends past end");
+
+      switch (static_cast<ComponentSection>(section_code)) {
+        case ComponentSection::Custom: {
+          // Custom sections are currently ignored.
+          state_.offset += section_size;
+          break;
+        }
+        case ComponentSection::CoreModule: {
+          COMPONENT_CALLBACK(OnCoreModule, state_.data + state_.offset,
+                             section_size, options_);
+          state_.offset += section_size;
+          break;
+        }
+        case ComponentSection::CoreInstance: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginCoreInstanceSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentCoreInstance());
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndCoreInstanceSection);
+          break;
+        }
+        case ComponentSection::Component: {
+          uint32_t magic = 0;
+          CHECK_RESULT(ReadU32(&magic, "magic"));
+          ERROR_UNLESS(magic == WABT_BINARY_MAGIC, "bad magic value");
+
+          uint16_t version = 0, layer = 0;
+          CHECK_RESULT(ReadU16(&version, "version"));
+          CHECK_RESULT(ReadU16(&layer, "layer"));
+
+          ERROR_UNLESS(layer == WABT_BINARY_LAYER_COMPONENT,
+                       "bad wasm layer index: %#x (expected %#x)", version,
+                       WABT_BINARY_LAYER_COMPONENT);
+          ERROR_UNLESS(version == WABT_BINARY_COMPONENT_VERSION,
+                       "bad wasm component version: %#x (expected %#x)",
+                       version, WABT_BINARY_COMPONENT_VERSION);
+
+          COMPONENT_CALLBACK(BeginComponent, version, comp_ends.size() + 1);
+          comp_ends.push_back(read_end);
+          read_end = read_end_;
+          break;
+        }
+        case ComponentSection::Instance: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginInstanceSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentInstance());
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndInstanceSection);
+          break;
+        }
+        case ComponentSection::Alias: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginAliasSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentAlias());
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndAliasSection);
+          break;
+        }
+        case ComponentSection::Type: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginTypeSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentType());
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndTypeSection);
+          break;
+        }
+        case ComponentSection::Canon: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginCanonSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentCanon());
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndCanonSection);
+          break;
+        }
+        case ComponentSection::Import: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginImportSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentExternal(true, false));
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndImportSection);
+          break;
+        }
+        case ComponentSection::Export: {
+          uint32_t count;
+          CHECK_RESULT(ReadU32Leb128(&count, "count"));
+
+          COMPONENT_CALLBACK(BeginExportSection, count);
+          while (count > 0) {
+            CHECK_RESULT(ReadComponentExternal(false, true));
+            count--;
+          }
+          COMPONENT_CALLBACK0(EndExportSection);
+          break;
+        }
+        default:
+          ERROR("Unknown section code: 0x%x", static_cast<int>(section_code));
+          break;
+      }
+    }
+
+    COMPONENT_CALLBACK0(EndComponent);
+
+    if (comp_ends.empty()) {
+      break;
+    }
+
+    read_end = comp_ends.back();
+    comp_ends.pop_back();
+  }
+
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
   uint32_t magic = 0;
   CHECK_RESULT(ReadU32(&magic, "magic"));
@@ -3518,9 +4406,23 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
       ERROR_UNLESS(version == WABT_BINARY_VERSION,
                    "bad wasm file version: %#x (expected %#x)", version,
                    WABT_BINARY_VERSION);
+
+      if (component_delegate_ != nullptr) {
+        // This component is a module.
+        COMPONENT_CALLBACK(OnCoreModule, state_.data, state_.size, options_);
+        return Result::Ok;
+      }
       break;
     case WABT_BINARY_LAYER_COMPONENT:
-      ERROR("wasm components are not yet supported in this tool");
+      if (component_delegate_ == nullptr) {
+        ERROR("wasm components are not yet supported in this tool");
+      } else {
+        ERROR_UNLESS(version == WABT_BINARY_COMPONENT_VERSION,
+                     "bad wasm component version: %#x (expected %#x)", version,
+                     WABT_BINARY_COMPONENT_VERSION);
+        COMPONENT_CALLBACK(BeginComponent, version, 0);
+        return ReadComponent();
+      }
       break;
     default:
       ERROR("unsupported wasm layer: %#x", layer);
@@ -3549,9 +4451,28 @@ Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* delegate,
                   const ReadBinaryOptions& options) {
-  BinaryReader reader(data, size, delegate, options);
+  BinaryReader reader(data, size, delegate, nullptr, options);
   return reader.ReadModule(
       BinaryReader::ReadModuleOptions{options.stop_on_first_error});
+}
+
+Result ReadBinaryComponent(const void* data,
+                           size_t size,
+                           ComponentBinaryReaderDelegate* delegate,
+                           const ReadBinaryOptions& options) {
+  BinaryReader reader(data, size, nullptr, delegate, options);
+  return reader.ReadModule(
+      BinaryReader::ReadModuleOptions{options.stop_on_first_error});
+}
+
+bool ReadBinaryIsComponent(const void* data, size_t size) {
+  const uint8_t* header = reinterpret_cast<const uint8_t*>(data);
+  return size >= 8 && header[0] == (WABT_BINARY_MAGIC & 0xff) &&
+         header[1] == ((WABT_BINARY_MAGIC >> 8) & 0xff) &&
+         header[2] == ((WABT_BINARY_MAGIC >> 16) & 0xff) &&
+         header[3] == (WABT_BINARY_MAGIC >> 24) &&
+         header[6] == (WABT_BINARY_LAYER_COMPONENT & 0xff) &&
+         header[7] == (WABT_BINARY_LAYER_COMPONENT >> 8);
 }
 
 }  // namespace wabt

@@ -23,6 +23,7 @@
 
 #include "wabt/binary.h"
 #include "wabt/common.h"
+#include "wabt/component.h"
 #include "wabt/error.h"
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
@@ -558,10 +559,111 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
+class ComponentBinaryReaderDelegate {
+ public:
+  virtual ~ComponentBinaryReaderDelegate() {}
+
+  virtual bool OnError(const Error&) = 0;
+  virtual void OnSetState(const BinaryReaderDelegate::State* s) { state = s; }
+
+  virtual Result OnCoreModule(const void* data,
+                              size_t size,
+                              const ReadBinaryOptions& options) = 0;
+  virtual Result BeginComponent(uint32_t version, size_t depth) = 0;
+  virtual Result EndComponent() = 0;
+
+  virtual Result BeginCoreInstanceSection(uint32_t count) = 0;
+  virtual Result EndCoreInstanceSection() = 0;
+  virtual Result OnCoreInstance(uint32_t module_index,
+                                uint32_t argument_count,
+                                ComponentNamedSort* arguments) = 0;
+  virtual Result OnInlineCoreInstance(uint32_t argument_count,
+                                      ComponentNamedSort* arguments) = 0;
+
+  virtual Result BeginInstanceSection(uint32_t count) = 0;
+  virtual Result EndInstanceSection() = 0;
+  virtual Result OnInstance(uint32_t module_index,
+                            uint32_t argument_count,
+                            ComponentNamedSort* arguments) = 0;
+  virtual Result OnInlineInstance(uint32_t argument_count,
+                                  ComponentNamedExportInfo* arguments) = 0;
+
+  virtual Result BeginAliasSection(uint32_t count) = 0;
+  virtual Result EndAliasSection() = 0;
+  virtual Result OnAliasExport(ComponentSort sort,
+                               uint32_t instance_index,
+                               std::string_view name) = 0;
+  virtual Result OnAliasCoreExport(ComponentSort sort,
+                                   uint32_t core_instance_index,
+                                   std::string_view name) = 0;
+  virtual Result OnAliasOuter(ComponentSort sort,
+                              uint32_t counter,
+                              uint32_t index) = 0;
+
+  virtual Result BeginTypeSection(uint32_t count) = 0;
+  virtual Result EndTypeSection() = 0;
+  virtual Result OnPrimitiveType(ComponentType type) = 0;
+  virtual Result OnRecordType(uint32_t field_count,
+                              ComponentNamedType* fields) = 0;
+  virtual Result OnVariantType(uint32_t case_count,
+                               ComponentNamedType* cases) = 0;
+  virtual Result OnListType(ComponentType type) = 0;
+  virtual Result OnListFixedType(ComponentType type, uint32_t size) = 0;
+  virtual Result OnTupleType(uint32_t type_count, ComponentType* types) = 0;
+  virtual Result OnFlagsType(uint32_t flag_count, std::string_view* flags) = 0;
+  virtual Result OnEnumType(uint32_t enum_count, std::string_view* enums) = 0;
+  virtual Result OnOptionType(ComponentType type) = 0;
+  virtual Result OnResultType(ComponentType result, ComponentType error) = 0;
+  virtual Result OnOwnType(Index index) = 0;
+  virtual Result OnBorrowType(Index index) = 0;
+  virtual Result OnStreamType(ComponentType type) = 0;
+  virtual Result OnFutureType(ComponentType type) = 0;
+  virtual Result OnFuncType(ComponentTypeDef type,
+                            uint32_t param_count,
+                            ComponentNamedType* params,
+                            ComponentType result) = 0;
+  virtual Result BeginInstanceType(uint32_t count) = 0;
+  virtual Result EndInstanceType() = 0;
+  virtual Result BeginComponentType(uint32_t count) = 0;
+  virtual Result EndComponentType() = 0;
+
+  virtual Result BeginCanonSection(uint32_t count) = 0;
+  virtual Result EndCanonSection() = 0;
+  virtual Result OnCanonLift(Index core_func_index,
+                             uint32_t option_count,
+                             ComponentCanonOption* options,
+                             Index type_index) = 0;
+  virtual Result OnCanonLower(Index func_index,
+                              uint32_t option_count,
+                              ComponentCanonOption* options) = 0;
+  virtual Result OnCanonType(ComponentBinaryCanon canon, Index type_index) = 0;
+
+  virtual Result BeginImportSection(uint32_t count) = 0;
+  virtual Result EndImportSection() = 0;
+  virtual Result OnImport(std::string_view external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info) = 0;
+
+  virtual Result BeginExportSection(uint32_t count) = 0;
+  virtual Result EndExportSection() = 0;
+  virtual Result OnExport(std::string_view external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info,
+                          ComponentExportInfo* export_info) = 0;
+  const BinaryReaderDelegate::State* state = nullptr;
+};
+
 Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
+
+Result ReadBinaryComponent(const void* data,
+                           size_t size,
+                           ComponentBinaryReaderDelegate* component_delegate,
+                           const ReadBinaryOptions& options);
+
+bool ReadBinaryIsComponent(const void* data, size_t size);
 
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,

@@ -300,6 +300,7 @@ set(WABT_LIBRARY_CC
   src/binding-hash.cc
   src/color.cc
   src/common.cc
+  src/component.cc
   src/config.cc
   src/config.h.in
   src/decompiler.cc

@@ -109,30 +109,16 @@ int ProgramMain(int argc, char** argv) {
   result = ReadFile(s_infile.c_str(), &file_data);
   if (Succeeded(result)) {
     Errors errors;
-    Module module;
     const bool kStopOnFirstError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
                               s_fail_on_custom_section_error);
-    result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module);
-    if (Succeeded(result)) {
-      if (Succeeded(result) && s_validate) {
-        ValidateOptions options(s_features);
-        result = ValidateModule(&module, &errors, options);
-      }
 
-      if (s_generate_names) {
-        result = GenerateNames(&module);
-      }
-
-      if (Succeeded(result)) {
-        /* TODO(binji): This shouldn't fail; if a name can't be applied
-         * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = ApplyNames(&module);
-        WABT_USE(dummy_result);
-      }
-
+    if (ReadBinaryIsComponent(file_data.data(), file_data.size())) {
+      Component component(nullptr);
+      result =
+          ReadBinaryComponentIr(s_infile.c_str(), file_data.data(),
+                                file_data.size(), options, &errors, &component);
       if (Succeeded(result)) {
         WriteWatOptions wat_options(s_features);
         wat_options.fold_exprs = s_fold_exprs;
@@ -140,7 +126,38 @@ int ProgramMain(int argc, char** argv) {
         wat_options.inline_export = s_inline_export;
         FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
                                              : FileStream(stdout));
-        result = WriteWat(&stream, &module, wat_options);
+        result = WriteComponentWat(&stream, &component, wat_options);
+      }
+    } else {
+      Module module;
+      result = ReadBinaryIr(s_infile.c_str(), file_data.data(),
+                            file_data.size(), options, &errors, &module);
+      if (Succeeded(result)) {
+        if (Succeeded(result) && s_validate) {
+          ValidateOptions options(s_features);
+          result = ValidateModule(&module, &errors, options);
+        }
+
+        if (s_generate_names) {
+          result = GenerateNames(&module);
+        }
+
+        if (Succeeded(result)) {
+          /* TODO(binji): This shouldn't fail; if a name can't be applied
+           * (because the index is invalid, say) it should just be skipped. */
+          Result dummy_result = ApplyNames(&module);
+          WABT_USE(dummy_result);
+        }
+
+        if (Succeeded(result)) {
+          WriteWatOptions wat_options(s_features);
+          wat_options.fold_exprs = s_fold_exprs;
+          wat_options.inline_import = s_inline_import;
+          wat_options.inline_export = s_inline_export;
+          FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
+                                               : FileStream(stdout));
+          result = WriteWat(&stream, &module, wat_options);
+        }
       }
     }
     FormatErrorsToFile(errors, Location::Type::Binary);
