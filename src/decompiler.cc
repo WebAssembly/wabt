@@ -215,20 +215,28 @@ struct Decompiler {
     }
   }
 
-  std::string_view VarName(std::string_view name) {
-    assert(!name.empty());
-    return name[0] == '$' ? name.substr(1) : name;
+  std::string VarName(std::string_view name) {
+    if (name.empty()) {
+      return "unknown";
+    }
+    return std::string(name[0] == '$' ? name.substr(1) : name);
+  }
+
+  std::string GetName(const Var& var) {
+    if (var.is_name()) {
+      return VarName(var.name());
+    }
+    return std::to_string(var.index());
   }
 
   template <ExprType T>
   Value Get(const VarExpr<T>& ve) {
-    return Value{{std::string(VarName(ve.var.name()))}, Precedence::Atomic};
+    return Value{{GetName(ve.var)}, Precedence::Atomic};
   }
 
   template <ExprType T>
   Value Set(Value& child, const VarExpr<T>& ve) {
-    return WrapChild(child, VarName(ve.var.name()) + " = ", "",
-                     Precedence::Assign);
+    return WrapChild(child, GetName(ve.var) + " = ", "", Precedence::Assign);
   }
 
   std::string TempVarName(Index n) {
@@ -389,19 +397,19 @@ struct Decompiler {
       }
       case NodeType::Decl: {
         cur_ast->vars_defined[n.u.var->name()].defined = true;
-        return Value{{"var " + LocalDecl(std::string(n.u.var->name()),
+        return Value{{"var " + LocalDecl(GetName(*n.u.var),
                                          cur_func->GetLocalType(*n.u.var))},
                      Precedence::None};
       }
       case NodeType::DeclInit: {
         if (cur_ast->vars_defined[n.u.var->name()].defined) {
           // This has already been pre-declared, output as assign.
-          return WrapChild(args[0], cat(VarName(n.u.var->name()), " = "), "",
+          return WrapChild(args[0], cat(GetName(*n.u.var), " = "), "",
                            Precedence::None);
         } else {
           return WrapChild(args[0],
                            cat("var ",
-                               LocalDecl(std::string(n.u.var->name()),
+                               LocalDecl(GetName(*n.u.var),
                                          cur_func->GetLocalType(*n.u.var)),
                                " = "),
                            "", Precedence::None);
@@ -565,14 +573,14 @@ struct Decompiler {
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
         return Value{{(n.u.lt == LabelType::Loop ? "continue " : "goto ") +
-                      VarName(be->var.name())},
+                      GetName(be->var)},
                      Precedence::None};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
         auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
         return WrapChild(args[0], "if (",
-                         cat(") ", jmp, " ", VarName(bie->var.name())),
+                         cat(") ", jmp, " ", GetName(bie->var)),
                          Precedence::None);
       }
       case ExprType::Return: {
@@ -599,11 +607,11 @@ struct Decompiler {
         auto bte = cast<BrTableExpr>(n.e);
         std::string ts = "br_table[";
         for (auto& v : bte->targets) {
-          ts += VarName(v.name());
+          ts += GetName(v);
           ts += ", ";
         }
         ts += "..";
-        ts += VarName(bte->default_target.name());
+        ts += GetName(bte->default_target);
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
@@ -619,10 +627,10 @@ struct Decompiler {
         auto precedence = Precedence::Atomic;
         switch (n.etype) {
           case ExprType::Call:
-            name = cast<CallExpr>(n.e)->var.name();
+            name = GetName(cast<CallExpr>(n.e)->var);
             break;
           case ExprType::ReturnCall:
-            name = "return_call " + cast<ReturnCallExpr>(n.e)->var.name();
+            name = "return_call " + GetName(cast<ReturnCallExpr>(n.e)->var);
             precedence = Precedence::None;
             break;
           case ExprType::Convert:
