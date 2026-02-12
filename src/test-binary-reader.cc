@@ -99,3 +99,48 @@ TEST(BinaryReader, InvalidFunctionBodySize) {
             reader.first_error.message.find("invalid function body size"))
       << "Got: " << reader.first_error.message;
 }
+
+TEST(BinaryReader, OversizedSectionSize) {
+  // A module whose section size extends past the end of the data.  The
+  // subtraction-based overflow check must reject this before computing
+  // read_end_ = offset + section_size, which would overflow on platforms
+  // where size_t is 32-bit.
+  // TODO: Move this test upstream into the spec repo.
+
+  uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      0x01,                                            // section code: Type
+      0x80, 0x80, 0x80, 0x80, 0x08,  // section size: 0x80000000 (LEB128)
+  };
+
+  BinaryReaderError reader;
+  ReadBinaryOptions options;
+  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  EXPECT_EQ(Result::Error, result);
+  EXPECT_NE(std::string::npos,
+            reader.first_error.message.find("invalid section size"))
+      << "Got: " << reader.first_error.message;
+}
+
+TEST(BinaryReader, OversizedSubsectionSize) {
+  // A module with a name section containing a subsection whose size extends
+  // past the section boundary.
+  // TODO: Move this test upstream into the spec repo.
+
+  uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      // Custom section (name section)
+      0x00,  // section code: custom
+      0x09,  // section size: 9 bytes
+      0x04,  // name length
+      'n', 'a', 'm', 'e',
+      0x01,              // subsection type: function names
+      0x80, 0x80, 0x04,  // subsection size: 65536 (LEB128), exceeds section
+  };
+
+  BinaryReaderError reader;
+  ReadBinaryOptions options;
+  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  // Custom section errors are not fatal by default, but ensure no crash.
+  (void)result;
+}
