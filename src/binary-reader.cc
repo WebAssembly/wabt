@@ -3019,6 +3019,8 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CHECK_RESULT(ReadU32Leb128(&body_size, "function body size"));
     Offset body_start_offset = state_.offset;
     Offset end_offset = body_start_offset + body_size;
+    ERROR_UNLESS(end_offset >= body_start_offset && end_offset <= read_end_,
+                 "invalid function body size: extends past end");
     CALLBACK(BeginFunctionBody, func_index, body_size);
 
     uint64_t total_locals = 0;

@@ -73,3 +73,29 @@ TEST(BinaryReader, DisabledOpcodes) {
         << "Got error message: " << message;
   }
 }
+
+TEST(BinaryReader, InvalidFunctionBodySize) {
+  // A wasm module where the function body size extends past the end of the
+  // code section.  Without the bounds check this would allow the binary reader
+  // to read past the section boundary.
+  // TODO: Move this test upstream into the spec repo.
+
+  uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      0x01, 0x04, 0x01, 0x60, 0x00, 0x00,  // type section: 1 type, (func)
+      0x03, 0x02, 0x01, 0x00,              // func section: 1 func, type 0
+      // Code section: 1 func, but body_size claims 0xFF bytes
+      0x0a, 0x04,  // code section, size=4
+      0x01,        // 1 function body
+      0xff, 0x01,  // body size = 255 (LEB128), far exceeds section
+      0x00,        // would be local decl count, but body_size is invalid
+  };
+
+  BinaryReaderError reader;
+  ReadBinaryOptions options;
+  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  EXPECT_EQ(Result::Error, result);
+  EXPECT_NE(std::string::npos,
+            reader.first_error.message.find("invalid function body size"))
+      << "Got: " << reader.first_error.message;
+}
