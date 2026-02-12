@@ -2161,7 +2161,7 @@ Result BinaryReaderObjdump::OnDylinkNeeded(std::string_view so_name) {
 }
 
 Result BinaryReaderObjdump::OnRelocCount(Index count, Index section_index) {
-  BinaryReaderObjdumpBase::OnRelocCount(count, section_index);
+  CHECK_RESULT(BinaryReaderObjdumpBase::OnRelocCount(count, section_index));
   PrintDetails("  - relocations for section: %d (" PRIstringview ") [%d]\n",
                section_index,
                WABT_PRINTF_STRING_VIEW_ARG(GetSectionName(section_index)),

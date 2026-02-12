@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "wabt/binary-reader-nop.h"
+#include "wabt/binary-reader-objdump.h"
 #include "wabt/binary-reader.h"
 #include "wabt/leb128.h"
 #include "wabt/opcode.h"
@@ -72,4 +73,40 @@ TEST(BinaryReader, DisabledOpcodes) {
     EXPECT_EQ(0u, message.find("unexpected opcode"))
         << "Got error message: " << message;
   }
+}
+
+TEST(BinaryReaderObjdump, RelocInvalidSectionIndex) {
+  // Minimal wasm with a reloc section referencing a section_index that exceeds
+  // the actual number of sections.  Before the fix, the derived-class
+  // OnRelocCount ignored the error returned by the base class and proceeded
+  // to call GetSectionName with BinarySection::Invalid, causing an
+  // out-of-bounds read on the section_starts_ array.
+  //
+  // The fix propagates the base class error via CHECK_RESULT so that the
+  // out-of-bounds GetSectionName call is never reached.  The overall result
+  // is still Ok because custom section errors are not fatal by default.
+
+  uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+
+      // Custom section pretending to be "reloc." (section id 0)
+      0x00,  // section code: custom
+      0x0a,  // section size: 10 bytes
+      // section name "reloc." (length-prefixed)
+      0x06,  // name length
+      'r', 'e', 'l', 'o', 'c', '.', 0xff,
+      0x01,  // section_index = 255 (invalid, LEB128)
+      0x00,  // relocation count = 0
+  };
+
+  ObjdumpOptions options;
+  memset(&options, 0, sizeof(options));
+  options.mode = ObjdumpMode::Details;
+  options.details = true;
+  ObjdumpState state;
+
+  // Should not crash.  Custom section errors are suppressed, so the overall
+  // result is Ok even though the reloc section itself fails.
+  Result result = ReadBinaryObjdump(data, sizeof(data), &options, &state);
+  EXPECT_EQ(Result::Ok, result);
 }
