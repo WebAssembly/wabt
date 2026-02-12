@@ -731,6 +731,68 @@ TEST_F(InterpGCTest, Collect_DeepRecursion) {
   EXPECT_EQ(1u, store_.object_count());
 }
 
+TEST_F(InterpTest, DropKeepRefTracking) {
+  // Regression test for a bug in InterpDropKeep where the "find dropped refs"
+  // loop used *iter (the stale iterator from the first loop) instead of
+  // *drop_iter.  This caused incorrect erasure of ref-tracking entries.
+  //
+  // (module
+  //   (func (export "test")
+  //         (param externref externref externref) (result externref)
+  //     (block (result externref)
+  //       local.get 0     ;; will be dropped
+  //       local.get 1     ;; will be dropped
+  //       local.get 2     ;; will be kept (block result)
+  //       br 0            ;; triggers drop=2, keep=1 on ref-typed values
+  //     )))
+  ReadModule({
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      // Type section
+      0x01, 0x08,              // section id=1, size=8
+      0x01,                    // 1 type
+      0x60,                    // func type
+      0x03, 0x6f, 0x6f, 0x6f,  // 3 params: externref x3
+      0x01, 0x6f,              // 1 result: externref
+      // Function section
+      0x03, 0x02,  // section id=3, size=2
+      0x01, 0x00,  // 1 func, type 0
+      // Export section
+      0x07, 0x08,                    // section id=7, size=8
+      0x01,                          // 1 export
+      0x04, 0x74, 0x65, 0x73, 0x74,  // "test"
+      0x00, 0x00,                    // func export, index 0
+      // Code section
+      0x0a, 0x0f,  // section id=10, size=15
+      0x01,        // 1 function body
+      0x0d,        // body size = 13
+      0x00,        // 0 local declarations
+      0x02, 0x6f,  // block (result externref)
+      0x20, 0x00,  // local.get 0
+      0x20, 0x01,  // local.get 1
+      0x20, 0x02,  // local.get 2
+      0x0c, 0x00,  // br 0
+      0x0b,        // end (block)
+      0x0b,        // end (func)
+  });
+  Instantiate();
+  auto func = GetFuncExport(0);
+
+  auto ref0 = Foreign::New(store_, nullptr);
+  auto ref1 = Foreign::New(store_, nullptr);
+  auto ref2 = Foreign::New(store_, nullptr);
+
+  Values results;
+  Trap::Ptr trap;
+  Result result =
+      func->Call(store_,
+                 {Value::Make(ref0->self()), Value::Make(ref1->self()),
+                  Value::Make(ref2->self())},
+                 results, &trap);
+  ASSERT_EQ(Result::Ok, result);
+  ASSERT_EQ(1u, results.size());
+  EXPECT_EQ(ref2->self(), results[0].Get<Ref>());
+}
+
 // TODO: Test for Thread keeping references alive as locals/params/stack values.
 // This requires better tracking of references than currently exists in the
 // interpreter. (see TODOs in Select/LocalGet/GlobalGet)
