@@ -712,6 +712,7 @@ if (BUILD_TESTS)
 
   # wabt-unittests
   set(UNITTESTS_SRCS
+    src/binary-reader-objdump.cc
     src/test-binary-reader.cc
     src/test-interp.cc
     src/test-intrusive-list.cc
