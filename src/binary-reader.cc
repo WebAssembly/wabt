@@ -417,7 +417,7 @@ Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
   uint32_t str_len = 0;
   CHECK_RESULT(ReadU32Leb128(&str_len, "string length"));
 
-  ERROR_UNLESS(state_.offset + str_len <= read_end_,
+  ERROR_UNLESS(str_len <= read_end_ - state_.offset,
                "unable to read string: %s", desc);
 
   *out_str = std::string_view(
@@ -442,7 +442,7 @@ Result BinaryReader::ReadBytes(const void** out_data,
 Result BinaryReader::ReadBytesWithSize(const void** out_data,
                                        Offset size,
                                        const char* desc) {
-  ERROR_UNLESS(state_.offset + size <= read_end_, "unable to read data: %s",
+  ERROR_UNLESS(size <= read_end_ - state_.offset, "unable to read data: %s",
                desc);
 
   *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
@@ -2033,9 +2033,9 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     }
     previous_subsection_type = name_type;
     CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
-    size_t subsection_end = state_.offset + subsection_size;
-    ERROR_UNLESS(subsection_end <= read_end_,
+    ERROR_UNLESS(subsection_size <= read_end_ - state_.offset,
                  "invalid sub-section size: extends past end");
+    size_t subsection_end = state_.offset + subsection_size;
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
@@ -2224,9 +2224,9 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
     Offset subsection_size;
     CHECK_RESULT(ReadU32Leb128(&dylink_type, "type"));
     CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
-    size_t subsection_end = state_.offset + subsection_size;
-    ERROR_UNLESS(subsection_end <= read_end_,
+    ERROR_UNLESS(subsection_size <= read_end_ - state_.offset,
                  "invalid sub-section size: extends past end");
+    size_t subsection_end = state_.offset + subsection_size;
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
@@ -2356,9 +2356,9 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
     Offset subsection_size;
     CHECK_RESULT(ReadU32Leb128(&linking_type, "type"));
     CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
-    size_t subsection_end = state_.offset + subsection_size;
-    ERROR_UNLESS(subsection_end <= read_end_,
+    ERROR_UNLESS(subsection_size <= read_end_ - state_.offset,
                  "invalid sub-section size: extends past end");
+    size_t subsection_end = state_.offset + subsection_size;
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
@@ -3019,6 +3019,8 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     CHECK_RESULT(ReadU32Leb128(&body_size, "function body size"));
     Offset body_start_offset = state_.offset;
     Offset end_offset = body_start_offset + body_size;
+    ERROR_UNLESS(end_offset >= body_start_offset && end_offset <= read_end_,
+                 "invalid function body size: extends past end");
     CALLBACK(BeginFunctionBody, func_index, body_size);
 
     uint64_t total_locals = 0;
@@ -3105,6 +3107,8 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
     Offset section_size;
     CHECK_RESULT(ReadU8(&section_code, "section code"));
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
+    ERROR_UNLESS(section_size <= state_.size - state_.offset,
+                 "invalid section size: extends past end");
     ReadEndRestoreGuard guard(this);
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
