@@ -28,6 +28,7 @@ struct Result {
   Result() : Result(Ok) {}
   Result(Enum e) : enum_(e) {}
   operator Enum() const { return enum_; }
+  operator bool() const { return enum_ == Ok; }
   Result& operator|=(Result rhs);
 
  private:
