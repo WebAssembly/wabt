@@ -64,11 +64,14 @@ void WriteU32Leb128(Stream* stream, uint32_t value, const char* desc) {
   stream->WriteData(data, length, desc);
 }
 
-void WriteFixedU32Leb128(Stream* stream, uint32_t value, const char* desc) {
+void WriteFixedU32Leb128(Stream* stream,
+                         const uint32_t value,
+                         const char* desc) {
   uint8_t data[MAX_U32_LEB128_BYTES];
-  Offset length =
+  const Offset length =
       WriteFixedU32Leb128Raw(data, data + MAX_U32_LEB128_BYTES, value);
-  stream->WriteData(data, length, desc);
+  assert(length == MAX_U32_LEB128_BYTES);
+  stream->WriteData(data, MAX_U32_LEB128_BYTES, desc);
 }
 
 // returns the length of the leb128.

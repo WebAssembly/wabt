@@ -1,0 +1,84 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS1: -x -j "metadata.code.call_targets"
+(module
+  (type $sig (func (result i32)))
+  (func $func0 (type $sig) (result i32) i32.const 0)
+  (func $func1 (type $sig) (result i32) i32.const 1)
+  (func $func2 (type $sig) (result i32) i32.const 2)
+  (func $func3 (type $sig) (result i32) i32.const 3)
+  (func $func4 (type $sig) (result i32) i32.const 4)
+  (func $func5 (type $sig) (result i32) i32.const 5)
+
+  (table 6 funcref)
+  (elem (i32.const 0) $func0 $func1 $func2 $func3 $func4 $func5)
+
+  (func $main (param i32) (result i32)
+    ;; First indirect call (multiple targets)
+    local.get 0
+    (@metadata.code.call_targets (target $func0 0.75) (target $func1 0.2) (target $func2 0.02))
+    call_indirect (type $sig)
+    drop
+
+    ;; Second indirect call (invalid target hint)
+    i32.const 4
+    (@metadata.code.call_targets (target $func3 1))
+    call_indirect (type $sig)
+    drop
+
+    ;; Third indirect call (binary hint repr)
+    i32.const 5
+    (@metadata.code.call_targets "\05\49")
+    call_indirect (type $sig)
+  )
+  (export "main" (func $main))
+)
+
+(;; STDOUT ;;;
+compilation-hint-call-targets.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "metadata.code.call_targets"
+   - func[6] <main>:
+    - meta[3]:
+     - target [0]: 75%
+     - target [1]: 20%
+     - target [2]: 2%
+    - meta[9]:
+     - target [3]: 100%
+    - meta[f]:
+     - target [5]: 73%
+
+Code Disassembly:
+
+000070 func[0]:
+ 000071: 41 00                      | i32.const 0
+ 000073: 0b                         | end
+000075 func[1]:
+ 000076: 41 01                      | i32.const 1
+ 000078: 0b                         | end
+00007a func[2]:
+ 00007b: 41 02                      | i32.const 2
+ 00007d: 0b                         | end
+00007f func[3]:
+ 000080: 41 03                      | i32.const 3
+ 000082: 0b                         | end
+000084 func[4]:
+ 000085: 41 04                      | i32.const 4
+ 000087: 0b                         | end
+000089 func[5]:
+ 00008a: 41 05                      | i32.const 5
+ 00008c: 0b                         | end
+00008e func[6] <main>:
+ 00008f: 20 00                      | local.get 0
+ 000091: 11 00 00                   | call_indirect 0 (type 0)
+ 000094: 1a                         | drop
+ 000095: 41 04                      | i32.const 4
+ 000097: 11 00 00                   | call_indirect 0 (type 0)
+ 00009a: 1a                         | drop
+ 00009b: 41 05                      | i32.const 5
+ 00009d: 11 00 00                   | call_indirect 0 (type 0)
+ 0000a0: 0b                         | end
+;;; STDOUT ;;)

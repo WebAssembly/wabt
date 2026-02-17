@@ -610,7 +610,7 @@ struct Decompiler {
       case ExprType::CodeMetadata: {
         auto cme = cast<CodeMetadataExpr>(n.e);
         std::string c = "// @metadata.code." + cme->name + " ";
-        c += BinaryToString(cme->data);
+        c += BinaryToString(cme->serialize(this->mc.module));
         return Value{{std::move(c)}, Precedence::None};
       }
       default: {
