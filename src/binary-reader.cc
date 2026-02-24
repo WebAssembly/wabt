@@ -738,6 +738,22 @@ Result BinaryReader::ReadAddress(Address* out_value,
 }
 
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
+  uint64_t total_locals = 0;
+  Index num_local_decls;
+  CHECK_RESULT(ReadCount(&num_local_decls, "local declaration count"));
+  CALLBACK(OnLocalDeclCount, num_local_decls);
+  for (Index k = 0; k < num_local_decls; ++k) {
+    Index num_local_types;
+    CHECK_RESULT(ReadIndex(&num_local_types, "local type count"));
+    total_locals += num_local_types;
+    ERROR_UNLESS(total_locals <= UINT32_MAX, "local count must be <= 0x%x",
+                 UINT32_MAX);
+    Type local_type;
+    CHECK_RESULT(ReadType(&local_type, "local type"));
+    ERROR_UNLESS(IsConcreteType(local_type), "expected valid local type");
+    CALLBACK(OnLocalDecl, k, num_local_types, local_type);
+  }
+  CALLBACK(EndLocalDecls);
   CHECK_RESULT(ReadInstructions(end_offset, "function body"));
   ERROR_UNLESS(state_.offset == end_offset,
                "function body shorter than given size");
@@ -3022,23 +3038,6 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     ERROR_UNLESS(end_offset >= body_start_offset && end_offset <= read_end_,
                  "invalid function body size: extends past end");
     CALLBACK(BeginFunctionBody, func_index, body_size);
-
-    uint64_t total_locals = 0;
-    Index num_local_decls;
-    CHECK_RESULT(ReadCount(&num_local_decls, "local declaration count"));
-    CALLBACK(OnLocalDeclCount, num_local_decls);
-    for (Index k = 0; k < num_local_decls; ++k) {
-      Index num_local_types;
-      CHECK_RESULT(ReadIndex(&num_local_types, "local type count"));
-      total_locals += num_local_types;
-      ERROR_UNLESS(total_locals <= UINT32_MAX, "local count must be <= 0x%x",
-                   UINT32_MAX);
-      Type local_type;
-      CHECK_RESULT(ReadType(&local_type, "local type"));
-      ERROR_UNLESS(IsConcreteType(local_type), "expected valid local type");
-      CALLBACK(OnLocalDecl, k, num_local_types, local_type);
-    }
-    CALLBACK(EndLocalDecls);
 
     if (options_.skip_function_bodies) {
       state_.offset = end_offset;

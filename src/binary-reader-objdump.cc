@@ -74,6 +74,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   const uint8_t* data_;
   size_t size_;
   bool print_details_ = false;
+  bool in_function_body = false;
   BinarySection reloc_section_ = BinarySection::Invalid;
   Offset section_starts_[kBinarySectionCount];
   // Map of section index to section type
@@ -109,7 +110,7 @@ bool BinaryReaderObjdumpBase::OnError(const Error&) {
   // Tell the BinaryReader that this error is "handled" for all passes other
   // than the prepass. When the error is handled the default message will be
   // suppressed.
-  return options_->mode != ObjdumpMode::Prepass;
+  return options_->mode != ObjdumpMode::Prepass && !in_function_body;
 }
 
 Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
@@ -565,7 +566,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Index next_reloc = 0;
   Index current_function_index = 0;
   Index local_index_ = 0;
-  bool in_function_body = false;
   bool skip_next_opcode_ = false;
 };
 
