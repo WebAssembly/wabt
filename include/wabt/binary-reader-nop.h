@@ -210,6 +210,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnOpcodeType(Type type) override { return Result::Ok; }
+
+  Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnQuaternaryExpr(Opcode opcode) override { return Result::Ok; }
+
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -241,7 +247,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnAtomicNotifyExpr(Opcode, Index, Address, Address) override {
     return Result::Ok;
   }
-  Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnBlockExpr(Type sig_type) override { return Result::Ok; }
   Result OnBrExpr(Index depth) override { return Result::Ok; }
   Result OnBrIfExpr(Index depth) override { return Result::Ok; }
@@ -333,8 +338,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         const CatchClauseVector& catches) override {
     return Result::Ok;
   }
-  Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
-  Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }

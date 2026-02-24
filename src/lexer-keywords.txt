@@ -623,3 +623,7 @@ v128.store32_lane, TokenType::SimdStoreLane, Opcode::V128Store32Lane
 v128.store64_lane, TokenType::SimdStoreLane, Opcode::V128Store64Lane
 i8x16.shuffle, TokenType::SimdShuffleOp, Opcode::I8X16Shuffle
 i8x16.swizzle, TokenType::Binary, Opcode::I8X16Swizzle
+i64.add128, TokenType::Quaternary, Opcode::I64Add128
+i64.sub128, TokenType::Quaternary, Opcode::I64Sub128
+i64.mul_wide_s, TokenType::Binary, Opcode::I64MulWideS
+i64.mul_wide_u, TokenType::Binary, Opcode::I64MulWideU

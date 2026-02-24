@@ -550,6 +550,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   explicit ExprVisitorDelegate(WatWriter* writer) : writer_(writer) {}
 
   Result OnBinaryExpr(BinaryExpr*) override;
+  Result OnQuaternaryExpr(QuaternaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
@@ -632,6 +633,16 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
 };
 
 Result WatWriter::ExprVisitorDelegate::OnBinaryExpr(BinaryExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTernaryExpr(TernaryExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnQuaternaryExpr(QuaternaryExpr* expr) {
   writer_->WritePutsNewline(expr->opcode.GetName());
   return Result::Ok;
 }
@@ -1122,11 +1133,6 @@ Result WatWriter::ExprVisitorDelegate::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnAtomicRmwCmpxchgExpr(
     AtomicRmwCmpxchgExpr* expr) {
   writer_->WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::OnTernaryExpr(TernaryExpr* expr) {
-  writer_->WritePutsNewline(expr->opcode.GetName());
   return Result::Ok;
 }
 

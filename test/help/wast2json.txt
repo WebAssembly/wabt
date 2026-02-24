@@ -36,6 +36,7 @@ options:
       --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-custom-page-sizes               Enable Custom page sizes
       --enable-compact-imports                 Enable Compact import section
+      --enable-wide-arithmetic                 Enable Wide arithmetic
       --enable-all                             Enable all features
   -o, --output=FILE                            output JSON file
   -r, --relocatable                            Create a relocatable wasm binary (suitable for linking with e.g. lld)

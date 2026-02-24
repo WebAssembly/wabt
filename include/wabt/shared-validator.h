@@ -138,6 +138,8 @@ class SharedValidator {
                       Address align,
                       Address offset);
   Result OnBinary(const Location&, Opcode);
+  Result OnTernary(const Location&, Opcode);
+  Result OnQuaternary(const Location&, Opcode);
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
   Result OnBrIf(const Location&, Var depth);
@@ -219,7 +221,6 @@ class SharedValidator {
   Result OnTableInit(const Location&, Var segment_var, Var table_var);
   Result OnTableSet(const Location&, Var table_var);
   Result OnTableSize(const Location&, Var table_var);
-  Result OnTernary(const Location&, Opcode);
   Result OnThrow(const Location&, Var tag_var);
   Result OnThrowRef(const Location&);
   Result OnTry(const Location&, Type sig_type);

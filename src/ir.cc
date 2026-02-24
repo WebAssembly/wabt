@@ -33,6 +33,7 @@ const char* ExprTypeName[] = {
     "AtomicFence",
     "AtomicWait",
     "Binary",
+    "Quaternary",
     "Block",
     "Br",
     "BrIf",

@@ -94,6 +94,7 @@ class Validator : public ExprVisitor::Delegate {
   Result CheckModule();
 
   Result OnBinaryExpr(BinaryExpr*) override;
+  Result OnQuaternaryExpr(QuaternaryExpr*) override;
   Result BeginBlockExpr(BlockExpr*) override;
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
@@ -319,6 +320,11 @@ Var Validator::GetFuncTypeIndex(const Location& default_loc,
 
 Result Validator::OnBinaryExpr(BinaryExpr* expr) {
   result_ |= validator_.OnBinary(expr->loc, expr->opcode);
+  return Result::Ok;
+}
+
+Result Validator::OnQuaternaryExpr(QuaternaryExpr* expr) {
+  result_ |= validator_.OnQuaternary(expr->loc, expr->opcode);
   return Result::Ok;
 }
 

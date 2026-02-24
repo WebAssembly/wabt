@@ -230,6 +230,12 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeV128(v128 value) = 0;
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnOpcodeType(Type type) = 0;
+
+  virtual Result OnUnaryExpr(Opcode opcode) = 0;
+  virtual Result OnBinaryExpr(Opcode opcode) = 0;
+  virtual Result OnTernaryExpr(Opcode opcode) = 0;
+  virtual Result OnQuaternaryExpr(Opcode opcode) = 0;
+
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   Index memidx,
                                   Address alignment_log2,
@@ -255,7 +261,6 @@ class BinaryReaderDelegate {
                                     Index memidx,
                                     Address alignment_log2,
                                     Address offset) = 0;
-  virtual Result OnBinaryExpr(Opcode opcode) = 0;
   virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
@@ -327,8 +332,6 @@ class BinaryReaderDelegate {
   virtual Result OnTryTableExpr(Type sig_type,
                                 const CatchClauseVector& catches) = 0;
 
-  virtual Result OnUnaryExpr(Opcode opcode) = 0;
-  virtual Result OnTernaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;

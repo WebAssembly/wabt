@@ -104,6 +104,9 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TableGrow:
       return {2, 1};
 
+    case ExprType::Quaternary:
+      return {4, 2};
+
     case ExprType::AtomicStore:
     case ExprType::Store:
     case ExprType::TableSet:

@@ -485,6 +485,12 @@ Instr Istream::Read(Offset* offset) const {
       instr.kind = InstrKind::Imm_0_Op_2;
       break;
 
+    case Opcode::I64Add128:
+    case Opcode::I64Sub128:
+    case Opcode::I64MulWideS:
+    case Opcode::I64MulWideU:
+      assert(false);  // Unsupported
+
     case Opcode::Select:
     case Opcode::SelectT:
     case Opcode::F32X4RelaxedMadd:

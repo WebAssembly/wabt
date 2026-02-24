@@ -199,7 +199,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                             Index memidx,
                             Address alignment_log2,
                             Address offset) override;
+  Result OnUnaryExpr(Opcode opcode) override;
   Result OnBinaryExpr(Opcode opcode) override;
+  Result OnTernaryExpr(Opcode opcode) override;
+  Result OnQuaternaryExpr(Opcode opcode) override;
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
@@ -269,8 +272,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTryExpr(Type sig_type) override;
   Result OnTryTableExpr(Type sig_type,
                         const CatchClauseVector& catches) override;
-  Result OnUnaryExpr(Opcode opcode) override;
-  Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
@@ -1350,6 +1351,10 @@ Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
 
 Result BinaryReaderIR::OnTernaryExpr(Opcode opcode) {
   return AppendExpr(std::make_unique<TernaryExpr>(opcode));
+}
+
+Result BinaryReaderIR::OnQuaternaryExpr(Opcode opcode) {
+  return AppendExpr(std::make_unique<QuaternaryExpr>(opcode));
 }
 
 Result BinaryReaderIR::OnUnreachableExpr() {

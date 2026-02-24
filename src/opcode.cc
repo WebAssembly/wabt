@@ -22,18 +22,33 @@ namespace wabt {
 
 // static
 Opcode::Info Opcode::infos_[] = {
-#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                             \
-  {text,     decomp, Type::rtype, {Type::type1, Type::type2, Type::type3},    \
-   mem_size, prefix, code,        PrefixCode(prefix, code)},
+#define WABT_OPCODE(rtype, rtype2, type1, type2, type3, mem_size, prefix, \
+                    code, Name, text, decomp)                             \
+  {text,                                                                  \
+   decomp,                                                                \
+   Type::rtype,                                                           \
+   Type::rtype2,                                                          \
+   {Type::type1, Type::type2, Type::type3},                               \
+   mem_size,                                                              \
+   prefix,                                                                \
+   code,                                                                  \
+   PrefixCode(prefix, code)},
 #include "wabt/opcode.def"
 #undef WABT_OPCODE
 
-  {"<invalid>", "", Type::Void, {Type::Void, Type::Void, Type::Void}, 0, 0, 0, 0},
+    {"<invalid>",
+     "",
+     Type::Void,
+     Type::Void,
+     {Type::Void, Type::Void, Type::Void},
+     0,
+     0,
+     0,
+     0},
 };
 
-#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                             \
+#define WABT_OPCODE(rtype, rtype2, type1, type2, type3, mem_size, prefix, \
+                    code, Name, text, decomp)                             \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "wabt/opcode.def"
 #undef WABT_OPCODE

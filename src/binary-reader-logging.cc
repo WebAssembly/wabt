@@ -846,6 +846,12 @@ DEFINE_INDEX(OnFunctionBodyCount)
 DEFINE_INDEX(EndFunctionBody)
 DEFINE_INDEX(OnLocalDeclCount)
 DEFINE0(EndLocalDecls)
+
+DEFINE_OPCODE(OnUnaryExpr)
+DEFINE_OPCODE(OnBinaryExpr)
+DEFINE_OPCODE(OnTernaryExpr)
+DEFINE_OPCODE(OnQuaternaryExpr)
+
 DEFINE_LOAD_STORE_OPCODE(OnAtomicLoadExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);
@@ -853,7 +859,6 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicStoreExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicWaitExpr);
 DEFINE_INDEX_DESC(OnAtomicFenceExpr, "consistency_model");
 DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
-DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
 DEFINE_TYPE(OnCallRefExpr)
@@ -902,8 +907,6 @@ DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE0(OnThrowRefExpr)
-DEFINE_OPCODE(OnUnaryExpr)
-DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdLoadLaneExpr);
 DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdStoreLaneExpr);
 DEFINE_END(EndCodeSection)

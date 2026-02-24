@@ -200,6 +200,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnBinaryExpr(cast<BinaryExpr>(expr)));
       break;
 
+    case ExprType::Quaternary:
+      CHECK_RESULT(delegate_->OnQuaternaryExpr(cast<QuaternaryExpr>(expr)));
+      break;
+
     case ExprType::Block: {
       auto block_expr = cast<BlockExpr>(expr);
       CHECK_RESULT(delegate_->BeginBlockExpr(block_expr));

@@ -1268,7 +1268,15 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       case Opcode::F64X2RelaxedMax:
       case Opcode::I16X8RelaxedQ15mulrS:
       case Opcode::I16X8DotI8X16I7X16S:
+      case Opcode::I64MulWideS:
+      case Opcode::I64MulWideU:
         CALLBACK(OnBinaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
+        break;
+
+      case Opcode::I64Add128:
+      case Opcode::I64Sub128:
+        CALLBACK(OnQuaternaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
 

@@ -158,6 +158,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnOpcodeType(Type type) override;
+
+  Result OnUnaryExpr(Opcode opcode) override;
+  Result OnBinaryExpr(Opcode opcode) override;
+  Result OnTernaryExpr(Opcode opcode) override;
+  Result OnQuaternaryExpr(Opcode opcode) override;
+
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -174,7 +180,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                                 Index memidx,
                                 Address alignment_log2,
                                 Address offset) override;
-  Result OnBinaryExpr(Opcode opcode) override;
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
@@ -244,8 +249,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTryExpr(Type sig_type) override;
   Result OnTryTableExpr(Type sig_type,
                         const CatchClauseVector& catches) override;
-  Result OnUnaryExpr(Opcode opcode) override;
-  Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result OnAtomicWaitExpr(Opcode opcode,
                           Index memidx,

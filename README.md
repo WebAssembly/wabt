@@ -65,6 +65,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [custom-page-sizes][] | `--enable-custom-page-sizes`|   | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [compact-imports][]   | `--enable-compact-imports`  |   | ✓ |   | ✓ |   |   |
 | [function-references][] | `--enable-function-references` |   | ✓ | ✓ | ✓ | ✓ |   |
+| [wide-arithmetic][]   | `--enable-wide-arithmetic`  |   | ✓ | ✓ | ✓ |   |   |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
 [mutable globals]: https://github.com/WebAssembly/mutable-global
@@ -84,6 +85,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 [custom-page-sizes]: https://github.com/WebAssembly/custom-page-sizes
 [function-references]: https://github.com/WebAssembly/function-references
 [compact-imports]: https://github.com/WebAssembly/compact-import-section
+[wide-arithmetic]: https://github.com/WebAssembly/wide-arithmetic
 
 ## Cloning
 

@@ -47,6 +47,7 @@ options:
       --enable-relaxed-simd                    Enable Relaxed SIMD
       --enable-custom-page-sizes               Enable Custom page sizes
       --enable-compact-imports                 Enable Compact import section
+      --enable-wide-arithmetic                 Enable Wide arithmetic
       --enable-all                             Enable all features
   -V, --value-stack-size=SIZE                  Size in elements of the value stack
   -C, --call-stack-size=SIZE                   Size in elements of the call stack

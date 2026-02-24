@@ -77,6 +77,10 @@ class TypeChecker {
   Result GetCatchCount(Index depth, Index* out_depth);
 
   Result BeginFunction(const TypeVector& sig);
+  Result OnUnary(Opcode);
+  Result OnBinary(Opcode);
+  Result OnQuaternary(Opcode);
+  Result OnTernary(Opcode);
   Result OnAtomicFence(uint32_t consistency_model);
   Result OnAtomicLoad(Opcode, const Limits& limits);
   Result OnAtomicNotify(Opcode, const Limits& limits);
@@ -84,7 +88,6 @@ class TypeChecker {
   Result OnAtomicRmw(Opcode, const Limits& limits);
   Result OnAtomicRmwCmpxchg(Opcode, const Limits& limits);
   Result OnAtomicWait(Opcode, const Limits& limits);
-  Result OnBinary(Opcode);
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
@@ -149,7 +152,6 @@ class TypeChecker {
   Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode, const Limits& limits);
-  Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnThrowRef();
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
@@ -157,7 +159,6 @@ class TypeChecker {
   Result BeginTryTable(const TypeVector& param_types);
   Result EndTryTable(const TypeVector& param_types,
                      const TypeVector& result_types);
-  Result OnUnary(Opcode);
   Result OnUnreachable();
   Result EndFunction();
 
@@ -203,6 +204,11 @@ class TypeChecker {
                            Type expected2,
                            Type expected3,
                            const char* desc);
+  Result PopAndCheck4Types(Type expected1,
+                           Type expected2,
+                           Type expected3,
+                           Type expected4,
+                           const char* desc);
   Result PopAndCheckReference(Type* actual, const char* desc);
   Result CheckOpcode1(Opcode opcode, const Limits* limits = nullptr);
   Result CheckOpcode2(Opcode opcode, const Limits* limits = nullptr);
@@ -210,6 +216,11 @@ class TypeChecker {
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,
                       const Limits* limits3 = nullptr);
+  Result CheckOpcode4(Opcode opcode,
+                      const Limits* limits1 = nullptr,
+                      const Limits* limits2 = nullptr,
+                      const Limits* limits3 = nullptr,
+                      const Limits* limits4 = nullptr);
   Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>

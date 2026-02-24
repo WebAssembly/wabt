@@ -177,6 +177,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Const:
     case TokenType::Unary:
     case TokenType::Binary:
+    case TokenType::Quaternary:
     case TokenType::Compare:
     case TokenType::Convert:
     case TokenType::MemoryCopy:
@@ -2537,6 +2538,13 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       out_expr->reset(new BinaryExpr(token.opcode(), loc));
+      break;
+    }
+
+    case TokenType::Quaternary: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new QuaternaryExpr(token.opcode(), loc));
       break;
     }
 

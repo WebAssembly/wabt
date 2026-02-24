@@ -391,6 +391,7 @@ enum class ExprType {
   AtomicFence,
   AtomicWait,
   Binary,
+  Quaternary,
   Block,
   Br,
   BrIf,
@@ -588,6 +589,7 @@ class OpcodeExpr : public ExprMixin<TypeEnum> {
 };
 
 using BinaryExpr = OpcodeExpr<ExprType::Binary>;
+using QuaternaryExpr = OpcodeExpr<ExprType::Quaternary>;
 using CompareExpr = OpcodeExpr<ExprType::Compare>;
 using ConvertExpr = OpcodeExpr<ExprType::Convert>;
 using UnaryExpr = OpcodeExpr<ExprType::Unary>;

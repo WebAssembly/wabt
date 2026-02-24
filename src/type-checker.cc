@@ -415,6 +415,21 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
   return result;
 }
 
+Result TypeChecker::PopAndCheck4Types(Type expected1,
+                                      Type expected2,
+                                      Type expected3,
+                                      Type expected4,
+                                      const char* desc) {
+  Result result = Result::Ok;
+  result |= PeekAndCheckType(0, expected4);
+  result |= PeekAndCheckType(1, expected3);
+  result |= PeekAndCheckType(2, expected2);
+  result |= PeekAndCheckType(3, expected1);
+  PrintStackIfFailed(result, desc, expected1, expected2, expected3, expected4);
+  result |= DropTypes(4);
+  return result;
+}
+
 Result TypeChecker::PopAndCheckReference(Type* actual, const char* desc) {
   *actual = Type::Any;
   Result result = PeekType(0, actual);
@@ -440,6 +455,7 @@ Result TypeChecker::CheckOpcode1(Opcode opcode, const Limits* limits) {
   Result result = PopAndCheck1Type(
       GetMemoryParam(opcode.GetParamType1(), limits), opcode.GetName());
   PushType(opcode.GetResultType());
+  PushType(opcode.GetResultType2());
   return result;
 }
 
@@ -448,6 +464,7 @@ Result TypeChecker::CheckOpcode2(Opcode opcode, const Limits* limits) {
       PopAndCheck2Types(GetMemoryParam(opcode.GetParamType1(), limits),
                         opcode.GetParamType2(), opcode.GetName());
   PushType(opcode.GetResultType());
+  PushType(opcode.GetResultType2());
   return result;
 }
 
@@ -460,6 +477,22 @@ Result TypeChecker::CheckOpcode3(Opcode opcode,
       GetMemoryParam(opcode.GetParamType2(), limits2),
       GetMemoryParam(opcode.GetParamType3(), limits3), opcode.GetName());
   PushType(opcode.GetResultType());
+  PushType(opcode.GetResultType2());
+  return result;
+}
+
+Result TypeChecker::CheckOpcode4(Opcode opcode,
+                                 const Limits* limits1,
+                                 const Limits* limits2,
+                                 const Limits* limits3,
+                                 const Limits* limits4) {
+  Result result = PopAndCheck4Types(
+      GetMemoryParam(opcode.GetParamType1(), limits1),
+      GetMemoryParam(opcode.GetParamType2(), limits2),
+      GetMemoryParam(opcode.GetParamType2(), limits3),
+      GetMemoryParam(opcode.GetParamType3(), limits4), opcode.GetName());
+  PushType(opcode.GetResultType());
+  PushType(opcode.GetResultType2());
   return result;
 }
 
@@ -552,6 +585,10 @@ Result TypeChecker::OnAtomicNotify(Opcode opcode, const Limits& limits) {
 
 Result TypeChecker::OnBinary(Opcode opcode) {
   return CheckOpcode2(opcode);
+}
+
+Result TypeChecker::OnQuaternary(Opcode opcode) {
+  return CheckOpcode4(opcode);
 }
 
 Result TypeChecker::OnBlock(const TypeVector& param_types,

@@ -4303,6 +4303,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
       case ExprType::ReturnCallRef:
+      case ExprType::Quaternary:
         UNIMPLEMENTED("...");
         break;
     }

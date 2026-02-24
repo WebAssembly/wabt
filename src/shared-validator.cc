@@ -769,6 +769,18 @@ Result SharedValidator::OnBinary(const Location& loc, Opcode opcode) {
   return result;
 }
 
+Result SharedValidator::OnTernary(const Location& loc, Opcode opcode) {
+  Result result = CheckInstr(opcode, loc);
+  result |= typechecker_.OnTernary(opcode);
+  return result;
+}
+
+Result SharedValidator::OnQuaternary(const Location& loc, Opcode opcode) {
+  Result result = CheckInstr(opcode, loc);
+  result |= typechecker_.OnQuaternary(opcode);
+  return result;
+}
+
 Result SharedValidator::OnBlock(const Location& loc, Type sig_type) {
   Result result = CheckInstr(Opcode::Block, loc);
   TypeVector param_types, result_types;
@@ -1383,12 +1395,6 @@ Result SharedValidator::OnTableSize(const Location& loc, Var table_var) {
   TableType tt;
   result |= CheckTableIndex(table_var, &tt);
   result |= typechecker_.OnTableSize(tt.limits);
-  return result;
-}
-
-Result SharedValidator::OnTernary(const Location& loc, Opcode opcode) {
-  Result result = CheckInstr(opcode, loc);
-  result |= typechecker_.OnTernary(opcode);
   return result;
 }
 

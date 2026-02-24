@@ -744,8 +744,17 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::AtomicNotify:
       WriteLoadStoreExpr<AtomicNotifyExpr>(func, expr, "memory offset");
       break;
+    case ExprType::Unary:
+      WriteOpcode(stream_, cast<UnaryExpr>(expr)->opcode);
+      break;
     case ExprType::Binary:
       WriteOpcode(stream_, cast<BinaryExpr>(expr)->opcode);
+      break;
+    case ExprType::Ternary:
+      WriteOpcode(stream_, cast<TernaryExpr>(expr)->opcode);
+      break;
+    case ExprType::Quaternary:
+      WriteOpcode(stream_, cast<QuaternaryExpr>(expr)->opcode);
       break;
     case ExprType::Block:
       WriteOpcode(stream_, Opcode::Block);
@@ -1144,12 +1153,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::End);
       break;
     }
-    case ExprType::Unary:
-      WriteOpcode(stream_, cast<UnaryExpr>(expr)->opcode);
-      break;
-    case ExprType::Ternary:
-      WriteOpcode(stream_, cast<TernaryExpr>(expr)->opcode);
-      break;
     case ExprType::SimdLaneOp: {
       const Opcode opcode = cast<SimdLaneOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);

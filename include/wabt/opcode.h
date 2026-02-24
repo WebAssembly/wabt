@@ -33,8 +33,8 @@ struct Opcode {
   // NOTE: this enum does not match the binary encoding.
   //
   enum Enum : uint32_t {
-#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                             \
+#define WABT_OPCODE(rtype, rtype2, type1, type2, type3, mem_size, prefix, \
+                    code, Name, text, decomp)                             \
   Name,
 #include "wabt/opcode.def"
 #undef WABT_OPCODE
@@ -42,8 +42,8 @@ struct Opcode {
   };
 
 // Static opcode objects.
-#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                             \
+#define WABT_OPCODE(rtype, rtype2, type1, type2, type3, mem_size, prefix, \
+                    code, Name, text, decomp)                             \
   static Opcode Name##_Opcode;
 #include "wabt/opcode.def"
 #undef WABT_OPCODE
@@ -63,6 +63,7 @@ struct Opcode {
     return *GetInfo().decomp ? GetInfo().decomp : GetInfo().name;
   }
   Type GetResultType() const { return GetInfo().result_type; }
+  Type GetResultType2() const { return GetInfo().result_type2; }
   Type GetParamType1() const { return GetInfo().param_types[0]; }
   Type GetParamType2() const { return GetInfo().param_types[1]; }
   Type GetParamType3() const { return GetInfo().param_types[2]; }
@@ -99,6 +100,7 @@ struct Opcode {
     const char* name;
     const char* decomp;
     Type result_type;
+    Type result_type2;
     Type param_types[3];
     Address memory_size;
     uint8_t prefix;
