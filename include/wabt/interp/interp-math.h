@@ -59,7 +59,7 @@ template <
     typename std::enable_if<std::is_floating_point<T>::value, int>::type = 0>
 T WABT_VECTORCALL CanonNaN(T val) {
   if (WABT_UNLIKELY(std::isnan(val))) {
-    return std::numeric_limits<f32>::quiet_NaN();
+    return std::numeric_limits<T>::quiet_NaN();
   }
   return val;
 }
