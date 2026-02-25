@@ -1015,6 +1015,7 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
     assert(expected.size() == 1);
     result |= CheckType(type1, expected[0]);
     result |= CheckType(type2, expected[0]);
+    result_type = expected[0];
   }
   PrintStackIfFailed(result, "select", result_type, result_type, Type::I32);
   result |= DropTypes(3);
