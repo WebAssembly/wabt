@@ -1684,7 +1684,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       // Find dropped refs.
       auto drop_iter = iter;
       for (; drop_iter != refs_.rend(); ++drop_iter) {
-        if (*iter < values_.size() - keep - drop) {
+        if (*drop_iter < values_.size() - keep - drop) {
           break;
         }
       }
