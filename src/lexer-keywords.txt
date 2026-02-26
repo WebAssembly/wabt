@@ -46,6 +46,7 @@ code, TokenType::Code
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
+definition, TokenType::Definition
 delegate, TokenType::Delegate
 do, TokenType::Do
 drop, TokenType::Drop, Opcode::Drop

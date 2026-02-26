@@ -144,3 +144,22 @@ TEST(WastParser, InvalidBinaryModule) {
 
   EXPECT_EQ(expected_data, binary_mod->data);
 }
+
+TEST(WastParser, ModuleDefinition) {
+  std::string text = "(module definition)";
+
+  Errors errors;
+  auto lexer =
+      WastLexer::CreateBufferLexer("test", text.c_str(), text.size(), &errors);
+  Features features;
+  WastParseOptions options(features);
+
+  std::unique_ptr<Script> script;
+  Result result = ParseWastScript(lexer.get(), &script, &errors, &options);
+  ASSERT_EQ(result, Result::Ok);
+  ASSERT_EQ(script->commands.size(), 1U);
+  Command* cmd = script->commands[0].get();
+  auto* mod_cmd = cast<ScriptModuleCommand>(cmd);
+  ASSERT_NE(mod_cmd, nullptr);
+  ASSERT_TRUE(mod_cmd->script_module->is_definition);
+}
