@@ -1,0 +1,71 @@
+;;; TOOL: run-interp
+;;; ARGS: --enable-function-references
+
+(module
+  (type $i32_func (func (result i32)))
+
+  ;; Two simple functions to use as reference values.
+  (func $f1 (type $i32_func) i32.const 42)
+  (func $f2 (type $i32_func) i32.const 99)
+
+  ;; Declare functions in elem so ref.func is valid.
+  (elem declare funcref (ref.func $f1) (ref.func $f2))
+
+  ;; Typed select choosing between two funcref values.
+  ;; When cond is nonzero, should return first operand (ref to $f1).
+  (func (export "select_funcref_true") (result i32)
+    ref.func $f1
+    ref.func $f2
+    i32.const 1
+    select (result funcref)
+    ref.is_null
+  )
+
+  ;; When cond is zero, should return second operand (ref to $f2).
+  (func (export "select_funcref_false") (result i32)
+    ref.func $f1
+    ref.func $f2
+    i32.const 0
+    select (result funcref)
+    ref.is_null
+  )
+
+  ;; Select between a non-null ref and a null ref.
+  ;; cond=1 selects first (non-null), so ref.is_null should return 0.
+  (func (export "select_nonnull") (result i32)
+    ref.func $f1
+    ref.null func
+    i32.const 1
+    select (result funcref)
+    ref.is_null
+  )
+
+  ;; cond=0 selects second (null), so ref.is_null should return 1.
+  (func (export "select_null") (result i32)
+    ref.func $f1
+    ref.null func
+    i32.const 0
+    select (result funcref)
+    ref.is_null
+  )
+
+  ;; Use select result as a global to verify the ref survives.
+  (global $g (mut funcref) (ref.null func))
+
+  (func (export "select_to_global") (result i32)
+    ref.func $f1
+    ref.func $f2
+    i32.const 1
+    select (result funcref)
+    global.set $g
+    global.get $g
+    ref.is_null
+  )
+)
+(;; STDOUT ;;;
+select_funcref_true() => i32:0
+select_funcref_false() => i32:0
+select_nonnull() => i32:0
+select_null() => i32:1
+select_to_global() => i32:0
+;;; STDOUT ;;)
