@@ -317,6 +317,7 @@ RefPtr<T>::RefPtr(const RefPtr<U>& other)
 template <typename T>
 template <typename U>
 RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other) {
+  assert(static_cast<const void*>(this) != static_cast<const void*>(&other));
   reset();
   obj_ = other.obj_;
   store_ = other.store_;
@@ -336,6 +337,7 @@ RefPtr<T>::RefPtr(RefPtr&& other)
 template <typename T>
 template <typename U>
 RefPtr<T>& RefPtr<T>::operator=(RefPtr&& other) {
+  assert(static_cast<const void*>(this) != static_cast<const void*>(&other));
   reset();
   obj_ = other.obj_;
   store_ = other.store_;
