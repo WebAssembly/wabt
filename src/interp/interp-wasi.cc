@@ -429,7 +429,7 @@ class WasiInstance {
     int32_t fd = params[0].Get<u32>();
     int32_t iovptr = params[1].Get<u32>();
     int32_t iovcnt = params[2].Get<u32>();
-    int32_t out_ptr = params[2].Get<u32>();
+    int32_t out_ptr = params[3].Get<u32>();
     if (trace_stream) {
       trace_stream->Writef("fd_read %d [%d]\n", fd, iovcnt);
     }
