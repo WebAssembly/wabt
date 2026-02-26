@@ -1419,9 +1419,9 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       auto cond = Pop<u32>();
       auto ref = false;
       // check if either is a ref
-      ref |= !refs_.empty() && refs_.back() == values_.size();
+      ref |= !refs_.empty() && refs_.back() == values_.size() - 1;
       Value false_ = Pop();
-      ref |= !refs_.empty() && refs_.back() == values_.size();
+      ref |= !refs_.empty() && refs_.back() == values_.size() - 1;
       Value true_ = Pop();
       if (ref) {
         refs_.push_back(values_.size());
