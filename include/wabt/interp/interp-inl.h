@@ -273,6 +273,8 @@ RefPtr<T>::RefPtr(const RefPtr& other)
 
 template <typename T>
 RefPtr<T>& RefPtr<T>::operator=(const RefPtr& other) {
+  if (this == &other) return *this;
+  reset();
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = store_ ? store_->CopyRoot(other.root_index_) : 0;
@@ -289,6 +291,7 @@ RefPtr<T>::RefPtr(RefPtr&& other)
 
 template <typename T>
 RefPtr<T>& RefPtr<T>::operator=(RefPtr&& other) {
+  reset();
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = other.root_index_;
@@ -313,6 +316,7 @@ RefPtr<T>::RefPtr(const RefPtr<U>& other)
 template <typename T>
 template <typename U>
 RefPtr<T>& RefPtr<T>::operator=(const RefPtr<U>& other) {
+  reset();
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = store_ ? store_->CopyRoot(other.root_index_) : 0;
@@ -331,6 +335,7 @@ RefPtr<T>::RefPtr(RefPtr&& other)
 template <typename T>
 template <typename U>
 RefPtr<T>& RefPtr<T>::operator=(RefPtr&& other) {
+  reset();
   obj_ = other.obj_;
   store_ = other.store_;
   root_index_ = other.root_index_;
