@@ -1,0 +1,19 @@
+;;; TOOL: wat2wasm
+(module
+  ;; Typed select with funcref should propagate the annotated type,
+  ;; allowing the result to be stored where funcref is expected.
+  (global (mut funcref) (ref.null func))
+  (func
+    ref.null func
+    ref.null func
+    i32.const 1
+    select (result funcref)
+    global.set 0
+  )
+  ;; Typed select with externref should also propagate the type.
+  (func (param externref externref) (result externref)
+    local.get 0
+    local.get 1
+    i32.const 0
+    select (result externref)
+  ))

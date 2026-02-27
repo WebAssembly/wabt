@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  ;; The result of typed select (result funcref) should be funcref,
+  ;; so using it where externref is expected should fail.
+  (global (mut externref) (ref.null extern))
+  (func
+    ref.null func
+    ref.null func
+    i32.const 1
+    select (result funcref)
+    global.set 0
+  ))
+(;; STDERR ;;;
+out/test/typecheck/bad-typed-select-type-mismatch.txt:12:5: error: type mismatch in global.set, expected [externref] but got [funcref]
+    global.set 0
+    ^^^^^^^^^^
+;;; STDERR ;;)
