@@ -73,6 +73,9 @@ struct FixupMap {
 
 class BinaryReaderInterp : public BinaryReaderNop {
  public:
+  // Prevent too much memory allocation errors by fuzzers.
+  static constexpr Index kMaxPreallocatedBufferSize = 16384;
+
   BinaryReaderInterp(ModuleDesc* module,
                      std::string_view filename,
                      Errors* errors,
@@ -525,7 +528,7 @@ Result BinaryReaderInterp::EndModule() {
 }
 
 Result BinaryReaderInterp::OnTypeCount(Index count) {
-  module_.func_types.reserve(count);
+  module_.func_types.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -615,7 +618,7 @@ Result BinaryReaderInterp::OnImportTag(Index import_index,
 }
 
 Result BinaryReaderInterp::OnFunctionCount(Index count) {
-  module_.funcs.reserve(count);
+  module_.funcs.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -629,7 +632,7 @@ Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
 }
 
 Result BinaryReaderInterp::OnTableCount(Index count) {
-  module_.tables.reserve(count);
+  module_.tables.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -662,7 +665,7 @@ Result BinaryReaderInterp::EndTableInitExpr(Index index) {
 }
 
 Result BinaryReaderInterp::OnMemoryCount(Index count) {
-  module_.memories.reserve(count);
+  module_.memories.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -677,7 +680,7 @@ Result BinaryReaderInterp::OnMemory(Index index,
 }
 
 Result BinaryReaderInterp::OnGlobalCount(Index count) {
-  module_.globals.reserve(count);
+  module_.globals.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -719,7 +722,7 @@ Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
 }
 
 Result BinaryReaderInterp::OnTagCount(Index count) {
-  module_.tags.reserve(count);
+  module_.tags.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -760,7 +763,7 @@ Result BinaryReaderInterp::OnStartFunction(Index func_index) {
 }
 
 Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
-  module_.elems.reserve(count);
+  module_.elems.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
@@ -820,7 +823,7 @@ Result BinaryReaderInterp::EndElemExpr(Index elem_index, Index expr_index) {
 
 Result BinaryReaderInterp::OnDataCount(Index count) {
   validator_.OnDataCount(count);
-  module_.datas.reserve(count);
+  module_.datas.reserve(std::min(count, kMaxPreallocatedBufferSize));
   return Result::Ok;
 }
 
