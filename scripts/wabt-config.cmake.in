@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10)
 @PACKAGE_INIT@
 
 if ("@HAVE_OPENSSL_SHA_H@")
