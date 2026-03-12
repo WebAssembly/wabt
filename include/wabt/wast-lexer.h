@@ -89,7 +89,7 @@ class WastLexer {
     return ReadReservedChars() == ReservedChars::None;
   }
   void ReadSign();
-  Token GetStringToken();
+  Token GetStringToken(TokenType);
   Token GetNumberToken(TokenType);
   Token GetHexNumberToken(TokenType);
   Token GetInfToken();

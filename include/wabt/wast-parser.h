@@ -132,6 +132,9 @@ class WastParser {
   // Returns true if the next two tokens are form reference type - (ref $t)
   bool PeekMatchRefType();
 
+  // Returns true if the next token represents a var.
+  bool PeekMatchVar();
+
   // Returns true if the next token's type is equal to the parameter. If so,
   // then the token is consumed.
   bool Match(TokenType);
@@ -159,9 +162,10 @@ class WastParser {
   // synchronized.
   Result Synchronize(SynchronizeFunc);
 
-  bool ParseBindVarOpt(std::string* name);
+  Result ParseVarText(Token& token, std::string* out_text);
+  Result ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
-  bool ParseVarOpt(Var* out_var, Var default_var = Var());
+  Result ParseVarOpt(Var* out_var, Var default_var = Var());
   Result ParseOffsetExpr(ExprList* out_expr_list);
   bool ParseOffsetExprOpt(ExprList* out_expr_list);
   Result ParseTextList(std::vector<uint8_t>* out_data);
@@ -169,7 +173,7 @@ class WastParser {
   Result ParseVarList(VarVector* out_var_list);
   bool ParseElemExprOpt(ExprList* out_elem_expr);
   bool ParseElemExprListOpt(ExprListVector* out_list);
-  bool ParseElemExprVarListOpt(ExprListVector* out_list);
+  Result ParseElemExprVarListOpt(ExprListVector* out_list);
   Result ParseRefDeclaration(Var* out_type);
   Result ParseValueType(Var* out_type);
   Result ParseValueTypeList(
