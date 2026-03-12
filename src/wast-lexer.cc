@@ -111,7 +111,7 @@ Token WastLexer::GetToken() {
         continue;
 
       case '"':
-        return GetStringToken();
+        return GetStringToken(TokenType::Text);
 
       case '+':
       case '-':
@@ -158,6 +158,10 @@ Token WastLexer::GetToken() {
         return GetNumberToken(TokenType::Nat);
 
       case '$':
+        ReadChar();
+        if (PeekChar() == '"') {
+          return GetStringToken(TokenType::Var);
+        }
         return GetIdChars();  // Initial $ is idchar, so this produces id token
 
       case 'a':
@@ -319,7 +323,7 @@ void WastLexer::ReadWhitespace() {
   }
 }
 
-Token WastLexer::GetStringToken() {
+Token WastLexer::GetStringToken(TokenType token_type) {
   const char* saved_token_start = token_start_;
   bool has_error = false;
   bool in_string = true;
@@ -437,7 +441,7 @@ Token WastLexer::GetStringToken() {
     return Token(GetLocation(), TokenType::Invalid);
   }
 
-  return TextToken(TokenType::Text);
+  return TextToken(token_type);
 }
 
 // static
@@ -497,7 +501,7 @@ WastLexer::ReservedChars WastLexer::ReadReservedChars() {
         ret = ReservedChars::Id;
       }
     } else if (peek == '"') {
-      GetStringToken();
+      GetStringToken(TokenType::Text);
       ret = ReservedChars::Some;
     } else {
       break;
@@ -602,7 +606,7 @@ Token WastLexer::GetNameEqNumToken(std::string_view name,
 }
 
 Token WastLexer::GetIdChars() {
-  if (ReadReservedChars() == ReservedChars::Id) {
+  if (ReadReservedChars() != ReservedChars::Some) {
     return TextToken(TokenType::Var);
   }
 

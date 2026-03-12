@@ -1,0 +1,21 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-annotations
+(module
+  (func $abc)
+  (func $"hi\6a")
+  (func $"xyz")
+
+  (func
+    call $"abc"
+    call $"\61bc"
+    call $"ab\u{63}"
+
+    call $hij
+    call $"hij"
+    call $"\u{68}ij"
+
+    call $xyz
+    call $"\u{78}yz"
+    call $"xy\7a"
+  )
+)

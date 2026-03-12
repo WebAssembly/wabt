@@ -1,0 +1,31 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-annotations
+;;; ERROR: 1
+(module
+  (func $)
+  (func $ (param i32))
+  (func $"")
+  (func $"" (param i32))
+  (func $"\80")
+  (func $"\80" (param i32))
+)
+(;; STDERR ;;;
+out/test/parse/bad-identifiers-with-annotations.txt:5:9: error: empty identifier.
+  (func $)
+        ^
+out/test/parse/bad-identifiers-with-annotations.txt:6:9: error: empty identifier.
+  (func $ (param i32))
+        ^
+out/test/parse/bad-identifiers-with-annotations.txt:7:9: error: empty identifier.
+  (func $"")
+        ^^^
+out/test/parse/bad-identifiers-with-annotations.txt:8:9: error: empty identifier.
+  (func $"" (param i32))
+        ^^^
+out/test/parse/bad-identifiers-with-annotations.txt:9:9: error: quoted identifier has an invalid utf-8 encoding
+  (func $"\80")
+        ^^^^^^
+out/test/parse/bad-identifiers-with-annotations.txt:10:9: error: quoted identifier has an invalid utf-8 encoding
+  (func $"\80" (param i32))
+        ^^^^^^
+;;; STDERR ;;)
