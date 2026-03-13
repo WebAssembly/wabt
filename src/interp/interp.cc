@@ -1315,6 +1315,8 @@ void Thread::Push(Ref ref) {
 RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
   using O = Opcode;
 
+  store_.Collect();
+
   u32& pc = frames_.back().offset;
   auto& istream = mod_->desc().istream;
 
