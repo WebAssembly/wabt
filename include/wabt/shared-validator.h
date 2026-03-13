@@ -29,8 +29,6 @@
 #include "wabt/opcode.h"
 #include "wabt/type-checker.h"
 
-#include "wabt/binary-reader.h"  // For TypeMut.
-
 namespace wabt {
 
 struct ValidateOptions {
@@ -48,7 +46,11 @@ enum class TableImportStatus {
 class SharedValidator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(SharedValidator);
+  using TypeEntry = TypeChecker::TypeEntry;
   using FuncType = TypeChecker::FuncType;
+  using StructType = TypeChecker::StructType;
+  using ArrayType = TypeChecker::ArrayType;
+  using RecGroup = TypeChecker::RecGroup;
   SharedValidator(Errors*, const ValidateOptions& options);
 
   // TODO: Move into SharedValidator?
@@ -68,16 +70,28 @@ class SharedValidator {
 
   Index GetLocalCount() const;
 
+  // The canonical index is the lowest index, which represents
+  // the same type as the type_index. The canonical index is
+  // always less or equal than type_index.
+  Index GetCanonicalTypeIndex(Index type_index);
+
   Result EndModule();
 
+  Result OnRecursiveGroup(Index first_type_index, Index type_count);
   Result OnFuncType(const Location&,
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
                     const Type* result_types,
-                    Index type_index);
-  Result OnStructType(const Location&, Index field_count, TypeMut* fields);
-  Result OnArrayType(const Location&, TypeMut field);
+                    Index type_index,
+                    SupertypesInfo* supertypes);
+  Result OnStructType(const Location&,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes);
+  Result OnArrayType(const Location&,
+                     TypeMut field,
+                     SupertypesInfo* supertypes);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&, TableImportStatus import_status, TableInitExprStatus init_provided);
@@ -106,6 +120,17 @@ class SharedValidator {
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
+  Result OnArrayCopy(const Location&, Var dst_type, Var src_type);
+  Result OnArrayFill(const Location&, Var type);
+  Result OnArrayGet(const Location&, Opcode, Var type);
+  Result OnArrayInitData(const Location&, Var type, Var segment_var);
+  Result OnArrayInitElem(const Location&, Var type, Var segment_var);
+  Result OnArrayNew(const Location&, Var type);
+  Result OnArrayNewData(const Location&, Var type, Var segment_var);
+  Result OnArrayNewDefault(const Location&, Var type);
+  Result OnArrayNewElem(const Location&, Var type, Var segment_var);
+  Result OnArrayNewFixed(const Location&, Var type, Index count);
+  Result OnArraySet(const Location&, Var type);
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
   Result OnAtomicLoad(const Location&,
                       Opcode,
@@ -143,6 +168,10 @@ class SharedValidator {
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
   Result OnBrIf(const Location&, Var depth);
+  Result OnBrOnCast(const Location&,
+                    Opcode, Var depth,
+                    Var type1_var,
+                    Var type2_var);
   Result OnBrOnNonNull(const Location&, Var depth);
   Result OnBrOnNull(const Location&, Var depth);
   Result BeginBrTable(const Location&);
@@ -161,6 +190,7 @@ class SharedValidator {
   Result OnElemDrop(const Location&, Var segment_var);
   Result OnElse(const Location&);
   Result OnEnd(const Location&);
+  Result OnGCUnary(const Location&, Opcode);
   Result OnGlobalGet(const Location&, Var);
   Result OnGlobalSet(const Location&, Var);
   Result OnIf(const Location&, Type sig_type);
@@ -186,9 +216,11 @@ class SharedValidator {
   Result OnMemorySize(const Location&, Var memidx);
   Result OnNop(const Location&);
   Result OnRefAsNonNull(const Location&);
+  Result OnRefCast(const Location&, Var type_var);
   Result OnRefFunc(const Location&, Var func_var);
   Result OnRefIsNull(const Location&);
   Result OnRefNull(const Location&, Var func_type_var);
+  Result OnRefTest(const Location&, Var type_var);
   Result OnRethrow(const Location&, Var depth);
   Result OnReturnCall(const Location&, Var func_var);
   Result OnReturnCallIndirect(const Location&, Var sig_var, Var table_var);
@@ -214,6 +246,10 @@ class SharedValidator {
                  Var memidx,
                  Address align,
                  Address offset);
+  Result OnStructGet(const Location&, Opcode, Var type, Var field);
+  Result OnStructNew(const Location&, Var type);
+  Result OnStructNewDefault(const Location&, Var type);
+  Result OnStructSet(const Location&, Var type, Var field);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
   Result OnTableFill(const Location&, Var table_var);
   Result OnTableGet(const Location&, Var table_var);
@@ -231,20 +267,6 @@ class SharedValidator {
   Result OnUnreachable(const Location&);
 
  private:
-  struct StructType {
-    StructType() = default;
-    StructType(const TypeMutVector& fields) : fields(fields) {}
-
-    TypeMutVector fields;
-  };
-
-  struct ArrayType {
-    ArrayType() = default;
-    ArrayType(TypeMut field) : field(field) {}
-
-    TypeMut field;
-  };
-
   struct TableType {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
@@ -300,7 +322,11 @@ class SharedValidator {
                    Type actual,
                    Type expected,
                    const char* desc);
-  Result CheckReferenceType(const Location&, Type type, const char* desc);
+  Result CheckReferenceType(const Location&,
+                            Type type,
+                            Index end_index,
+                            const char* desc);
+  Result CheckSupertypes(const Location&, SupertypesInfo* supertypes);
   Result CheckLimits(const Location&,
                      const Limits&,
                      uint64_t absolute_max,
@@ -316,7 +342,9 @@ class SharedValidator {
                              const std::vector<T>& values,
                              T* out,
                              const char* desc);
-  Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
+  Result CheckFuncTypeIndex(Var sig_var, FuncType* out);
+  Result CheckStructTypeIndex(Var type_var, Type* out_ref, StructType* out);
+  Result CheckArrayTypeIndex(Var type_var, Type* out_ref, TypeMut* out);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
@@ -345,6 +373,8 @@ class SharedValidator {
   void RestoreLocalRefs(Result result);
   void IgnoreLocalRefs();
 
+  Index GetRecGroupEnd();
+
   ValidateOptions options_;
   Errors* errors_;
   TypeChecker typechecker_;  // TODO: Move into SharedValidator.
@@ -352,10 +382,7 @@ class SharedValidator {
   Location expr_loc_ = Location(kInvalidOffset);
   bool in_init_expr_ = false;
 
-  Index num_types_ = 0;
-  std::map<Index, FuncType> func_types_;
-  std::map<Index, StructType> struct_types_;
-  std::map<Index, ArrayType> array_types_;
+  TypeChecker::TypeFields type_fields_;
 
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.
@@ -366,6 +393,9 @@ class SharedValidator {
   Index starts_ = 0;
   Index num_imported_globals_ = 0;
   Index data_segments_ = 0;
+  Index last_rec_type_end_ = 0;
+  // Recursive type checks may enter to infinite loop for invalid values.
+  Result type_validation_result_ = Result::Ok;
 
   // Includes parameters, since this is only used for validating
   // local.{get,set,tee} instructions.
