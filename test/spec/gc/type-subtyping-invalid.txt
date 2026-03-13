@@ -1,0 +1,18 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/type-subtyping-invalid.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/type-subtyping-invalid.wast:2: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping-invalid.wast:12: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping-invalid.wast:22: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping-invalid.wast:31: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnStructType callback failed
+4/4 tests passed.
+;;; STDOUT ;;)

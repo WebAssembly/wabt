@@ -102,13 +102,20 @@ class BinaryReaderIR : public BinaryReaderNop {
   bool OnError(const Error&) override;
 
   Result OnTypeCount(Index count) override;
+  Result OnRecursiveGroup(Index first_type_index, Index type_count) override;
   Result OnFuncType(Index index,
                     Index param_count,
                     Type* param_types,
                     Index result_count,
-                    Type* result_types) override;
-  Result OnStructType(Index index, Index field_count, TypeMut* fields) override;
-  Result OnArrayType(Index index, TypeMut field) override;
+                    Type* result_types,
+                    SupertypesInfo* supertypes) override;
+  Result OnStructType(Index index,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes) override;
+  Result OnArrayType(Index index,
+                     TypeMut field,
+                     SupertypesInfo* supertypes) override;
 
   Result OnImportCount(Index count) override;
   Result OnImportFunc(Index import_index,
@@ -174,6 +181,17 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
   Result OnOpcode(Opcode opcode) override;
+  Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) override;
+  Result OnArrayFillExpr(Index type_index) override;
+  Result OnArrayGetExpr(Opcode opcode, Index type_index) override;
+  Result OnArrayInitDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayInitElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewExpr(Index type_index) override;
+  Result OnArrayNewDataExpr(Index type_index, Index data_index) override;
+  Result OnArrayNewDefaultExpr(Index type_index) override;
+  Result OnArrayNewElemExpr(Index type_index, Index elem_index) override;
+  Result OnArrayNewFixedExpr(Index type_index, Index count) override;
+  Result OnArraySetExpr(Index type_index) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           Index memidx,
                           Address alignment_log2,
@@ -206,6 +224,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnCastExpr(Opcode opcode,
+                        Index depth,
+                        Type type1,
+                        Type type2) override;
   Result OnBrOnNonNullExpr(Index depth) override;
   Result OnBrOnNullExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
@@ -228,6 +250,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
+  Result OnGCUnaryExpr(Opcode opcode) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnGlobalSetExpr(Index global_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
@@ -256,9 +279,11 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableSizeExpr(Index table_index) override;
   Result OnTableFillExpr(Index table_index) override;
   Result OnRefAsNonNullExpr() override;
+  Result OnRefCastExpr(Type type) override;
   Result OnRefFuncExpr(Index func_index) override;
   Result OnRefNullExpr(Type type) override;
   Result OnRefIsNullExpr() override;
+  Result OnRefTestExpr(Type type) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
@@ -267,6 +292,12 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index memidx,
                      Address alignment_log2,
                      Address offset) override;
+  Result OnStructGetExpr(Opcode opcode,
+                         Index type_index,
+                         Index field_index) override;
+  Result OnStructNewExpr(Index type_index) override;
+  Result OnStructNewDefaultExpr(Index type_index) override;
+  Result OnStructSetExpr(Index type_index, Index field_index) override;
   Result OnThrowExpr(Index tag_index) override;
   Result OnThrowRefExpr() override;
   Result OnTryExpr(Type sig_type) override;
@@ -524,11 +555,22 @@ Result BinaryReaderIR::OnTypeCount(Index count) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnRecursiveGroup(Index first_type_index,
+                                        Index type_count) {
+  // The type_count == 0 is ignored, because its support is not mandatory
+  if (type_count > 1) {
+    module_->rec_group_ranges.push_back(
+        RecGroupRange{first_type_index, type_count});
+  }
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFuncType(Index index,
                                   Index param_count,
                                   Type* param_types,
                                   Index result_count,
-                                  Type* result_types) {
+                                  Type* result_types,
+                                  SupertypesInfo* supertypes) {
   if (param_count > kMaxFunctionParams) {
     PrintError("FuncType param count exceeds maximum value");
     return Result::Error;
@@ -540,7 +582,9 @@ Result BinaryReaderIR::OnFuncType(Index index,
   }
 
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto func_type = std::make_unique<FuncType>();
+  auto func_type = std::make_unique<FuncType>(supertypes->is_final_sub_type);
+  func_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                     supertypes->sub_type_count);
   func_type->sig.param_types.assign(param_types, param_types + param_count);
   func_type->sig.result_types.assign(result_types, result_types + result_count);
 
@@ -566,9 +610,13 @@ Result BinaryReaderIR::OnFuncType(Index index,
 
 Result BinaryReaderIR::OnStructType(Index index,
                                     Index field_count,
-                                    TypeMut* fields) {
+                                    TypeMut* fields,
+                                    SupertypesInfo* supertypes) {
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto struct_type = std::make_unique<StructType>();
+  auto struct_type =
+      std::make_unique<StructType>(supertypes->is_final_sub_type);
+  struct_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                       supertypes->sub_type_count);
   struct_type->fields.resize(field_count);
   for (Index i = 0; i < field_count; ++i) {
     struct_type->fields[i].type = fields[i].type;
@@ -581,9 +629,13 @@ Result BinaryReaderIR::OnStructType(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnArrayType(Index index, TypeMut type_mut) {
+Result BinaryReaderIR::OnArrayType(Index index,
+                                   TypeMut type_mut,
+                                   SupertypesInfo* supertypes) {
   auto field = std::make_unique<TypeModuleField>(GetLocation());
-  auto array_type = std::make_unique<ArrayType>();
+  auto array_type = std::make_unique<ArrayType>(supertypes->is_final_sub_type);
+  array_type->supertypes.InitSubTypes(supertypes->sub_types,
+                                      supertypes->sub_type_count);
   array_type->field.type = type_mut.type;
   array_type->field.mutable_ = type_mut.mutable_;
   module_->features_used.simd |= (type_mut.type == Type::V128);
@@ -844,6 +896,62 @@ Result BinaryReaderIR::OnOpcode(Opcode opcode) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnArrayCopyExpr(Index dst_type_index,
+                                       Index src_type_index) {
+  return AppendExpr(std::make_unique<ArrayCopyExpr>(
+      Var(dst_type_index, GetLocation()), Var(src_type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayFillExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayFillExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayGetExpr(Opcode opcode, Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayGetExpr>(opcode, Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayInitDataExpr(Index type_index, Index data_index) {
+  return AppendExpr(std::make_unique<ArrayInitDataExpr>(
+      Var(type_index, GetLocation()), Var(data_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayInitElemExpr(Index type_index, Index elem_index) {
+  return AppendExpr(std::make_unique<ArrayInitElemExpr>(
+      Var(type_index, GetLocation()), Var(elem_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayNewExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewDataExpr(Index type_index, Index data_index) {
+  return AppendExpr(std::make_unique<ArrayNewDataExpr>(
+      Var(type_index, GetLocation()), Var(data_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewDefaultExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArrayNewDefaultExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewElemExpr(Index type_index, Index elem_index) {
+  return AppendExpr(std::make_unique<ArrayNewElemExpr>(
+      Var(type_index, GetLocation()), Var(elem_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnArrayNewFixedExpr(Index type_index, Index count) {
+  return AppendExpr(std::make_unique<ArrayNewFixedExpr>(
+      Var(type_index, GetLocation()), count));
+}
+
+Result BinaryReaderIR::OnArraySetExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<ArraySetExpr>(Var(type_index, GetLocation())));
+}
+
 Result BinaryReaderIR::OnAtomicLoadExpr(Opcode opcode,
                                         Index memidx,
                                         Address alignment_log2,
@@ -914,6 +1022,15 @@ Result BinaryReaderIR::OnBrExpr(Index depth) {
 
 Result BinaryReaderIR::OnBrIfExpr(Index depth) {
   return AppendExpr(std::make_unique<BrIfExpr>(Var(depth, GetLocation())));
+}
+
+Result BinaryReaderIR::OnBrOnCastExpr(Opcode opcode,
+                                      Index depth,
+                                      Type type1,
+                                      Type type2) {
+  return AppendExpr(std::make_unique<BrOnCastExpr>(
+      opcode, Var(depth, GetLocation()), Var(type1, GetLocation()),
+      Var(type2, GetLocation())));
 }
 
 Result BinaryReaderIR::OnBrOnNonNullExpr(Index depth) {
@@ -1067,6 +1184,10 @@ Result BinaryReaderIR::OnV128ConstExpr(v128 value_bits) {
       std::make_unique<ConstExpr>(Const::V128(value_bits, GetLocation())));
 }
 
+Result BinaryReaderIR::OnGCUnaryExpr(Opcode opcode) {
+  return AppendExpr(std::make_unique<GCUnaryExpr>(opcode));
+}
+
 Result BinaryReaderIR::OnGlobalGetExpr(Index global_index) {
   return AppendExpr(
       std::make_unique<GlobalGetExpr>(Var(global_index, GetLocation())));
@@ -1186,6 +1307,10 @@ Result BinaryReaderIR::OnRefAsNonNullExpr() {
       std::make_unique<RefAsNonNullExpr>(Opcode::RefAsNonNull, GetLocation()));
 }
 
+Result BinaryReaderIR::OnRefCastExpr(Type type) {
+  return AppendExpr(std::make_unique<RefCastExpr>(Var(type, GetLocation())));
+}
+
 Result BinaryReaderIR::OnRefFuncExpr(Index func_index) {
   module_->used_func_refs.insert(func_index);
   return AppendExpr(
@@ -1199,6 +1324,10 @@ Result BinaryReaderIR::OnRefNullExpr(Type type) {
 
 Result BinaryReaderIR::OnRefIsNullExpr() {
   return AppendExpr(std::make_unique<RefIsNullExpr>());
+}
+
+Result BinaryReaderIR::OnRefTestExpr(Type type) {
+  return AppendExpr(std::make_unique<RefTestExpr>(Var(type, GetLocation())));
 }
 
 Result BinaryReaderIR::OnNopExpr() {
@@ -1235,6 +1364,28 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
                                    Address offset) {
   return AppendExpr(std::make_unique<StoreExpr>(
       opcode, Var(memidx, GetLocation()), 1ull << alignment_log2, offset));
+}
+
+Result BinaryReaderIR::OnStructGetExpr(Opcode opcode,
+                                       Index type_index,
+                                       Index field_index) {
+  return AppendExpr(std::make_unique<StructGetExpr>(
+      opcode, Var(type_index, GetLocation()), Var(field_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructNewExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<StructNewExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructNewDefaultExpr(Index type_index) {
+  return AppendExpr(
+      std::make_unique<StructNewDefaultExpr>(Var(type_index, GetLocation())));
+}
+
+Result BinaryReaderIR::OnStructSetExpr(Index type_index, Index field_index) {
+  return AppendExpr(std::make_unique<StructSetExpr>(
+      Var(type_index, GetLocation()), Var(field_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
@@ -1893,6 +2044,428 @@ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
   return Result::Ok;
 }
 
+class BinaryReaderComponentIR : public ComponentBinaryReaderDelegate {
+ public:
+  BinaryReaderComponentIR(Component* out_component,
+                          const char* filename,
+                          Errors* errors);
+
+ public:
+  bool OnError(const Error&) override { return false; }
+
+  Result OnCoreModule(const void* data,
+                      size_t size,
+                      const ReadBinaryOptions& options) override;
+  Result BeginComponent(uint32_t version, size_t depth) override;
+  Result EndComponent() override;
+
+  Result BeginAliasSection(uint32_t count) override;
+  Result EndAliasSection() override;
+  Result OnAliasExport(ComponentBinarySort sort,
+                       ComponentBinaryCoreSort core_sort,
+                       uint32_t index,
+                       std::string_view export_name) override;
+  Result OnAliasOuter(ComponentBinarySort sort,
+                      ComponentBinaryCoreSort core_sort,
+                      uint32_t counter,
+                      uint32_t index) override;
+
+  Result BeginTypeSection(uint32_t count) override;
+  Result EndTypeSection() override;
+  Result OnPrimitiveType(ComponentType type) override;
+  Result OnRecordType(uint32_t field_count,
+                      ComponentNamedType* fields) override;
+  Result OnVariantType(uint32_t case_count, ComponentNamedType* cases) override;
+  Result OnListType(ComponentType type) override;
+  Result OnListFixedType(ComponentType type, uint32_t size) override;
+  Result OnOptionType(ComponentType type) override;
+  Result OnResultType(ComponentType result, ComponentType error) override;
+  Result OnOwnType(Index index) override;
+  Result OnBorrowType(Index index) override;
+  Result OnFuncType(ComponentBinaryType type,
+                    uint32_t param_count,
+                    ComponentNamedType* params,
+                    ComponentType result) override;
+  Result BeginInstanceType(uint32_t count) override;
+  Result EndInstanceType() override;
+  Result BeginComponentType(uint32_t count) override;
+  Result EndComponentType() override;
+
+  Result BeginImportSection(uint32_t count) override;
+  Result EndImportSection() override;
+  Result BeginExportSection(uint32_t count) override;
+  Result EndExportSection() override;
+  Result OnImport(std::string_view external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info) override;
+  Result OnExport(std::string_view external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info,
+                  ComponentExportInfo* export_info) override;
+
+ private:
+  Result OnItemsType(ComponentDef::Type type,
+                     uint32_t item_count,
+                     ComponentNamedType* items);
+
+  Errors* errors_ = nullptr;
+  ComponentSharedData* shared_data_ = nullptr;
+  Component::StringTable string_table_;
+  const char* filename_;
+};
+
+BinaryReaderComponentIR::BinaryReaderComponentIR(Component* out_component,
+                                                 const char* filename,
+                                                 Errors* errors)
+    : errors_(errors),
+      shared_data_(out_component),
+      string_table_(out_component),
+      filename_(filename) {}
+
+Result BinaryReaderComponentIR::OnCoreModule(const void* data,
+                                             size_t size,
+                                             const ReadBinaryOptions& options) {
+  auto coreModule = std::make_unique<ComponentCoreModule>();
+  BinaryReaderIR reader(coreModule->module(), filename_, errors_);
+  CHECK_RESULT(ReadBinary(data, size, &reader, options));
+  ComponentData* component =
+      const_cast<ComponentData*>(shared_data_->AsComponent());
+  component->Append(std::move(coreModule));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginComponent(uint32_t version, size_t depth) {
+  if (depth == 0) {
+    return Result::Ok;
+  }
+  auto component = std::make_unique<ComponentData>(shared_data_->AsComponent());
+  ComponentData* parent =
+      const_cast<ComponentData*>(shared_data_->AsComponent());
+  shared_data_ = component.get();
+  parent->Append(std::move(component));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndComponent() {
+  shared_data_ = const_cast<ComponentSharedData*>(shared_data_->GetParent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginAliasSection(uint32_t count) {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndAliasSection() {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+static ComponentDef::Sort GetComponentSortType(
+    ComponentBinarySort sort,
+    ComponentBinaryCoreSort core_sort) {
+  switch (sort) {
+    case ComponentBinarySort::Core:
+      switch (core_sort) {
+        case ComponentBinaryCoreSort::Func:
+          return ComponentDef::Sort::CoreFunc;
+        case ComponentBinaryCoreSort::Table:
+          return ComponentDef::Sort::CoreTable;
+        case ComponentBinaryCoreSort::Memory:
+          return ComponentDef::Sort::CoreMemory;
+        case ComponentBinaryCoreSort::Global:
+          return ComponentDef::Sort::CoreGlobal;
+        case ComponentBinaryCoreSort::Type:
+          return ComponentDef::Sort::CoreType;
+        case ComponentBinaryCoreSort::Module:
+          return ComponentDef::Sort::CoreModule;
+        default:
+          break;
+      }
+      assert(core_sort == ComponentBinaryCoreSort::Instance);
+      return ComponentDef::Sort::CoreInstance;
+    case ComponentBinarySort::Func:
+      return ComponentDef::Sort::Func;
+    case ComponentBinarySort::Value:
+      return ComponentDef::Sort::Value;
+    case ComponentBinarySort::Type:
+      return ComponentDef::Sort::Type;
+    case ComponentBinarySort::Component:
+      return ComponentDef::Sort::Component;
+    default:
+      assert(sort == ComponentBinarySort::Instance);
+      return ComponentDef::Sort::Instance;
+  }
+}
+
+static ComponentDef::External GetComponentExternal(
+    ComponentExternalInfo* external_info) {
+  switch (external_info->sort) {
+    case ComponentBinarySort::Core:
+      assert(external_info->core_sort == ComponentBinaryCoreSort::Module);
+      return ComponentDef::External::CoreModule;
+    case ComponentBinarySort::Func:
+      return ComponentDef::External::Func;
+    case ComponentBinarySort::Value:
+      if (external_info->external == ComponentBinaryExternal::ValueEq) {
+        return ComponentDef::External::ValueEq;
+      }
+      assert(external_info->external == ComponentBinaryExternal::ValueType);
+      return ComponentDef::External::ValueType;
+    case ComponentBinarySort::Type:
+      if (external_info->external == ComponentBinaryExternal::TypeEq) {
+        return ComponentDef::External::TypeEq;
+      }
+      assert(external_info->external == ComponentBinaryExternal::TypeSubRes);
+      return ComponentDef::External::TypeSubResource;
+    case ComponentBinarySort::Component:
+      return ComponentDef::External::Component;
+    default:
+      assert(external_info->sort == ComponentBinarySort::Instance);
+      return ComponentDef::External::Instance;
+  }
+}
+
+Result BinaryReaderComponentIR::OnAliasExport(ComponentBinarySort sort,
+                                              ComponentBinaryCoreSort core_sort,
+                                              uint32_t instance_index,
+                                              std::string_view export_name) {
+  ComponentDef::Sort target_sort = GetComponentSortType(sort, core_sort);
+  auto value = std::make_unique<ComponentAliasExport>(
+      false, instance_index, string_table_.Append(export_name), target_sort);
+  shared_data_->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnAliasOuter(ComponentBinarySort sort,
+                                             ComponentBinaryCoreSort core_sort,
+                                             uint32_t counter,
+                                             uint32_t index) {
+  const ComponentSharedData* target = shared_data_;
+  const ComponentDef* definition = nullptr;
+  ComponentDef::Sort target_sort = GetComponentSortType(sort, core_sort);
+
+  for (uint32_t i = counter; i > 0 && target != nullptr; i--) {
+    target = target->GetParent();
+  }
+
+  if (target != nullptr) {
+    definition = target->Find(target_sort, index);
+  }
+
+  auto value = std::make_unique<ComponentAliasOuter>(
+      counter, index, target_sort, target, definition);
+  shared_data_->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginTypeSection(uint32_t count) {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndTypeSection() {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnPrimitiveType(ComponentType type) {
+  auto value_type =
+      std::make_unique<ComponentValueType>(ComponentDef::Type::ValueType, type);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnOptionType(ComponentType type) {
+  auto value_type =
+      std::make_unique<ComponentValueType>(ComponentDef::Type::Option, type);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnRecordType(uint32_t field_count,
+                                             ComponentNamedType* fields) {
+  return OnItemsType(ComponentDef::Type::Record, field_count, fields);
+}
+
+Result BinaryReaderComponentIR::OnVariantType(uint32_t case_count,
+                                              ComponentNamedType* cases) {
+  return OnItemsType(ComponentDef::Type::Variant, case_count, cases);
+}
+
+Result BinaryReaderComponentIR::OnListType(ComponentType type) {
+  auto value_type =
+      std::make_unique<ComponentTypeList>(ComponentDef::Type::List, type, 0);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnListFixedType(ComponentType type,
+                                                uint32_t size) {
+  auto value_type = std::make_unique<ComponentTypeList>(
+      ComponentDef::Type::ListFixed, type, size);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnResultType(ComponentType result,
+                                             ComponentType error) {
+  auto value_type = std::make_unique<ComponentTypeResult>(result, error);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnOwnType(Index index) {
+  auto type =
+      std::make_unique<ComponentTypeIndex>(ComponentDef::Type::Own, index);
+  shared_data_->AppendType(std::move(type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnBorrowType(Index index) {
+  auto type =
+      std::make_unique<ComponentTypeIndex>(ComponentDef::Type::Borrow, index);
+  shared_data_->AppendType(std::move(type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnFuncType(ComponentBinaryType type,
+                                           uint32_t param_count,
+                                           ComponentNamedType* params,
+                                           ComponentType result) {
+  std::vector<ComponentTypeFunc::Param> func_params;
+  func_params.reserve(param_count);
+
+  while (func_params.size() < param_count) {
+    const std::string* name = string_table_.Append(params->name);
+    func_params.push_back(ComponentTypeFunc::Param{name, params->type});
+    params++;
+  }
+
+  bool is_async = type == ComponentBinaryType::AsyncFunc;
+  auto value_type =
+      std::make_unique<ComponentTypeFunc>(is_async, &func_params, result);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginInstanceType(uint32_t count) {
+  auto type = std::make_unique<ComponentTypeData>(shared_data_, false);
+  ComponentSharedData* type_data = type.get();
+  shared_data_->AppendType(std::move(type));
+  shared_data_ = type_data;
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndInstanceType() {
+  shared_data_ = const_cast<ComponentSharedData*>(shared_data_->GetParent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginComponentType(uint32_t count) {
+  auto type = std::make_unique<ComponentTypeData>(shared_data_, true);
+  ComponentSharedData* type_data = type.get();
+  shared_data_->AppendType(std::move(type));
+  shared_data_ = type_data;
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndComponentType() {
+  shared_data_ = const_cast<ComponentSharedData*>(shared_data_->GetParent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginImportSection(uint32_t count) {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndImportSection() {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::BeginExportSection(uint32_t count) {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::EndExportSection() {
+  assert(shared_data_->IsComponent());
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnImport(std::string_view external_name,
+                                         std::string_view* version_suffix,
+                                         ComponentExternalInfo* external_info) {
+  const std::string* name = string_table_.Append(external_name);
+  const std::string* suffix = nullptr;
+
+  if (version_suffix != nullptr) {
+    suffix = string_table_.Append(*version_suffix);
+  }
+
+  ComponentDef::External external = GetComponentExternal(external_info);
+  ComponentDef::Sort sort =
+      GetComponentSortType(external_info->sort, external_info->core_sort);
+
+  auto value = std::make_unique<ComponentExternal>(
+      true, name, suffix, external, sort, external_info->index, kInvalidIndex);
+  shared_data_->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnExport(std::string_view external_name,
+                                         std::string_view* version_suffix,
+                                         ComponentExternalInfo* external_info,
+                                         ComponentExportInfo* export_info) {
+  const std::string* name = string_table_.Append(external_name);
+  const std::string* suffix = nullptr;
+
+  if (version_suffix != nullptr) {
+    suffix = string_table_.Append(*version_suffix);
+  }
+
+  ComponentDef::External external = ComponentDef::External::Unused;
+  ComponentDef::Sort sort;
+  Index type_index = kInvalidIndex;
+  Index export_index = kInvalidIndex;
+
+  if (export_info != nullptr) {
+    sort = GetComponentSortType(export_info->sort, export_info->core_sort);
+    export_index = export_info->index;
+  } else {
+    sort = GetComponentSortType(external_info->sort, external_info->core_sort);
+  }
+
+  if (external_info != nullptr) {
+    external = GetComponentExternal(external_info);
+    type_index = external_info->index;
+  }
+
+  auto value = std::make_unique<ComponentExternal>(
+      false, name, suffix, external, sort, type_index, export_index);
+  shared_data_->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result BinaryReaderComponentIR::OnItemsType(ComponentDef::Type type,
+                                            uint32_t item_count,
+                                            ComponentNamedType* items) {
+  std::vector<ComponentTypeItems::Item> list;
+  list.reserve(item_count);
+
+  while (list.size() < item_count) {
+    const std::string* name = string_table_.Append(items->name);
+    list.push_back(ComponentTypeItems::Item{name, items->type});
+    items++;
+  }
+
+  auto value_type = std::make_unique<ComponentTypeItems>(type, &list);
+  shared_data_->AppendType(std::move(value_type));
+  return Result::Ok;
+}
+
 }  // end anonymous namespace
 
 Result ReadBinaryIr(const char* filename,
@@ -1903,6 +2476,16 @@ Result ReadBinaryIr(const char* filename,
                     Module* out_module) {
   BinaryReaderIR reader(out_module, filename, errors);
   return ReadBinary(data, size, &reader, options);
+}
+
+Result ReadBinaryComponentIr(const char* filename,
+                             const void* data,
+                             size_t size,
+                             const ReadBinaryOptions& options,
+                             Errors* errors,
+                             Component* out_component) {
+  BinaryReaderComponentIR reader(out_component, filename, errors);
+  return ReadBinaryComponent(data, size, &reader, options);
 }
 
 }  // namespace wabt

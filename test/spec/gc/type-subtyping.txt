@@ -1,0 +1,82 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/type-subtyping.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/type-subtyping.wast:140: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.10.wasm:0000043: error: type mismatch in initializer expression, expected [(ref 4)] but got [(ref 6)]
+  0000044: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-subtyping.wast:206: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.15.wasm:0000031: error: type mismatch in initializer expression, expected [(ref 0)] but got [(ref 2)]
+  0000032: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-subtyping.wast:216: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.16.wasm:000003e: error: type mismatch in initializer expression, expected [(ref 2)] but got [(ref 4)]
+  000003f: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-subtyping.wast:283: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:284: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:285: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:286: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/type-subtyping.wast:287: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/type-subtyping.wast:288: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/type-subtyping.wast:314: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:315: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:316: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/type-subtyping.wast:317: assert_trap passed: type error: invalid type cast
+out/test/spec/gc/type-subtyping.wast:345: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:346: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-subtyping.wast:511: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:521: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:531: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:549: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:557: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:606: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:699: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:714: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-subtyping.wast:727: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.55.wasm:0000014: error: sub type 0 has final property
+  0000014: error: OnFuncType callback failed
+out/test/spec/gc/type-subtyping.wast:735: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.56.wasm:0000012: error: sub type 0 has final property
+  0000012: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping.wast:743: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.57.wasm:0000014: error: sub type 0 has final property
+  0000014: error: OnFuncType callback failed
+out/test/spec/gc/type-subtyping.wast:751: assert_invalid passed:
+  out/test/spec/gc/type-subtyping/type-subtyping.58.wasm:000001c: error: sub type 1 has final property
+  000001c: error: OnFuncType callback failed
+out/test/spec/gc/type-subtyping.wast:764: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000015: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping.wast:772: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000017: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping.wast:780: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000015: error: OnArrayType callback failed
+out/test/spec/gc/type-subtyping.wast:788: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnArrayType callback failed
+out/test/spec/gc/type-subtyping.wast:796: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000017: error: OnFuncType callback failed
+out/test/spec/gc/type-subtyping.wast:804: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnFuncType callback failed
+out/test/spec/gc/type-subtyping.wast:812: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000016: error: OnArrayType callback failed
+out/test/spec/gc/type-subtyping.wast:820: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000018: error: OnStructType callback failed
+out/test/spec/gc/type-subtyping.wast:828: assert_invalid passed:
+  0000000: error: sub type 0 does not match super type 1
+  0000017: error: OnFuncType callback failed
+91/91 tests passed.
+;;; STDOUT ;;)

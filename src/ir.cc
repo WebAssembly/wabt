@@ -25,6 +25,17 @@
 namespace {
 
 const char* ExprTypeName[] = {
+    "ArrayCopy",
+    "ArrayFill",
+    "ArrayGet",
+    "ArrayInitData",
+    "ArrayInitElem",
+    "ArrayNew",
+    "ArrayNewData",
+    "ArrayNewDefault",
+    "ArrayNewElem",
+    "ArrayNewFixed",
+    "ArraySet",
     "AtomicLoad",
     "AtomicRmw",
     "AtomicRmwCmpxchg",
@@ -37,6 +48,7 @@ const char* ExprTypeName[] = {
     "Block",
     "Br",
     "BrIf",
+    "BrOnCast",
     "BrOnNonNull",
     "BrOnNull",
     "BrTable",
@@ -48,6 +60,7 @@ const char* ExprTypeName[] = {
     "Const",
     "Convert",
     "Drop",
+    "GCUnary",
     "GlobalGet",
     "GlobalSet",
     "If",
@@ -64,9 +77,11 @@ const char* ExprTypeName[] = {
     "MemorySize",
     "Nop",
     "RefAsNonNull",
+    "RefCast",
     "RefIsNull",
     "RefFunc",
     "RefNull",
+    "RefTest",
     "Rethrow",
     "Return",
     "ReturnCall",
@@ -77,6 +92,10 @@ const char* ExprTypeName[] = {
     "SimdLoadLane",
     "SimdStoreLane",
     "SimdShuffleOp",
+    "StructGet",
+    "StructNew",
+    "StructNewDefault",
+    "StructSet",
     "LoadSplat",
     "LoadZero",
     "Store",
@@ -346,8 +365,50 @@ FuncType* Module::GetFuncType(const Var& var) {
   return dyn_cast<FuncType>(types[index]);
 }
 
+const StructType* Module::GetStructType(const Var& var) const {
+  return const_cast<Module*>(this)->GetStructType(var);
+}
+
+StructType* Module::GetStructType(const Var& var) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
+    return nullptr;
+  }
+  return dyn_cast<StructType>(types[index]);
+}
+
+const ArrayType* Module::GetArrayType(const Var& var) const {
+  return const_cast<Module*>(this)->GetArrayType(var);
+}
+
+ArrayType* Module::GetArrayType(const Var& var) {
+  Index index = type_bindings.FindIndex(var);
+  if (index >= types.size()) {
+    return nullptr;
+  }
+  return dyn_cast<ArrayType>(types[index]);
+}
+
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
+  size_t range_index = 0;
+  size_t range_start = types.size();
+
+  if (range_index < rec_group_ranges.size()) {
+    range_start = rec_group_ranges[range_index].first_type_index;
+  }
+
   for (size_t i = 0; i < types.size(); ++i) {
+    // Functions in recursice groups must never match.
+    if (i == range_start) {
+      i += rec_group_ranges[range_index].type_count - 1;
+      range_index++;
+
+      if (range_index < rec_group_ranges.size()) {
+        range_start = rec_group_ranges[range_index].first_type_index;
+      }
+      continue;
+    }
+
     if (auto* func_type = dyn_cast<FuncType>(types[i])) {
       if (func_type->sig == sig) {
         return i;
@@ -704,6 +765,16 @@ void Var::Destroy() {
   }
 }
 
+void TypeEntrySupertypesInfo::InitSubTypes(Index* sub_type_list,
+                                           Index sub_type_count) {
+  sub_types.clear();
+  sub_types.reserve(sub_type_count);
+
+  for (Index i = 0; i < sub_type_count; i++) {
+    sub_types.push_back(Var(sub_type_list[i], Location()));
+  }
+}
+
 uint8_t ElemSegment::GetFlags(const Module* module,
                               bool function_references_enabled) const {
   uint8_t flags = 0;
@@ -758,6 +829,137 @@ uint8_t DataSegment::GetFlags(const Module* module) const {
   }
 
   return flags;
+}
+
+const char* ComponentDef::GetSortName(Sort sort) {
+  switch (sort) {
+    case Sort::CoreFunc:
+      return "core func";
+    case Sort::CoreTable:
+      return "core table";
+    case Sort::CoreMemory:
+      return "core memory";
+    case Sort::CoreGlobal:
+      return "core global";
+    case Sort::CoreType:
+      return "core type";
+    case Sort::CoreModule:
+      return "core module";
+    case Sort::CoreInstance:
+      return "core instance";
+    case Sort::Func:
+      return "func";
+    case Sort::Value:
+      return "value";
+    case Sort::Type:
+      return "type";
+    case Sort::Component:
+      return "component";
+    case Sort::Instance:
+      return "instance";
+    default:
+      assert(0);
+      return "invalid";
+  }
+}
+
+const ComponentDef* ComponentSharedData::Find(ComponentDef::Sort sort,
+                                              const std::string* name,
+                                              Index* out_index) const {
+  if (out_index != nullptr) {
+    *out_index = kInvalidIndex;
+  }
+
+  if (sort == ComponentDef::Sort::Type) {
+    size_t size = type_list_.size();
+    for (size_t i = 0; i < size; i++) {
+      const ComponentDef* definition = type_list_[i];
+      if (definition->Name() == name) {
+        if (out_index != nullptr) {
+          *out_index = static_cast<Index>(i);
+        }
+        return definition;
+      }
+    }
+    return nullptr;
+  }
+
+  size_t size = list_.size();
+  Index index = 0;
+  for (size_t i = 0; i < size; i++) {
+    const ComponentDef* definition = list_[i].get();
+    if (definition->sort() == sort) {
+      if (definition->Name() == name) {
+        if (out_index != nullptr) {
+          *out_index = index;
+        }
+        return definition;
+      }
+      index++;
+    }
+  }
+  return nullptr;
+}
+
+const ComponentDef* ComponentSharedData::Find(Sort sort, Index index) const {
+  if (sort == ComponentDef::Sort::Type) {
+    if (type_list_.size() <= index) {
+      return nullptr;
+    }
+    return type_list_[index];
+  }
+
+  size_t size = list_.size();
+  for (size_t i = 0; i < size; i++) {
+    const ComponentDef* definition = list_[i].get();
+    if (definition->sort() == sort) {
+      if (index == 0) {
+        return definition;
+      }
+      index--;
+    }
+  }
+  return nullptr;
+}
+
+Index ComponentSharedData::SortSize(Sort sort) const {
+  if (sort == ComponentDef::Sort::Type) {
+    return static_cast<Index>(type_list_.size());
+  }
+
+  size_t size = list_.size();
+  Index count = 0;
+  for (size_t i = 0; i < size; i++) {
+    if (list_[i].get()->sort() == sort) {
+      count++;
+    }
+  }
+  return count;
+}
+
+const std::string* Component::StringTable::Find(
+    const std::string_view& name) const {
+  auto str = std::make_unique<std::string>(name);
+
+  std::set<std::string*>::iterator it = string_map_.find(str.get());
+  if (it != string_map_.end()) {
+    return *it;
+  }
+  return nullptr;
+}
+
+const std::string* Component::StringTable::Append(
+    const std::string_view& name) {
+  auto str = std::make_unique<std::string>(name);
+
+  auto it = string_map_.insert(str.get());
+  if (!it.second) {
+    return *it.first;
+  }
+
+  std::string* ref = str.get();
+  owner_->string_table_.push_back(std::move(str));
+  return ref;
 }
 
 }  // namespace wabt
