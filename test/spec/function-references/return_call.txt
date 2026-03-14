@@ -1,6 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/function-references/return_call.wast
 ;;; ARGS*: --enable-function-references --enable-tail-call
+;;; SLOW
 (;; STDOUT ;;;
 out/test/spec/function-references/return_call.wast:124: assert_invalid passed:
   out/test/spec/function-references/return_call/return_call.1.wasm:000001e: error: return signatures have inconsistent types: expected [i32], got []

@@ -1,6 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/wasm-3.0/return_call.wast
 ;;; ARGS*: --enable-tail-call
+;;; SLOW
 (;; STDOUT ;;;
 called host spectest.print_i32_f32(i32:5, f32:91.000000) =>
 out/test/spec/tail-call/return_call.wast:141: assert_invalid passed:
