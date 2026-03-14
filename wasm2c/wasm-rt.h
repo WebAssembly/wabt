@@ -578,7 +578,8 @@ typedef struct {
  * On macOS XNU, there is a bug where nested `sigsetjmp` and `siglongjmp` 
  * across threads that have an allocated alternate signal stack (`SS_ONSTACK`) 
  * will erroneously cause the kernel to preserve the `SS_ONSTACK` flag in the 
- * thread state. This happens even if the exception did not originate from 
+ * thread state. This happens because `siglongjmp` fails to call `_sigunaltstack`
+ * to clear the kernel state, even if the exception did not originate from 
  * the signal handler, leading to an assertion failure when trying to free 
  * the alternate signal stack.
  * 
