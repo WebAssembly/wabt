@@ -17,6 +17,8 @@ jobs:
       with:
         python-version: '3.x'
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: install tools
       run: |
         pip3 install flake8==7.3.0
@@ -48,6 +50,8 @@ jobs:
       if: startsWith(matrix.os, 'macos-')
     - name: install ninja (win)
       run: choco install ninja
+      if: matrix.os == 'windows-latest'
+    - uses: ilammy/msvc-dev-cmd@v1
       if: matrix.os == 'windows-latest'
     - name: tool versions
       run: |
