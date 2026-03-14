@@ -43,7 +43,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
     - name: install ninja (osx)
       run: brew install ninja
-      if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-latest'
     - name: install ninja (win)
       run: choco install ninja
       if: matrix.os == 'windows-latest'
