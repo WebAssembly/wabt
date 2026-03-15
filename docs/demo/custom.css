@@ -81,7 +81,7 @@ pre {
   top: 0;
 }
 
-.CodeMirror, .output {
+.CodeMirror, .cm-editor, .output {
   position: absolute;
   height: calc(100% - 2.625rem);
   top: 2.625rem;
@@ -115,12 +115,12 @@ pre {
 
 .gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('third_party/split/vertical.png');
+  background-image: url('assets/vertical.png');
 }
 
 .gutter-vertical {
   cursor: ns-resize;
-  background-image: url('third_party/split/horizontal.png');
+  background-image: url('assets/horizontal.png');
 }
 
 .gutter {
@@ -158,4 +158,18 @@ header {
 ul {
   margin: 1em;
   list-style: none;
+}
+
+#features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }

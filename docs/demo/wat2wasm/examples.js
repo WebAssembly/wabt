@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var examples = [
+export const examples = [
   {
     name: 'empty',
     contents: '(module)',
