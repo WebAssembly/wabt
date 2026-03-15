@@ -115,12 +115,12 @@ pre {
 
 .gutter-horizontal {
   cursor: ew-resize;
-  background-image: url('third_party/split/vertical.png');
+  background-image: url('vertical.png');
 }
 
 .gutter-vertical {
   cursor: ns-resize;
-  background-image: url('third_party/split/horizontal.png');
+  background-image: url('horizontal.png');
 }
 
 .gutter {
