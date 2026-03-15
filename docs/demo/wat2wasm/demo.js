@@ -22,7 +22,14 @@ Split(["#top-row", "#bottom-row"], {
 
 const features = {};
 
-WabtModule().then(function(wabt) {
+WabtModule({
+  locateFile: function(url) {
+    if (url.endsWith('.wasm')) {
+      return '../' + url;
+    }
+    return url;
+  }
+}).then(function(wabt) {
 
 const kCompileMinMS = 100;
 let outputShowBase64 = false;

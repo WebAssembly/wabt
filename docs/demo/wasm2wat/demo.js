@@ -26,7 +26,14 @@ function getLocalStorageFeatures() {
   }
 }
 
-WabtModule().then(function(wabt) {
+WabtModule({
+  locateFile: function(url) {
+    if (url.endsWith('.wasm')) {
+      return '../' + url;
+    }
+    return url;
+  }
+}).then(function(wabt) {
 
 const editorEl = document.querySelector('.editor');
 const uploadEl = document.getElementById('upload');

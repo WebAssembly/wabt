@@ -831,6 +831,8 @@ if (EMSCRIPTEN)
     -sMODULARIZE
     -sEXPORT_NAME=WabtModule
     -sEXPORTED_RUNTIME_METHODS=writeAsciiToMemory
+    -sWASM=1
+    -sSINGLE_FILE=0
     -Oz
   )
   string(REPLACE ";" " " LIBWABT_LINK_FLAGS_STR "${LIBWABT_LINK_FLAGS}")
