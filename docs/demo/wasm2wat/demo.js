@@ -15,7 +15,7 @@
  */
 
 
-var features = getLocalStorageFeatures();
+const features = getLocalStorageFeatures();
 
 function getLocalStorageFeatures() {
   try {
@@ -28,19 +28,19 @@ function getLocalStorageFeatures() {
 
 WabtModule().then(function(wabt) {
 
-var editorEl = document.querySelector('.editor');
-var uploadEl = document.getElementById('upload');
-var selectEl = document.getElementById('select');
-var uploadInputEl = document.getElementById('uploadInput');
-var generateNamesEl = document.getElementById('generateNames');
-var foldExprsEl = document.getElementById('foldExprs');
-var inlineExportEl = document.getElementById('inlineExport');
-var checkEl = document.getElementById('check');
-var readDebugNamesEl = document.getElementById('readDebugNames');
-var options = {mode: 'wast', lineNumbers: true};
-var editor = CodeMirror.fromTextArea(editorEl, options);
+const editorEl = document.querySelector('.editor');
+const uploadEl = document.getElementById('upload');
+const selectEl = document.getElementById('select');
+const uploadInputEl = document.getElementById('uploadInput');
+const generateNamesEl = document.getElementById('generateNames');
+const foldExprsEl = document.getElementById('foldExprs');
+const inlineExportEl = document.getElementById('inlineExport');
+const checkEl = document.getElementById('check');
+const readDebugNamesEl = document.getElementById('readDebugNames');
+const options = {mode: 'wast', lineNumbers: true};
+const editor = CodeMirror.fromTextArea(editorEl, options);
 
-var editorContainer = document.querySelector('.CodeMirror.cm-s-default');
+const editorContainer = document.querySelector('.CodeMirror.cm-s-default');
 
 editorContainer.ondrop = function(e) {
   e.preventDefault();
@@ -50,12 +50,12 @@ editorContainer.ondrop = function(e) {
   }
   readAndCompileFile(file);
 }
-var fileBuffer = null;
+let fileBuffer = null;
 for (const [f, v] of Object.entries(wabt.FEATURES)) {
-  var featureEl = document.getElementById(f);
+  const featureEl = document.getElementById(f);
   featureEl.checked = !!(features[f] !== undefined ? features[f] : v);
   featureEl.addEventListener('change', event => {
-    var feature = event.target.id;
+    const feature = event.target.id;
     features[feature] = event.target.checked;
     compile(fileBuffer);
     if (localStorage) {
@@ -69,21 +69,20 @@ function compile(contents) {
     return;
   }
 
-  var readDebugNames = readDebugNamesEl.checked;
-  var check = checkEl.checked;
-  var generateNames = generateNamesEl.checked;
-  var foldExprs = foldExprsEl.checked;
-  var inlineExport = inlineExportEl.checked;
+  const readDebugNames = readDebugNamesEl.checked;
+  const check = checkEl.checked;
+  const generateNames = generateNamesEl.checked;
+  const foldExprs = foldExprsEl.checked;
+  const inlineExport = inlineExportEl.checked;
 
+  let module;
   try {
-    var module =
-        wabt.readWasm(contents, {readDebugNames: readDebugNames, check: check, ...features});
+    module = wabt.readWasm(contents, {readDebugNames: readDebugNames, check: check, ...features});
     if (generateNames) {
       module.generateNames();
       module.applyNames();
     }
-    var result =
-        module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
+    const result = module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
     editor.setValue(result);
   } catch (e) {
     editor.setValue(e.toString());
@@ -95,7 +94,7 @@ function compile(contents) {
 function onUploadClicked(e) {
   uploadInput.value = '';
   // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
-  var event = new MouseEvent('click', {
+  const event = new MouseEvent('click', {
     view: window,
     bubbles: true,
     cancelable: true,
@@ -104,12 +103,12 @@ function onUploadClicked(e) {
 }
 
 function onUploadedFile(e) {
-  var file = e.target.files[0];
+  const file = e.target.files[0];
   readAndCompileFile(file);
 }
 // extract common util function
 function readAndCompileFile(file) {
-  var reader = new FileReader();
+  const reader = new FileReader();
   reader.onload = function(e) {
     fileBuffer = new Uint8Array(e.target.result);
     compile(fileBuffer);
@@ -122,7 +121,7 @@ function recompileIfChanged(el) {
 }
 
 function setExample(index) {
-  var contents = examples[index].contents;
+  const contents = examples[index].contents;
   fileBuffer = contents;
   compile(contents);
 }
@@ -139,9 +138,9 @@ recompileIfChanged(inlineExportEl);
 recompileIfChanged(readDebugNamesEl);
 selectEl.addEventListener('change', onSelectChanged);
 
-for (var i = 0; i < examples.length; ++i) {
-  var example = examples[i];
-  var option = document.createElement('option');
+for (let i = 0; i < examples.length; ++i) {
+  const example = examples[i];
+  const option = document.createElement('option');
   option.textContent = example.name;
   selectEl.appendChild(option);
 }

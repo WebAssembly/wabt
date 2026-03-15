@@ -20,44 +20,44 @@ Split(["#top-row", "#bottom-row"], {
   direction: 'vertical'
 });
 
-var features = {};
+const features = {};
 
 WabtModule().then(function(wabt) {
 
-var kCompileMinMS = 100;
-var outputShowBase64 = false;
-var outputLog;
-var outputBase64;
+const kCompileMinMS = 100;
+let outputShowBase64 = false;
+let outputLog;
+let outputBase64;
 
-var outputEl = document.getElementById('output');
-var jsLogEl = document.getElementById('js_log');
-var selectEl = document.getElementById('select');
-var downloadEl = document.getElementById('download');
-var runEl = document.getElementById('run');
-var downloadLink = document.getElementById('downloadLink');
-var buildLogEl = document.getElementById('buildLog');
-var base64El = document.getElementById('base64');
-var binaryBuffer = null;
-var binaryBlobUrl = null;
+const outputEl = document.getElementById('output');
+const jsLogEl = document.getElementById('js_log');
+const selectEl = document.getElementById('select');
+const downloadEl = document.getElementById('download');
+const runEl = document.getElementById('run');
+const downloadLink = document.getElementById('downloadLink');
+const buildLogEl = document.getElementById('buildLog');
+const base64El = document.getElementById('base64');
+let binaryBuffer = null;
+let binaryBlobUrl = null;
 
 for (const [f, v] of Object.entries(wabt.FEATURES)) {
-  var featureEl = document.getElementById(f);
+  const featureEl = document.getElementById(f);
   featureEl.checked = v;
   featureEl.addEventListener('change', event => {
-    var feature = event.target.id;
+    const feature = event.target.id;
     features[feature] = event.target.checked;
     onWatChange();
   });
 }
 
-var watEditor = CodeMirror((elt) => {
+const watEditor = CodeMirror((elt) => {
   document.getElementById('top-left').appendChild(elt);
 }, {
   mode: 'wast',
   lineNumbers: true,
 });
 
-var jsEditor = CodeMirror((elt) => {
+const jsEditor = CodeMirror((elt) => {
   document.getElementById('bottom-left').appendChild(elt);
 }, {
   mode: 'javascript',
@@ -65,10 +65,10 @@ var jsEditor = CodeMirror((elt) => {
 });
 
 function debounce(f, wait) {
-  var lastTime = 0;
-  var timeoutId = -1;
-  var wrapped = function() {
-    var time = +new Date();
+  let lastTime = 0;
+  let timeoutId = -1;
+  const wrapped = function(...args) {
+    const time = +new Date();
     if (time - lastTime < wait) {
       if (timeoutId == -1)
         timeoutId = setTimeout(wrapped, (lastTime + wait) - time);
@@ -78,7 +78,7 @@ function debounce(f, wait) {
       clearTimeout(timeoutId);
     timeoutId = -1;
     lastTime = time;
-    f.apply(null, arguments);
+    f(...args);
   };
   return wrapped;
 }
@@ -87,19 +87,19 @@ function compile() {
   outputLog = '';
   outputBase64 = 'Error occured, base64 output is not available';
 
-  var binaryOutput;
+  let module;
   try {
-    var module = wabt.parseWat('test.wast', watEditor.getValue(), features);
+    module = wabt.parseWat('test.wast', watEditor.getValue(), features);
     module.resolveNames();
     module.validate(features);
-    var binaryOutput = module.toBinary({log: true, write_debug_names:true});
+    const binaryOutput = module.toBinary({log: true, write_debug_names:true});
     outputLog = binaryOutput.log;
     binaryBuffer = binaryOutput.buffer;
     // binaryBuffer is a Uint8Array, so we need to convert it to a string to use btoa
     // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
     outputBase64 = btoa(String.fromCharCode.apply(null, binaryBuffer));
 
-    var blob = new Blob([binaryOutput.buffer]);
+    const blob = new Blob([binaryOutput.buffer]);
     if (binaryBlobUrl) {
       URL.revokeObjectURL(binaryBlobUrl);
     }
@@ -144,11 +144,11 @@ function stop() {
   runEl.textContent = 'Run';
 }
 
-var onWatChange = debounce(compile, kCompileMinMS);
-var onJsChange = debounce(run, kCompileMinMS);
+const onWatChange = debounce(compile, kCompileMinMS);
+const onJsChange = debounce(run, kCompileMinMS);
 
 function setExample(index) {
-  var example = examples[index];
+  const example = examples[index];
   watEditor.setValue(example.contents);
   onWatChange();
   jsEditor.setValue(example.js);
@@ -169,7 +169,7 @@ function onRunClicked(e) {
 
 function onDownloadClicked(e) {
   // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
-  var event = new MouseEvent('click', {
+  const event = new MouseEvent('click', {
     view: window,
     bubbles: true,
     cancelable: true,
@@ -199,9 +199,9 @@ downloadEl.addEventListener('click', onDownloadClicked);
 buildLogEl.addEventListener('click', onBuildLogClicked );
 base64El.addEventListener('click', onBase64Clicked );
 
-for (var i = 0; i < examples.length; ++i) {
-  var example = examples[i];
-  var option = document.createElement('option');
+for (let i = 0; i < examples.length; ++i) {
+  const example = examples[i];
+  const option = document.createElement('option');
   option.textContent = example.name;
   selectEl.appendChild(option);
 }

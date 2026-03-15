@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var examples = [
+const examples = [
   {
     name: 'simple',
     contents: new Uint8Array([

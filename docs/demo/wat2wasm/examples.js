@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var examples = [
+const examples = [
   {
     name: 'empty',
     contents: '(module)',
