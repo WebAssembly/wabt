@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { renderFeatures } from '../share.js';
+
 Split(["#top-left", "#top-right"]);
 Split(["#bottom-left", "#bottom-right"]);
 
@@ -23,197 +25,189 @@ Split(["#top-row", "#bottom-row"], {
 const features = {};
 
 WabtModule({
-  locateFile: function(url) {
+  locateFile: function (url) {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
     return url;
   }
-}).then(function(wabt) {
+}).then(function (wabt) {
 
-const kCompileMinMS = 100;
-let outputShowBase64 = false;
-let outputLog;
-let outputBase64;
+  const kCompileMinMS = 100;
+  let outputShowBase64 = false;
+  let outputLog;
+  let outputBase64;
 
-const outputEl = document.getElementById('output');
-const jsLogEl = document.getElementById('js_log');
-const selectEl = document.getElementById('select');
-const downloadEl = document.getElementById('download');
-const runEl = document.getElementById('run');
-const downloadLink = document.getElementById('downloadLink');
-const buildLogEl = document.getElementById('buildLog');
-const base64El = document.getElementById('base64');
-let binaryBuffer = null;
-let binaryBlobUrl = null;
+  const outputEl = document.getElementById('output');
+  const jsLogEl = document.getElementById('js_log');
+  const selectEl = document.getElementById('select');
+  const downloadEl = document.getElementById('download');
+  const runEl = document.getElementById('run');
+  const downloadLink = document.getElementById('downloadLink');
+  const buildLogEl = document.getElementById('buildLog');
+  const base64El = document.getElementById('base64');
+  let binaryBuffer = null;
+  let binaryBlobUrl = null;
 
-for (const [f, v] of Object.entries(wabt.FEATURES)) {
-  const featureEl = document.getElementById(f);
-  featureEl.checked = v;
-  featureEl.addEventListener('change', event => {
-    const feature = event.target.id;
-    features[feature] = event.target.checked;
+  renderFeatures(wabt, features, () => onWatChange());
+
+  const watEditor = CodeMirror((elt) => {
+    document.getElementById('top-left').appendChild(elt);
+  }, {
+    mode: 'wast',
+    lineNumbers: true,
+  });
+
+  const jsEditor = CodeMirror((elt) => {
+    document.getElementById('bottom-left').appendChild(elt);
+  }, {
+    mode: 'javascript',
+    lineNumbers: true,
+  });
+
+  function debounce(f, wait) {
+    let lastTime = 0;
+    let timeoutId = -1;
+    const wrapped = function (...args) {
+      const time = +new Date();
+      if (time - lastTime < wait) {
+        if (timeoutId == -1)
+          timeoutId = setTimeout(wrapped, (lastTime + wait) - time);
+        return;
+      }
+      if (timeoutId != -1)
+        clearTimeout(timeoutId);
+      timeoutId = -1;
+      lastTime = time;
+      f(...args);
+    };
+    return wrapped;
+  }
+
+  function compile() {
+    outputLog = '';
+    outputBase64 = 'Error occured, base64 output is not available';
+
+    let module;
+    try {
+      module = wabt.parseWat('test.wast', watEditor.getValue(), features);
+      module.resolveNames();
+      module.validate(features);
+      const binaryOutput = module.toBinary({ log: true, write_debug_names: true });
+      outputLog = binaryOutput.log;
+      binaryBuffer = binaryOutput.buffer;
+      // binaryBuffer is a Uint8Array, so we need to convert it to a string to use btoa
+      // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
+      outputBase64 = btoa(String.fromCharCode.apply(null, binaryBuffer));
+
+      const blob = new Blob([binaryOutput.buffer]);
+      if (binaryBlobUrl) {
+        URL.revokeObjectURL(binaryBlobUrl);
+      }
+      binaryBlobUrl = URL.createObjectURL(blob);
+      downloadLink.setAttribute('href', binaryBlobUrl);
+      downloadEl.classList.remove('disabled');
+    } catch (e) {
+      outputLog += e.toString();
+      downloadEl.classList.add('disabled');
+    } finally {
+      if (module) module.destroy();
+      outputEl.textContent = outputShowBase64 ? outputBase64 : outputLog;
+    }
+  }
+
+  let activeWorker = null;
+  function run() {
+    if (activeWorker != null) stop();
+    runEl.textContent = 'Stop';
+    jsLogEl.textContent = '';
+    if (binaryBuffer === null) return;
+    const js = jsEditor.getValue();
+    activeWorker = new Worker('./worker.js');
+    activeWorker.addEventListener('message', function (event) {
+      switch (event.data.type) {
+        case 'log':
+          jsLogEl.textContent += event.data.data;
+          break;
+        case 'done':
+          stop();
+          break;
+      }
+    });
+    activeWorker.postMessage({ binaryBuffer: binaryBuffer.buffer, js }, []);
+  }
+
+  function stop() {
+    if (activeWorker != null) {
+      activeWorker.terminate();
+      activeWorker = null;
+    }
+    runEl.textContent = 'Run';
+  }
+
+  const onWatChange = debounce(compile, kCompileMinMS);
+  const onJsChange = debounce(run, kCompileMinMS);
+
+  function setExample(index) {
+    const example = examples[index];
+    watEditor.setValue(example.contents);
     onWatChange();
-  });
-}
-
-const watEditor = CodeMirror((elt) => {
-  document.getElementById('top-left').appendChild(elt);
-}, {
-  mode: 'wast',
-  lineNumbers: true,
-});
-
-const jsEditor = CodeMirror((elt) => {
-  document.getElementById('bottom-left').appendChild(elt);
-}, {
-  mode: 'javascript',
-  lineNumbers: true,
-});
-
-function debounce(f, wait) {
-  let lastTime = 0;
-  let timeoutId = -1;
-  const wrapped = function(...args) {
-    const time = +new Date();
-    if (time - lastTime < wait) {
-      if (timeoutId == -1)
-        timeoutId = setTimeout(wrapped, (lastTime + wait) - time);
-      return;
-    }
-    if (timeoutId != -1)
-      clearTimeout(timeoutId);
-    timeoutId = -1;
-    lastTime = time;
-    f(...args);
-  };
-  return wrapped;
-}
-
-function compile() {
-  outputLog = '';
-  outputBase64 = 'Error occured, base64 output is not available';
-
-  let module;
-  try {
-    module = wabt.parseWat('test.wast', watEditor.getValue(), features);
-    module.resolveNames();
-    module.validate(features);
-    const binaryOutput = module.toBinary({log: true, write_debug_names:true});
-    outputLog = binaryOutput.log;
-    binaryBuffer = binaryOutput.buffer;
-    // binaryBuffer is a Uint8Array, so we need to convert it to a string to use btoa
-    // https://stackoverflow.com/questions/12710001/how-to-convert-uint8-array-to-base64-encoded-string
-    outputBase64 = btoa(String.fromCharCode.apply(null, binaryBuffer));
-
-    const blob = new Blob([binaryOutput.buffer]);
-    if (binaryBlobUrl) {
-      URL.revokeObjectURL(binaryBlobUrl);
-    }
-    binaryBlobUrl = URL.createObjectURL(blob);
-    downloadLink.setAttribute('href', binaryBlobUrl);
-    downloadEl.classList.remove('disabled');
-  } catch (e) {
-    outputLog += e.toString();
-    downloadEl.classList.add('disabled');
-  } finally {
-    if (module) module.destroy();
-    outputEl.textContent = outputShowBase64 ? outputBase64 : outputLog;
-  }
-}
-
-let activeWorker = null;
-function run() {
-  if (activeWorker != null) stop();
-  runEl.textContent = 'Stop';
-  jsLogEl.textContent = '';
-  if (binaryBuffer === null) return;
-  const js = jsEditor.getValue();
-  activeWorker = new Worker('./worker.js');
-  activeWorker.addEventListener('message', function(event) {
-    switch (event.data.type) {
-      case 'log':
-        jsLogEl.textContent += event.data.data;
-        break;
-      case 'done':
-        stop();
-        break;
-    }
-  });
-  activeWorker.postMessage({ binaryBuffer: binaryBuffer.buffer, js }, []);
-}
-
-function stop() {
-  if (activeWorker != null) {
-    activeWorker.terminate();
-    activeWorker = null;
-  }
-  runEl.textContent = 'Run';
-}
-
-const onWatChange = debounce(compile, kCompileMinMS);
-const onJsChange = debounce(run, kCompileMinMS);
-
-function setExample(index) {
-  const example = examples[index];
-  watEditor.setValue(example.contents);
-  onWatChange();
-  jsEditor.setValue(example.js);
-  onJsChange();
-}
-
-function onSelectChanged(e) {
-  setExample(this.selectedIndex);
-}
-
-function onRunClicked(e) {
-  if (activeWorker != null) {
-    stop();
-  } else {
+    jsEditor.setValue(example.js);
     onJsChange();
   }
-}
 
-function onDownloadClicked(e) {
-  // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
-  const event = new MouseEvent('click', {
-    view: window,
-    bubbles: true,
-    cancelable: true,
-  });
-  downloadLink.dispatchEvent(event);
-}
+  function onSelectChanged(e) {
+    setExample(this.selectedIndex);
+  }
 
-function onBuildLogClicked(e) {
-  outputShowBase64 = false;
-  outputEl.textContent = outputLog;
-  buildLogEl.style.textDecoration = 'underline';
-  base64El.style.textDecoration = 'none';
-}
+  function onRunClicked(e) {
+    if (activeWorker != null) {
+      stop();
+    } else {
+      onJsChange();
+    }
+  }
 
-function onBase64Clicked(e) {
-  outputShowBase64 = true;
-  outputEl.textContent = outputBase64;
-  buildLogEl.style.textDecoration = 'none';
-  base64El.style.textDecoration = 'underline';
-}
+  function onDownloadClicked(e) {
+    // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
+    const event = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    });
+    downloadLink.dispatchEvent(event);
+  }
 
-watEditor.on('change', onWatChange);
-jsEditor.on('change', onJsChange);
-selectEl.addEventListener('change', onSelectChanged);
-runEl.addEventListener('click', onRunClicked);
-downloadEl.addEventListener('click', onDownloadClicked);
-buildLogEl.addEventListener('click', onBuildLogClicked );
-base64El.addEventListener('click', onBase64Clicked );
+  function onBuildLogClicked(e) {
+    outputShowBase64 = false;
+    outputEl.textContent = outputLog;
+    buildLogEl.style.textDecoration = 'underline';
+    base64El.style.textDecoration = 'none';
+  }
 
-for (let i = 0; i < examples.length; ++i) {
-  const example = examples[i];
-  const option = document.createElement('option');
-  option.textContent = example.name;
-  selectEl.appendChild(option);
-}
-selectEl.selectedIndex = 1;
-setExample(selectEl.selectedIndex);
-runEl.classList.remove('disabled');
+  function onBase64Clicked(e) {
+    outputShowBase64 = true;
+    outputEl.textContent = outputBase64;
+    buildLogEl.style.textDecoration = 'none';
+    base64El.style.textDecoration = 'underline';
+  }
+
+  watEditor.on('change', onWatChange);
+  jsEditor.on('change', onJsChange);
+  selectEl.addEventListener('change', onSelectChanged);
+  runEl.addEventListener('click', onRunClicked);
+  downloadEl.addEventListener('click', onDownloadClicked);
+  buildLogEl.addEventListener('click', onBuildLogClicked);
+  base64El.addEventListener('click', onBase64Clicked);
+
+  for (let i = 0; i < examples.length; ++i) {
+    const example = examples[i];
+    const option = document.createElement('option');
+    option.textContent = example.name;
+    selectEl.appendChild(option);
+  }
+  selectEl.selectedIndex = 1;
+  setExample(selectEl.selectedIndex);
+  runEl.classList.remove('disabled');
 
 });
