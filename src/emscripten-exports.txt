@@ -4,6 +4,7 @@ _wabt_annotations_enabled
 _wabt_apply_names_module
 _wabt_bulk_memory_enabled
 _wabt_code_metadata_enabled
+_wabt_compact_imports_enabled
 _wabt_destroy_errors
 _wabt_destroy_features
 _wabt_destroy_module
@@ -43,6 +44,7 @@ _wabt_sat_float_to_int_enabled
 _wabt_set_annotations_enabled
 _wabt_set_bulk_memory_enabled
 _wabt_set_code_metadata_enabled
+_wabt_set_compact_imports_enabled
 _wabt_set_exceptions_enabled
 _wabt_set_extended_const_enabled
 _wabt_set_function_references_enabled
