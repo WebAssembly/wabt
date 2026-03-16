@@ -20,46 +20,46 @@ import WabtModule from '../libwabt.js';
 import { basicSetup, EditorView, EditorState, StreamLanguage, wast } from '../third_party.bundle.js';
 const features = getLocalStorageFeatures();
 
-WabtModule({
+const wabt = await WabtModule({
   locateFile: function (url) {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
     return url;
   }
-}).then(function (wabt) {
+});
 
-  const editorEl = document.querySelector('.editor');
-  const uploadEl = document.getElementById('upload');
-  const selectEl = document.getElementById('select');
-  const uploadInputEl = document.getElementById('uploadInput');
-  const generateNamesEl = document.getElementById('generateNames');
-  const foldExprsEl = document.getElementById('foldExprs');
-  const inlineExportEl = document.getElementById('inlineExport');
-  const checkEl = document.getElementById('check');
-  const readDebugNamesEl = document.getElementById('readDebugNames');
-  const editor = new EditorView({
-    state: EditorState.create({
-      extensions: [basicSetup, StreamLanguage.define(wast)]
-    }),
-    parent: document.querySelector('main')
-  });
+const editorEl = document.querySelector('.editor');
+const uploadEl = document.getElementById('upload');
+const selectEl = document.getElementById('select');
+const uploadInputEl = document.getElementById('uploadInput');
+const generateNamesEl = document.getElementById('generateNames');
+const foldExprsEl = document.getElementById('foldExprs');
+const inlineExportEl = document.getElementById('inlineExport');
+const checkEl = document.getElementById('check');
+const readDebugNamesEl = document.getElementById('readDebugNames');
+const editor = new EditorView({
+  state: EditorState.create({
+    extensions: [basicSetup, StreamLanguage.define(wast)]
+  }),
+  parent: document.querySelector('main')
+});
 
-  const editorContainer = editor.dom;
+const editorContainer = editor.dom;
 
-  editorContainer.ondrop = function (e) {
-    e.preventDefault();
-    let file = e.dataTransfer.files[0];
-    if (!file) {
-      return;
-    }
-    readAndCompileFile(file);
+editorContainer.ondrop = function (e) {
+  e.preventDefault();
+  let file = e.dataTransfer.files[0];
+  if (!file) {
+    return;
   }
-  let fileBuffer = null;
-  renderFeatures(wabt, features, () => {
-    saveLocalStorageFeatures(features);
-    compile(fileBuffer);
-  });
+  readAndCompileFile(file);
+}
+let fileBuffer = null;
+renderFeatures(wabt, features, () => {
+  saveLocalStorageFeatures(features);
+  compile(fileBuffer);
+});
 
   function compile(contents) {
     if (!contents) {
@@ -104,13 +104,9 @@ WabtModule({
     readAndCompileFile(file);
   }
   // extract common util function
-  function readAndCompileFile(file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      fileBuffer = new Uint8Array(e.target.result);
-      compile(fileBuffer);
-    };
-    reader.readAsArrayBuffer(file);
+  async function readAndCompileFile(file) {
+    fileBuffer = new Uint8Array(await file.arrayBuffer());
+    compile(fileBuffer);
   }
 
   function recompileIfChanged(el) {
@@ -143,5 +139,3 @@ WabtModule({
   }
   selectEl.selectedIndex = 0;
   setExample(selectEl.selectedIndex);
-
-});

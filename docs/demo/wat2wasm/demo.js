@@ -27,32 +27,32 @@ Split(["#top-row", "#bottom-row"], {
 
 const features = {};
 
-WabtModule({
+const wabt = await WabtModule({
   locateFile: function (url) {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
     return url;
   }
-}).then(function (wabt) {
+});
 
-  const kCompileMinMS = 100;
-  let outputShowBase64 = false;
-  let outputLog;
-  let outputBase64;
+const kCompileMinMS = 100;
+let outputShowBase64 = false;
+let outputLog;
+let outputBase64;
 
-  const outputEl = document.getElementById('output');
-  const jsLogEl = document.getElementById('js_log');
-  const selectEl = document.getElementById('select');
-  const downloadEl = document.getElementById('download');
-  const runEl = document.getElementById('run');
-  const downloadLink = document.getElementById('downloadLink');
-  const buildLogEl = document.getElementById('buildLog');
-  const base64El = document.getElementById('base64');
-  let binaryBuffer = null;
-  let binaryBlobUrl = null;
+const outputEl = document.getElementById('output');
+const jsLogEl = document.getElementById('js_log');
+const selectEl = document.getElementById('select');
+const downloadEl = document.getElementById('download');
+const runEl = document.getElementById('run');
+const downloadLink = document.getElementById('downloadLink');
+const buildLogEl = document.getElementById('buildLog');
+const base64El = document.getElementById('base64');
+let binaryBuffer = null;
+let binaryBlobUrl = null;
 
-  renderFeatures(wabt, features, () => onWatChange());
+renderFeatures(wabt, features, () => onWatChange());
 
   const watEditor = new EditorView({
     state: EditorState.create({
@@ -221,5 +221,3 @@ WabtModule({
   selectEl.selectedIndex = 1;
   setExample(selectEl.selectedIndex);
   runEl.classList.remove('disabled');
-
-});
