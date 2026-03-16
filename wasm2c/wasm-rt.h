@@ -578,16 +578,8 @@ typedef struct {
  * On macOS XNU, there is a bug where nested `sigsetjmp` and `siglongjmp` 
  * across threads that have an allocated alternate signal stack (`SS_ONSTACK`) 
  * will erroneously cause the kernel to preserve the `SS_ONSTACK` flag in the 
- * thread state. This happens because `siglongjmp` fails to call `_sigunaltstack`
- * to clear the kernel state, even if the exception did not originate from 
- * the signal handler, leading to an assertion failure when trying to free 
- * the alternate signal stack.
- * 
- * To bypass this, we use `sigsetjmp(buf, 0)` for Wasm exceptions. Since Wasm 
- * exceptions are purely for control flow and do not need to restore signal 
- * masks (unlike Wasm trap handlers recovering from a SIGSEGV), avoiding the 
- * signal mask prevents XNU from applying the buggy `SS_ONSTACK` persistence.
- * 
+ * thread state
+ *
  * See: https://github.com/WebAssembly/wabt/issues/2654
  * See: https://github.com/golang/go/issues/44501
  */
