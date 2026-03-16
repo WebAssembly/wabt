@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import { renderFeatures } from '../share.js';
+import { examples } from './examples.js';
+import WabtModule from '../libwabt.js';
 
 Split(["#top-left", "#top-right"]);
 Split(["#bottom-left", "#bottom-right"]);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const examples = [
+export const examples = [
   {
     name: 'simple',
     contents: new Uint8Array([

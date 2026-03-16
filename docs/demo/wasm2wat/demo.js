@@ -16,6 +16,8 @@
 
 
 import { getLocalStorageFeatures, saveLocalStorageFeatures, renderFeatures } from '../share.js';
+import { examples } from './examples.js';
+import WabtModule from '../libwabt.js';
 
 const features = getLocalStorageFeatures();
 
