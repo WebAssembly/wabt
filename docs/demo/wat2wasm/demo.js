@@ -16,6 +16,7 @@
 import { renderFeatures } from '../share.js';
 import { examples } from './examples.js';
 import WabtModule from '../libwabt.js';
+import { basicSetup, EditorView, EditorState, StreamLanguage, wast, javascript, Split } from '../third_party.bundle.js';
 
 Split(["#top-left", "#top-right"]);
 Split(["#bottom-left", "#bottom-right"]);
@@ -53,18 +54,30 @@ WabtModule({
 
   renderFeatures(wabt, features, () => onWatChange());
 
-  const watEditor = CodeMirror((elt) => {
-    document.getElementById('top-left').appendChild(elt);
-  }, {
-    mode: 'wast',
-    lineNumbers: true,
+  const watEditor = new EditorView({
+    state: EditorState.create({
+      extensions: [
+        basicSetup, 
+        StreamLanguage.define(wast),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) onWatChange();
+        })
+      ]
+    }),
+    parent: document.getElementById('top-left')
   });
 
-  const jsEditor = CodeMirror((elt) => {
-    document.getElementById('bottom-left').appendChild(elt);
-  }, {
-    mode: 'javascript',
-    lineNumbers: true,
+  const jsEditor = new EditorView({
+    state: EditorState.create({
+      extensions: [
+        basicSetup, 
+        javascript(),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) onJsChange();
+        })
+      ]
+    }),
+    parent: document.getElementById('bottom-left')
   });
 
   function debounce(f, wait) {
@@ -92,7 +105,7 @@ WabtModule({
 
     let module;
     try {
-      module = wabt.parseWat('test.wast', watEditor.getValue(), features);
+      module = wabt.parseWat('test.wast', watEditor.state.doc.toString(), features);
       module.resolveNames();
       module.validate(features);
       const binaryOutput = module.toBinary({ log: true, write_debug_names: true });
@@ -124,7 +137,7 @@ WabtModule({
     runEl.textContent = 'Stop';
     jsLogEl.textContent = '';
     if (binaryBuffer === null) return;
-    const js = jsEditor.getValue();
+    const js = jsEditor.state.doc.toString();
     activeWorker = new Worker('./worker.js');
     activeWorker.addEventListener('message', function (event) {
       switch (event.data.type) {
@@ -152,10 +165,8 @@ WabtModule({
 
   function setExample(index) {
     const example = examples[index];
-    watEditor.setValue(example.contents);
-    onWatChange();
-    jsEditor.setValue(example.js);
-    onJsChange();
+    watEditor.dispatch({ changes: { from: 0, to: watEditor.state.doc.length, insert: example.contents } });
+    jsEditor.dispatch({ changes: { from: 0, to: jsEditor.state.doc.length, insert: example.js } });
   }
 
   function onSelectChanged(e) {
@@ -194,8 +205,7 @@ WabtModule({
     base64El.style.textDecoration = 'underline';
   }
 
-  watEditor.on('change', onWatChange);
-  jsEditor.on('change', onJsChange);
+
   selectEl.addEventListener('change', onSelectChanged);
   runEl.addEventListener('click', onRunClicked);
   downloadEl.addEventListener('click', onDownloadClicked);

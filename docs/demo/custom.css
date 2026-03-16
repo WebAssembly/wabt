@@ -81,7 +81,7 @@ pre {
   top: 0;
 }
 
-.CodeMirror, .output {
+.CodeMirror, .cm-editor, .output {
   position: absolute;
   height: calc(100% - 2.625rem);
   top: 2.625rem;

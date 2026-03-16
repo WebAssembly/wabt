@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-
 import { getLocalStorageFeatures, saveLocalStorageFeatures, renderFeatures } from '../share.js';
 import { examples } from './examples.js';
 import WabtModule from '../libwabt.js';
-
+import { basicSetup, EditorView, EditorState, StreamLanguage, wast } from '../third_party.bundle.js';
 const features = getLocalStorageFeatures();
 
 WabtModule({
@@ -39,10 +38,14 @@ WabtModule({
   const inlineExportEl = document.getElementById('inlineExport');
   const checkEl = document.getElementById('check');
   const readDebugNamesEl = document.getElementById('readDebugNames');
-  const options = { mode: 'wast', lineNumbers: true };
-  const editor = CodeMirror.fromTextArea(editorEl, options);
+  const editor = new EditorView({
+    state: EditorState.create({
+      extensions: [basicSetup, StreamLanguage.define(wast)]
+    }),
+    parent: document.querySelector('main')
+  });
 
-  const editorContainer = document.querySelector('.CodeMirror.cm-s-default');
+  const editorContainer = editor.dom;
 
   editorContainer.ondrop = function (e) {
     e.preventDefault();
@@ -77,9 +80,9 @@ WabtModule({
         module.applyNames();
       }
       const result = module.toText({ foldExprs: foldExprs, inlineExport: inlineExport });
-      editor.setValue(result);
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: result } });
     } catch (e) {
-      editor.setValue(e.toString());
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: e.toString() } });
     } finally {
       if (module) module.destroy();
     }
