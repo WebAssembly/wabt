@@ -15,15 +15,15 @@
  */
 
 import WabtModule from '../libwabt.js';
-import {getLocalStorageFeatures, renderFeatures, saveLocalStorageFeatures} from '../share.js';
-import {basicSetup, EditorState, EditorView, StreamLanguage, wast} from '../third_party.bundle.js';
+import { getLocalStorageFeatures, renderFeatures, saveLocalStorageFeatures } from '../share.js';
+import { basicSetup, EditorState, EditorView, StreamLanguage, wast } from '../third_party.bundle.js';
 
-import {examples} from './examples.js';
+import { examples } from './examples.js';
 
 const features = getLocalStorageFeatures();
 
 const wabt = await WabtModule({
-  locateFile: function(url) {
+  locateFile: function (url) {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
@@ -42,20 +42,22 @@ const checkEl = document.getElementById('check');
 const readDebugNamesEl = document.getElementById('readDebugNames');
 const editor = new EditorView({
   state: EditorState.create(
-      {extensions: [basicSetup, StreamLanguage.define(wast)]}),
+    { extensions: [basicSetup, StreamLanguage.define(wast)] }),
   parent: document.querySelector('main')
 });
 
 const editorContainer = editor.dom;
 
-editorContainer.ondrop = function(e) {
+editorContainer.ondrop = function (e) {
   e.preventDefault();
   let file = e.dataTransfer.files[0];
   if (!file) {
     return;
   }
   readAndCompileFile(file);
-} let fileBuffer = null;
+}
+
+let fileBuffer = null;
 renderFeatures(wabt, features, () => {
   saveLocalStorageFeatures(features);
   compile(fileBuffer);
@@ -75,19 +77,19 @@ function compile(contents) {
   let module;
   try {
     module = wabt.readWasm(
-        contents,
-        {readDebugNames : readDebugNames, check : check, ...features});
+      contents,
+      { readDebugNames: readDebugNames, check: check, ...features });
     if (generateNames) {
       module.generateNames();
       module.applyNames();
     }
     const result =
-        module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
+      module.toText({ foldExprs: foldExprs, inlineExport: inlineExport });
     editor.dispatch(
-        {changes: {from: 0, to: editor.state.doc.length, insert: result}});
+      { changes: { from: 0, to: editor.state.doc.length, insert: result } });
   } catch (e) {
     editor.dispatch({
-      changes: {from: 0, to: editor.state.doc.length, insert: e.toString()}
+      changes: { from: 0, to: editor.state.doc.length, insert: e.toString() }
     });
   } finally {
     if (module)
@@ -117,7 +119,7 @@ async function readAndCompileFile(file) {
 }
 
 function recompileIfChanged(el) {
-  el.addEventListener('change', function() {
+  el.addEventListener('change', function () {
     compile(fileBuffer);
   });
 }
