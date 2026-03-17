@@ -830,7 +830,6 @@ if (EMSCRIPTEN)
     -sALLOW_MEMORY_GROWTH
     -sEXPORT_ES6
     -sEXPORT_NAME=WabtModule
-    -sEXPORTED_RUNTIME_METHODS=writeAsciiToMemory
     -Oz
   )
   string(REPLACE ";" " " LIBWABT_LINK_FLAGS_STR "${LIBWABT_LINK_FLAGS}")
