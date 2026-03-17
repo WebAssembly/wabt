@@ -120,8 +120,7 @@ class Lexer {
     this.filename = stringToNewUTF8(filename);
     this.bufferObj = allocateBuffer(buffer);
     this.addr = Module._wabt_new_wast_buffer_lexer(
-        this.filename, this.bufferObj.addr, this.bufferObj.size,
-        errors.addr);
+        this.filename, this.bufferObj.addr, this.bufferObj.size, errors.addr);
   }
 
   destroy() {
