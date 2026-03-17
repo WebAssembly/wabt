@@ -813,15 +813,30 @@ if (EMSCRIPTEN)
 
   # wabt.js
 
+  set(WABT_POST_JS ${CMAKE_CURRENT_BINARY_DIR}/wabt.post.js)
+  set(EMSCRIPTEN_EXPORTS ${CMAKE_CURRENT_BINARY_DIR}/emscripten-exports.txt)
+
+  add_custom_command(
+    OUTPUT ${WABT_POST_JS} ${EMSCRIPTEN_EXPORTS}
+    COMMAND ${Python3_EXECUTABLE} ${WABT_SOURCE_DIR}/scripts/gen-emscripten-exports.py
+      --feature-def ${WABT_SOURCE_DIR}/include/wabt/feature.def
+      --postjs-in ${WABT_SOURCE_DIR}/src/wabt.post.js.in
+      --postjs-out ${WABT_POST_JS}
+      --exports-in ${WABT_SOURCE_DIR}/src/emscripten-exports.txt.in
+      --exports-out ${EMSCRIPTEN_EXPORTS}
+    DEPENDS
+      ${WABT_SOURCE_DIR}/scripts/gen-emscripten-exports.py
+      ${WABT_SOURCE_DIR}/include/wabt/feature.def
+      ${WABT_SOURCE_DIR}/src/wabt.post.js.in
+      ${WABT_SOURCE_DIR}/src/emscripten-exports.txt.in
+  )
+
   # just dump everything into one binary so we can reference it from JavaScript
   add_definitions(-Wno-warn-absolute-paths)
-  add_executable(libwabtjs src/emscripten-helpers.cc)
+  add_executable(libwabtjs src/emscripten-helpers.cc ${WABT_POST_JS} ${EMSCRIPTEN_EXPORTS})
   add_dependencies(everything libwabtjs)
   target_link_libraries(libwabtjs wabt)
   set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
-
-  set(WABT_POST_JS ${WABT_SOURCE_DIR}/src/wabt.post.js)
-  set(EMSCRIPTEN_EXPORTS ${WABT_SOURCE_DIR}/src/emscripten-exports.txt)
 
   set(LIBWABT_LINK_FLAGS
     --post-js ${WABT_POST_JS}

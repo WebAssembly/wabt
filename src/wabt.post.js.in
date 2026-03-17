@@ -19,27 +19,7 @@ const WABT_ERROR = 1;
 
 /// features and default enabled state
 const FEATURES = Object.freeze({
-  'exceptions': false,
-  'mutable_globals': true,
-  'sat_float_to_int': true,
-  'sign_extension': true,
-  'simd': true,
-  'threads': false,
-  'function_references': false,
-  'multi_value': true,
-  'tail_call': false,
-  'bulk_memory': true,
-  'reference_types': true,
-  'annotations': false,
-  'code_metadata': false,
-  'gc': false,
-  'memory64': false,
-  'multi_memory': false,
-  'extended_const': false,
-  'relaxed_simd': false,
-  'custom_page_sizes': false,
-  'compact_imports': false,
-  'wide_arithmetic': false,
+@FEATURES@
 });
 
 /// If value is not undefined, return it. Otherwise return default_.

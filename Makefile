@@ -20,7 +20,7 @@ MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
 ROOT_DIR := $(dir $(abspath $(MAKEFILE_NAME)))
 
 USE_NINJA ?= 1
-EMSCRIPTEN_DIR ?= $(dir $(shell which emcc))
+EMSCRIPTEN_DIR ?= $(shell em-config EMSCRIPTEN_ROOT 2>/dev/null || dirname $(shell which emcc))
 CMAKE_CMD ?= cmake
 
 DEFAULT_SUFFIX = clang-debug
