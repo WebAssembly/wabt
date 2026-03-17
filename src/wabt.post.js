@@ -68,7 +68,8 @@ function allocateBuffer(buf) {
   } else if (ArrayBuffer.isView(buf)) {
     size = buf.byteLength;
     addr = malloc(size);
-    new Uint8Array(HEAPU8.buffer, addr, size).set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
+    new Uint8Array(HEAPU8.buffer, addr, size)
+        .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
     addr = stringToNewUTF8(buf);
     size = lengthBytesUTF8(buf);
