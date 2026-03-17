@@ -23,7 +23,7 @@ import {examples} from './examples.js';
 const features = getLocalStorageFeatures();
 
 const wabt = await WabtModule({
-  locateFile: function(url) {
+  locateFile: (url) => {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
@@ -48,7 +48,7 @@ const editor = new EditorView({
 
 const editorContainer = editor.dom;
 
-editorContainer.ondrop = function(e) {
+editorContainer.ondrop = (e) => {
   e.preventDefault();
   let file = e.dataTransfer.files[0];
   if (!file) {
@@ -119,7 +119,7 @@ async function readAndCompileFile(file) {
 }
 
 function recompileIfChanged(el) {
-  el.addEventListener('change', function() {
+  el.addEventListener('change', () => {
     compile(fileBuffer);
   });
 }
