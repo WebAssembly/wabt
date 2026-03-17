@@ -3,6 +3,12 @@
 set -o errexit
 set -o pipefail
 
+FIX=0
+if [ "$1" = "--fix" ]; then
+  FIX=1
+  shift
+fi
+
 if [ -n "$1" ]; then
   BRANCH="$1"
 elif [ "$CI" != "true" ]; then
@@ -25,8 +31,15 @@ else
 fi
 
 MERGE_BASE=$(git merge-base $BRANCH HEAD)
+
+if [ $FIX -eq 1 ]; then
+  echo "Applying clang-format..."
+  git clang-format $MERGE_BASE -q -- src/ docs/demo/ ':(exclude)docs/demo/third_party.bundle.js'
+  exit 0
+fi
+
 if ! git clang-format $MERGE_BASE -q --diff -- src/ docs/demo/ ':(exclude)docs/demo/third_party.bundle.js' 2>&1 >/dev/null; then
-  echo "Please run git clang-format before committing, or apply this diff:"
+  echo "Please run '$0 --fix $BRANCH' before committing, or apply this diff:"
   echo
   # Run git clang-format again, this time with output.  This lets us add
   # the above message.

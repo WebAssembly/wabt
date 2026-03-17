@@ -52,7 +52,7 @@ function allocateBuffer(buf) {
     size = buf.byteLength;
     addr = malloc(size);
     (new Uint8Array(HEAPU8.buffer, addr, size))
-      .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
+        .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
     const encoded = new TextEncoder().encode(buf);
     size = encoded.length;
@@ -61,7 +61,7 @@ function allocateBuffer(buf) {
   } else {
     throw new Error('unknown buffer type: ' + buf);
   }
-  return { addr: addr, size: size };
+  return {addr: addr, size: size};
 }
 
 function allocateCString(s) {
@@ -70,7 +70,7 @@ function allocateCString(s) {
   const addr = malloc(size + 1);
   (new Uint8Array(HEAPU8.buffer, addr, size)).set(encoded);
   HEAPU8[addr + size] = 0;  // null-terminate
-  return { addr: addr, size: size };
+  return {addr: addr, size: size};
 }
 
 /// Features
@@ -87,13 +87,13 @@ class Features {
   }
 }
 
-Object.keys(FEATURES).forEach(function (feature) {
+Object.keys(FEATURES).forEach(function(feature) {
   Object.defineProperty(Features.prototype, feature, {
     enumerable: true,
-    get: function () {
+    get: function() {
       return Module['_wabt_' + feature + '_enabled'](this.addr);
     },
-    set: function (newValue) {
+    set: function(newValue) {
       Module['_wabt_set_' + feature + '_enabled'](this.addr, newValue | 0);
     }
   });
@@ -105,8 +105,8 @@ class Lexer {
     this.filenameObj = allocateCString(filename);
     this.bufferObj = allocateBuffer(buffer);
     this.addr = Module._wabt_new_wast_buffer_lexer(
-      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
-      errors.addr);
+        this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
+        errors.addr);
   }
 
   destroy() {
@@ -161,7 +161,7 @@ class Errors {
     switch (this.kind) {
       case 'text':
         buffer = new OutputBuffer(
-          Module._wabt_format_text_errors(this.addr, this.lexer.addr));
+            Module._wabt_format_text_errors(this.addr, this.lexer.addr));
         break;
       case 'binary':
         buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
@@ -192,7 +192,7 @@ function parseWat(filename, buffer, options) {
   let parseResult_addr;
   try {
     parseResult_addr =
-      Module._wabt_parse_wat(lexer.addr, features.addr, errors.addr);
+        Module._wabt_parse_wat(lexer.addr, features.addr, errors.addr);
 
     const result = Module._wabt_parse_wat_result_get_result(parseResult_addr);
     if (result !== WABT_OK) {
@@ -200,7 +200,7 @@ function parseWat(filename, buffer, options) {
     }
 
     const module_addr =
-      Module._wabt_parse_wat_result_release_module(parseResult_addr);
+        Module._wabt_parse_wat_result_release_module(parseResult_addr);
     const wasmModule = new WasmModule(module_addr, errors);
     // Clear errors so it isn't destroyed below.
     errors = null;
@@ -225,17 +225,17 @@ function readWasm(buffer, options) {
   let readBinaryResult_addr;
   try {
     readBinaryResult_addr = Module._wabt_read_binary(
-      bufferObj.addr, bufferObj.size, readDebugNames, features.addr,
-      errors.addr);
+        bufferObj.addr, bufferObj.size, readDebugNames, features.addr,
+        errors.addr);
 
     const result =
-      Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
+        Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
     if (check && result !== WABT_OK) {
       throw new Error('readWasm failed:\n' + errors.format());
     }
 
     const module_addr =
-      Module._wabt_read_binary_result_release_module(readBinaryResult_addr);
+        Module._wabt_read_binary_result_release_module(readBinaryResult_addr);
     const wasmModule = new WasmModule(module_addr, errors);
     // Clear errors so it isn't destroyed below.
     errors = null;
@@ -261,7 +261,7 @@ class WasmModule {
     const features = new Features(options || {});
     try {
       const result = Module._wabt_validate_module(
-        this.module_addr, features.addr, this.errors.addr);
+          this.module_addr, features.addr, this.errors.addr);
       if (result !== WABT_OK) {
         throw new Error('validate failed:\n' + this.errors.format());
       }
@@ -293,10 +293,10 @@ class WasmModule {
     const inlineExport = booleanOrDefault(options.inlineExport, false);
 
     const writeModuleResult_addr = Module._wabt_write_text_module(
-      this.module_addr, foldExprs, inlineExport);
+        this.module_addr, foldExprs, inlineExport);
 
     const result =
-      Module._wabt_write_module_result_get_result(writeModuleResult_addr);
+        Module._wabt_write_module_result_get_result(writeModuleResult_addr);
 
     let outputBuffer;
     try {
@@ -305,8 +305,8 @@ class WasmModule {
       }
 
       outputBuffer = new OutputBuffer(
-        Module._wabt_write_module_result_release_output_buffer(
-          writeModuleResult_addr));
+          Module._wabt_write_module_result_release_output_buffer(
+              writeModuleResult_addr));
 
       return outputBuffer.toString();
 
@@ -323,14 +323,14 @@ class WasmModule {
     const canonicalize_lebs = booleanOrDefault(options.canonicalize_lebs, true);
     const relocatable = booleanOrDefault(options.relocatable, false);
     const write_debug_names =
-      booleanOrDefault(options.write_debug_names, false);
+        booleanOrDefault(options.write_debug_names, false);
 
     const writeModuleResult_addr = Module._wabt_write_binary_module(
-      this.module_addr, log, canonicalize_lebs, relocatable,
-      write_debug_names);
+        this.module_addr, log, canonicalize_lebs, relocatable,
+        write_debug_names);
 
     const result =
-      Module._wabt_write_module_result_get_result(writeModuleResult_addr);
+        Module._wabt_write_module_result_get_result(writeModuleResult_addr);
 
     let binaryOutputBuffer;
     let logOutputBuffer;
@@ -340,11 +340,11 @@ class WasmModule {
       }
 
       binaryOutputBuffer = new OutputBuffer(
-        Module._wabt_write_module_result_release_output_buffer(
-          writeModuleResult_addr));
+          Module._wabt_write_module_result_release_output_buffer(
+              writeModuleResult_addr));
       logOutputBuffer = new OutputBuffer(
-        Module._wabt_write_module_result_release_log_output_buffer(
-          writeModuleResult_addr));
+          Module._wabt_write_module_result_release_log_output_buffer(
+              writeModuleResult_addr));
 
       return {
         buffer: binaryOutputBuffer.toTypedArray(),
