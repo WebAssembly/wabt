@@ -23,15 +23,13 @@ export const examples = [
 
   {
     name: 'simple',
-    contents:
-`(module
+    contents: `(module
   (func (export "addTwo") (param i32 i32) (result i32)
     local.get 0
     local.get 1
     i32.add))
 `,
-    js:
-`const wasmInstance =
+    js: `const wasmInstance =
       new WebAssembly.Instance(wasmModule, {});
 const { addTwo } = wasmInstance.exports;
 for (let i = 0; i < 10; i++) {
@@ -42,8 +40,7 @@ for (let i = 0; i < 10; i++) {
 
   {
     name: 'factorial',
-    contents:
-`(module
+    contents: `(module
   (func $fac (export "fac") (param f64) (result f64)
     local.get 0
     f64.const 1
@@ -70,8 +67,7 @@ for (let i = 1; i <= 15; i++) {
 
   {
     name: 'stuff',
-    contents:
-`(module
+    contents: `(module
   (import "foo" "bar" (func (param f32)))
   (memory (data "hi"))
   (type (func (param i32) (result i32)))
@@ -93,15 +89,13 @@ for (let i = 1; i <= 15; i++) {
 
   {
     name: 'mutable globals',
-    contents:
-`(module
+    contents: `(module
   (import "env" "g" (global (mut i32)))
   (func (export "f")
     i32.const 100
     global.set 0))
 `,
-    js:
-`
+    js: `
   const g = new WebAssembly.Global({value: 'i32', mutable: true});
   const wasmInstance = new WebAssembly.Instance(wasmModule, {env: {g}});
   console.log('before: ' + g.value);
@@ -111,28 +105,24 @@ for (let i = 1; i <= 15; i++) {
   },
 
   {
-    name: "saturating float-to-int",
-    contents:
-`(module
+    name: 'saturating float-to-int',
+    contents: `(module
   (func (export "f") (param f32) (result i32)
     local.get 0
     i32.trunc_sat_f32_s))`,
-    js:
-`const wasmInstance = new WebAssembly.Instance(wasmModule);
+    js: `const wasmInstance = new WebAssembly.Instance(wasmModule);
 const {f} = wasmInstance.exports;
 console.log(f(Infinity));`
   },
 
   {
-    name: "sign extension",
-    contents:
-`(module
+    name: 'sign extension',
+    contents: `(module
   (func (export "f") (param i32) (result i32)
     local.get 0
     i32.extend8_s))
 `,
-    js:
-`const wasmInstance = new WebAssembly.Instance(wasmModule);
+    js: `const wasmInstance = new WebAssembly.Instance(wasmModule);
 const {f} = wasmInstance.exports;
 console.log(f(0));
 console.log(f(127));
@@ -141,9 +131,8 @@ console.log(f(255));`
   },
 
   {
-    name: "multi value",
-    contents:
-`(module
+    name: 'multi value',
+    contents: `(module
   (func $swap (param i32 i32) (result i32 i32)
     local.get 1
     local.get 0)
@@ -154,16 +143,14 @@ console.log(f(255));`
     call $swap
     i32.sub))
 `,
-    js:
-`const wasmInstance = new WebAssembly.Instance(wasmModule);
+    js: `const wasmInstance = new WebAssembly.Instance(wasmModule);
 const {reverseSub} = wasmInstance.exports;
 console.log(reverseSub(10, 3));`
   },
 
   {
-    name: "bulk memory",
-    contents:
-`(module
+    name: 'bulk memory',
+    contents: `(module
   (memory (export "mem") 1)
   (func (export "fill") (param i32 i32 i32)
     local.get 0
@@ -171,8 +158,7 @@ console.log(reverseSub(10, 3));`
     local.get 2
     memory.fill))
 `,
-    js:
-`const wasmInstance = new WebAssembly.Instance(wasmModule);
+    js: `const wasmInstance = new WebAssembly.Instance(wasmModule);
 const {fill, mem} = wasmInstance.exports;
 fill(0, 13, 5);
 fill(10, 77, 7);

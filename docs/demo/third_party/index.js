@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-export { basicSetup, EditorView } from "codemirror";
-export { EditorState } from "@codemirror/state";
-export { StreamLanguage } from "@codemirror/language";
-export { wast } from "@codemirror/legacy-modes/mode/wast";
-export { javascript } from "@codemirror/lang-javascript";
-export { default as Split } from "split.js";
+export {javascript} from '@codemirror/lang-javascript';
+export {StreamLanguage} from '@codemirror/language';
+export {wast} from '@codemirror/legacy-modes/mode/wast';
+export {EditorState} from '@codemirror/state';
+export {basicSetup, EditorView} from 'codemirror';
+export {default as Split} from 'split.js';

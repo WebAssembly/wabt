@@ -25,11 +25,11 @@ else
 fi
 
 MERGE_BASE=$(git merge-base $BRANCH HEAD)
-if ! git clang-format $MERGE_BASE -q --diff -- src/ 2>&1 >/dev/null; then
+if ! git clang-format $MERGE_BASE -q --diff -- src/ docs/demo/ ':(exclude)docs/demo/third_party.bundle.js' 2>&1 >/dev/null; then
   echo "Please run git clang-format before committing, or apply this diff:"
   echo
   # Run git clang-format again, this time with output.  This lets us add
   # the above message.
-  git clang-format $MERGE_BASE -q --diff -- src/
+  git clang-format $MERGE_BASE -q --diff -- src/ docs/demo/ ':(exclude)docs/demo/third_party.bundle.js'
   exit 1
 fi

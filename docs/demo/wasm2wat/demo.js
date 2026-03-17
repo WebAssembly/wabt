@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import { getLocalStorageFeatures, saveLocalStorageFeatures, renderFeatures } from '../share.js';
-import { examples } from './examples.js';
 import WabtModule from '../libwabt.js';
-import { basicSetup, EditorView, EditorState, StreamLanguage, wast } from '../third_party.bundle.js';
+import {getLocalStorageFeatures, renderFeatures, saveLocalStorageFeatures} from '../share.js';
+import {basicSetup, EditorState, EditorView, StreamLanguage, wast} from '../third_party.bundle.js';
+
+import {examples} from './examples.js';
+
 const features = getLocalStorageFeatures();
 
 const wabt = await WabtModule({
-  locateFile: function (url) {
+  locateFile: function(url) {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
@@ -39,103 +41,110 @@ const inlineExportEl = document.getElementById('inlineExport');
 const checkEl = document.getElementById('check');
 const readDebugNamesEl = document.getElementById('readDebugNames');
 const editor = new EditorView({
-  state: EditorState.create({
-    extensions: [basicSetup, StreamLanguage.define(wast)]
-  }),
+  state: EditorState.create(
+      {extensions: [basicSetup, StreamLanguage.define(wast)]}),
   parent: document.querySelector('main')
 });
 
 const editorContainer = editor.dom;
 
-editorContainer.ondrop = function (e) {
+editorContainer.ondrop = function(e) {
   e.preventDefault();
   let file = e.dataTransfer.files[0];
   if (!file) {
     return;
   }
   readAndCompileFile(file);
-}
-let fileBuffer = null;
+} let fileBuffer = null;
 renderFeatures(wabt, features, () => {
   saveLocalStorageFeatures(features);
   compile(fileBuffer);
 });
 
-  function compile(contents) {
-    if (!contents) {
-      return;
-    }
-
-    const readDebugNames = readDebugNamesEl.checked;
-    const check = checkEl.checked;
-    const generateNames = generateNamesEl.checked;
-    const foldExprs = foldExprsEl.checked;
-    const inlineExport = inlineExportEl.checked;
-
-    let module;
-    try {
-      module = wabt.readWasm(contents, { readDebugNames: readDebugNames, check: check, ...features });
-      if (generateNames) {
-        module.generateNames();
-        module.applyNames();
-      }
-      const result = module.toText({ foldExprs: foldExprs, inlineExport: inlineExport });
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: result } });
-    } catch (e) {
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: e.toString() } });
-    } finally {
-      if (module) module.destroy();
-    }
+function compile(contents) {
+  if (!contents) {
+    return;
   }
 
-  function onUploadClicked(e) {
-    uploadInput.value = '';
-    // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
-    const event = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
+  const readDebugNames = readDebugNamesEl.checked;
+  const check = checkEl.checked;
+  const generateNames = generateNamesEl.checked;
+  const foldExprs = foldExprsEl.checked;
+  const inlineExport = inlineExportEl.checked;
+
+  let module;
+  try {
+    module = wabt.readWasm(
+        contents,
+        {readDebugNames : readDebugNames, check : check, ...features});
+    if (generateNames) {
+      module.generateNames();
+      module.applyNames();
+    }
+    const result =
+        module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
+    editor.dispatch(
+        {changes: {from: 0, to: editor.state.doc.length, insert: result}});
+  } catch (e) {
+    editor.dispatch({
+      changes: {from: 0, to: editor.state.doc.length, insert: e.toString()}
     });
-    uploadInput.dispatchEvent(event);
+  } finally {
+    if (module)
+      module.destroy();
   }
+}
 
-  function onUploadedFile(e) {
-    const file = e.target.files[0];
-    readAndCompileFile(file);
-  }
-  // extract common util function
-  async function readAndCompileFile(file) {
-    fileBuffer = new Uint8Array(await file.arrayBuffer());
+function onUploadClicked(e) {
+  uploadInput.value = '';
+  // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
+  const event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+  });
+  uploadInput.dispatchEvent(event);
+}
+
+function onUploadedFile(e) {
+  const file = e.target.files[0];
+  readAndCompileFile(file);
+}
+// extract common util function
+async function readAndCompileFile(file) {
+  fileBuffer = new Uint8Array(await file.arrayBuffer());
+  compile(fileBuffer);
+}
+
+function recompileIfChanged(el) {
+  el.addEventListener('change', function() {
     compile(fileBuffer);
-  }
+  });
+}
 
-  function recompileIfChanged(el) {
-    el.addEventListener('change', function () { compile(fileBuffer); });
-  }
+function setExample(index) {
+  const contents = examples[index].contents;
+  fileBuffer = contents;
+  compile(contents);
+}
 
-  function setExample(index) {
-    const contents = examples[index].contents;
-    fileBuffer = contents;
-    compile(contents);
-  }
+function onSelectChanged(e) {
+  setExample(this.selectedIndex);
+}
 
-  function onSelectChanged(e) {
-    setExample(this.selectedIndex);
-  }
+uploadEl.addEventListener('click', onUploadClicked);
+uploadInputEl.addEventListener('change', onUploadedFile);
+recompileIfChanged(generateNamesEl);
+recompileIfChanged(foldExprsEl);
+recompileIfChanged(inlineExportEl);
+recompileIfChanged(readDebugNamesEl);
+selectEl.addEventListener('change', onSelectChanged);
 
-  uploadEl.addEventListener('click', onUploadClicked);
-  uploadInputEl.addEventListener('change', onUploadedFile);
-  recompileIfChanged(generateNamesEl);
-  recompileIfChanged(foldExprsEl);
-  recompileIfChanged(inlineExportEl);
-  recompileIfChanged(readDebugNamesEl);
-  selectEl.addEventListener('change', onSelectChanged);
-
-  for (let i = 0; i < examples.length; ++i) {
-    const example = examples[i];
-    const option = document.createElement('option');
-    option.textContent = example.name;
-    selectEl.appendChild(option);
-  }
-  selectEl.selectedIndex = 0;
-  setExample(selectEl.selectedIndex);
+for (let i = 0; i < examples.length; ++i) {
+  const example = examples[i];
+  const option = document.createElement('option');
+  option.textContent = example.name;
+  selectEl.appendChild(option);
+}
+selectEl.selectedIndex = 0;
+setExample(selectEl.selectedIndex);
