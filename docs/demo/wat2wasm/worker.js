@@ -12,7 +12,7 @@ wrappedConsole.log = (...args) => {
   console.log(...args);
 }
 
-self.onmessage = async function (event) {
+self.onmessage = async (event) => {
   console.log("Running WebAssembly");
   const { binaryBuffer, js } = event.data;
   let wasm;
