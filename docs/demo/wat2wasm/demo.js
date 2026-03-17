@@ -29,7 +29,7 @@ Split(["#top-row", "#bottom-row"], {
 const features = {};
 
 const wabt = await WabtModule({
-  locateFile: function(url) {
+  locateFile: (url) => {
     if (url.endsWith('.wasm')) {
       return '../' + url;
     }
@@ -83,7 +83,7 @@ const jsEditor = new EditorView({
 function debounce(f, wait) {
   let lastTime = 0;
   let timeoutId = -1;
-  const wrapped = function(...args) {
+  const wrapped = (...args) => {
     const time = +new Date();
     if (time - lastTime < wait) {
       if (timeoutId == -1)
@@ -144,7 +144,7 @@ function run() {
     return;
   const js = jsEditor.state.doc.toString();
   activeWorker = new Worker('./worker.js');
-  activeWorker.addEventListener('message', function(event) {
+  activeWorker.addEventListener('message', (event) => {
     switch (event.data.type) {
       case 'log':
         jsLogEl.textContent += event.data.data;
