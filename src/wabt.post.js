@@ -42,10 +42,6 @@ const FEATURES = Object.freeze({
   'wide_arithmetic': false,
 });
 
-/// Coerce value to boolean if not undefined. Otherwise return default_.
-function booleanOrDefault(value, default_) {
-  return !!(value !== undefined ? value : default_);
-}
 
 /// Allocate memory in the Module.
 function malloc(size) {
@@ -82,10 +78,10 @@ function allocateBuffer(buf) {
 
 /// Features
 class Features {
-  constructor(obj) {
+  constructor(obj = {}) {
     this.addr = Module._wabt_new_features();
     for (const [f, v] of Object.entries(FEATURES)) {
-      this[f] = booleanOrDefault(obj[f], v);
+      this[f] = obj[f] ?? v;
     }
   }
 
@@ -226,11 +222,11 @@ function parseWat(filename, buffer, options) {
 
 
 // readWasm
-function readWasm(buffer, options) {
+function readWasm(buffer, options = {}) {
   const bufferObj = allocateBuffer(buffer);
   let errors = new Errors('binary');
-  const readDebugNames = booleanOrDefault(options.readDebugNames, false);
-  const check = booleanOrDefault(options.check, true);
+  const readDebugNames = options.readDebugNames ?? false;
+  const check = options.check ?? true;
   const features = new Features(options);
 
   let readBinaryResult_addr;
@@ -297,9 +293,9 @@ class WasmModule {
     }
   }
 
-  toText(options) {
-    const foldExprs = booleanOrDefault(options.foldExprs, false);
-    const inlineExport = booleanOrDefault(options.inlineExport, false);
+  toText(options = {}) {
+    const foldExprs = options.foldExprs ?? false;
+    const inlineExport = options.inlineExport ?? false;
 
     const writeModuleResult_addr = Module._wabt_write_text_module(
         this.module_addr, foldExprs, inlineExport);
@@ -327,12 +323,11 @@ class WasmModule {
     }
   }
 
-  toBinary(options) {
-    const log = booleanOrDefault(options.log, false);
-    const canonicalize_lebs = booleanOrDefault(options.canonicalize_lebs, true);
-    const relocatable = booleanOrDefault(options.relocatable, false);
-    const write_debug_names =
-        booleanOrDefault(options.write_debug_names, false);
+  toBinary(options = {}) {
+    const log = options.log ?? false;
+    const canonicalize_lebs = options.canonicalize_lebs ?? true;
+    const relocatable = options.relocatable ?? false;
+    const write_debug_names = options.write_debug_names ?? false;
 
     const writeModuleResult_addr = Module._wabt_write_binary_module(
         this.module_addr, log, canonicalize_lebs, relocatable,
