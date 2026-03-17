@@ -151,6 +151,7 @@ update-wasm2c-fac:
 .PHONY: demo
 demo: emscripten-release
 	cp out/emscripten/Release/libwabt.js docs/demo
+	cp out/emscripten/Release/libwabt.wasm docs/demo
 
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \
