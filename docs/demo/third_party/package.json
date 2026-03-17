@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild index.js --bundle --format=esm --minify --sourcemap --outfile=../demo/third_party.bundle.js"
+    "build": "esbuild index.js --bundle --format=esm --minify --sourcemap --outfile=../third_party.bundle.js"
   },
   "keywords": [],
   "author": "",
