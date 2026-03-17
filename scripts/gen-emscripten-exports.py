@@ -32,20 +32,15 @@ def parse_features(feature_def_path):
     return features
 
 
-def generate_post_js(post_js_in_path, post_js_out_path, features):
-    with open(post_js_in_path, 'r') as f:
-        content = f.read()
-
-    # Generate the JS dictionary entries
+def generate_features_js(features_out_path, features):
     js_features = []
+    js_features.append('const FEATURES = Object.freeze({')
     for name, default in features:
         js_features.append(f"  '{name}': {default},")
-    js_features_str = '\n'.join(js_features)
+    js_features.append('});')
 
-    content = content.replace('@FEATURES@', js_features_str)
-
-    with open(post_js_out_path, 'w') as f:
-        f.write(content)
+    with open(features_out_path, 'w') as f:
+        f.write('\n'.join(js_features) + '\n')
 
 
 def generate_exports(exports_in_path, exports_out_path, features):
@@ -80,8 +75,7 @@ def generate_exports(exports_in_path, exports_out_path, features):
 def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--feature-def', required=True, help='Path to include/wabt/feature.def')
-    parser.add_argument('--postjs-in', required=True, help='Path to src/wabt.post.js.in')
-    parser.add_argument('--postjs-out', required=True, help='Output path for wabt.post.js')
+    parser.add_argument('--features-out', required=True, help='Output path for generated features.js')
     parser.add_argument('--exports-in', required=True, help='Path to src/emscripten-exports.txt.in')
     parser.add_argument('--exports-out', required=True, help='Output path for emscripten-exports.txt')
     options = parser.parse_args(args)
@@ -91,7 +85,7 @@ def main(args):
         print("Error: No features found in", options.feature_def)
         return 1
 
-    generate_post_js(options.postjs_in, options.postjs_out, features)
+    generate_features_js(options.features_out, features)
     generate_exports(options.exports_in, options.exports_out, features)
     return 0
 
