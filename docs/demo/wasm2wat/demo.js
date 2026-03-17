@@ -55,7 +55,9 @@ editorContainer.ondrop = function(e) {
     return;
   }
   readAndCompileFile(file);
-} let fileBuffer = null;
+};
+
+let fileBuffer = null;
 renderFeatures(wabt, features, () => {
   saveLocalStorageFeatures(features);
   compile(fileBuffer);
