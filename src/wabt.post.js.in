@@ -52,28 +52,31 @@ function allocateBuffer(buf) {
   if (buf instanceof ArrayBuffer) {
     size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
+    (new Uint8Array(HEAPU8.buffer, addr, size)).set(new Uint8Array(buf));
   } else if (ArrayBuffer.isView(buf)) {
-    size = buf.buffer.byteLength;
+    size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(buf);
+    (new Uint8Array(HEAPU8.buffer, addr, size))
+        .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
-    size = buf.length;
+    const encoded = new TextEncoder().encode(buf);
+    size = encoded.length;
     addr = malloc(size);
-    writeAsciiToMemory(buf, addr, true);  // don't null-terminate
+    (new Uint8Array(HEAPU8.buffer, addr, size)).set(encoded);
   } else {
     throw new Error('unknown buffer type: ' + buf);
   }
-  return {addr: addr, size: size};
+  return {addr : addr, size : size};
 }
 
 function allocateCString(s) {
-  const size = s.length;
-  const addr = malloc(size);
-  writeAsciiToMemory(s, addr);
-  return {addr: addr, size: size};
+  const encoded = new TextEncoder().encode(s);
+  const size = encoded.length;
+  const addr = malloc(size + 1);
+  (new Uint8Array(HEAPU8.buffer, addr, size)).set(encoded);
+  HEAPU8[addr + size] = 0; // null-terminate
+  return {addr : addr, size : size};
 }
-
 
 /// Features
 class Features {
@@ -84,23 +87,20 @@ class Features {
     }
   }
 
-  destroy() {
-    Module._wabt_destroy_features(this.addr);
-  }
+  destroy() { Module._wabt_destroy_features(this.addr); }
 }
 
 Object.keys(FEATURES).forEach(function(feature) {
   Object.defineProperty(Features.prototype, feature, {
-    enumerable: true,
-    get: function() {
+    enumerable : true,
+    get : function() {
       return Module['_wabt_' + feature + '_enabled'](this.addr);
     },
-    set: function(newValue) {
+    set : function(newValue) {
       Module['_wabt_set_' + feature + '_enabled'](this.addr, newValue | 0);
     }
   });
 });
-
 
 /// Lexer
 class Lexer {
@@ -119,12 +119,9 @@ class Lexer {
   }
 }
 
-
 /// OutputBuffer
 class OutputBuffer {
-  constructor(addr) {
-    this.addr = addr;
-  }
+  constructor(addr) { this.addr = addr; }
 
   toTypedArray() {
     if (!this.addr) {
@@ -148,11 +145,8 @@ class OutputBuffer {
     return UTF8ToString(addr, size);
   }
 
-  destroy() {
-    Module._wabt_destroy_output_buffer(this.addr);
-  }
+  destroy() { Module._wabt_destroy_output_buffer(this.addr); }
 }
-
 
 /// Errors
 class Errors {
@@ -164,15 +158,15 @@ class Errors {
   format() {
     let buffer;
     switch (this.kind) {
-      case 'text':
-        buffer = new OutputBuffer(
-            Module._wabt_format_text_errors(this.addr, this.lexer.addr));
-        break;
-      case 'binary':
-        buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
-        break;
-      default:
-        throw new Error(`Invalid Errors kind: ${this.kind}`);
+    case 'text':
+      buffer = new OutputBuffer(
+          Module._wabt_format_text_errors(this.addr, this.lexer.addr));
+      break;
+    case 'binary':
+      buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
+      break;
+    default:
+      throw new Error(`Invalid Errors kind: ${this.kind}`);
     }
     const message = buffer.toString();
     buffer.destroy();
@@ -186,7 +180,6 @@ class Errors {
     }
   }
 }
-
 
 /// parseWat
 function parseWat(filename, buffer, options) {
@@ -220,7 +213,6 @@ function parseWat(filename, buffer, options) {
   }
 }
 
-
 // readWasm
 function readWasm(buffer, options) {
   const bufferObj = allocateBuffer(buffer);
@@ -231,9 +223,9 @@ function readWasm(buffer, options) {
 
   let readBinaryResult_addr;
   try {
-    readBinaryResult_addr = Module._wabt_read_binary(
-        bufferObj.addr, bufferObj.size, readDebugNames, features.addr,
-        errors.addr);
+    readBinaryResult_addr =
+        Module._wabt_read_binary(bufferObj.addr, bufferObj.size, readDebugNames,
+                                 features.addr, errors.addr);
 
     const result =
         Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
@@ -256,7 +248,6 @@ function readWasm(buffer, options) {
     Module._free(bufferObj.addr);
   }
 }
-
 
 // WasmModule (can't call it Module because emscripten has claimed it.)
 class WasmModule {
@@ -355,8 +346,8 @@ class WasmModule {
               writeModuleResult_addr));
 
       return {
-        buffer: binaryOutputBuffer.toTypedArray(),
-        log: logOutputBuffer.toString()
+        buffer : binaryOutputBuffer.toTypedArray(),
+        log : logOutputBuffer.toString()
       };
 
     } finally {
