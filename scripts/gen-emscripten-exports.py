@@ -16,9 +16,9 @@
 #
 
 import argparse
-import os
 import re
 import sys
+
 
 def parse_features(feature_def_path):
     features = []
@@ -31,34 +31,36 @@ def parse_features(feature_def_path):
                 features.append((match.group(1), match.group(2)))
     return features
 
+
 def generate_post_js(post_js_in_path, post_js_out_path, features):
     with open(post_js_in_path, 'r') as f:
         content = f.read()
-    
+
     # Generate the JS dictionary entries
     js_features = []
     for name, default in features:
         js_features.append(f"  '{name}': {default},")
     js_features_str = '\n'.join(js_features)
-    
+
     content = content.replace('@FEATURES@', js_features_str)
-    
+
     with open(post_js_out_path, 'w') as f:
         f.write(content)
+
 
 def generate_exports(exports_in_path, exports_out_path, features):
     with open(exports_in_path, 'r') as f:
         content = f.read()
-        
+
     exports = []
     for name, default in features:
         exports.append(f"_wabt_{name}_enabled")
         exports.append(f"_wabt_set_{name}_enabled")
-    
+
     # Sort for deterministic output
     exports.sort()
     exports_str = '\n'.join(exports)
-    
+
     # If the file already has a trailing newline, we want to just insert our block
     if content.endswith('\n'):
         content = content[:-1]
@@ -66,13 +68,14 @@ def generate_exports(exports_in_path, exports_out_path, features):
         content += '\n'
     else:
         content = content.replace('@FEATURES@', exports_str)
-    
+
     # Now sort everything alphabetically (some non-feature exports were already there)
     all_exports = [e for e in content.split('\n') if e.strip()]
     all_exports.sort()
-    
+
     with open(exports_out_path, 'w') as f:
         f.write('\n'.join(all_exports) + '\n')
+
 
 def main(args):
     parser = argparse.ArgumentParser()
@@ -87,10 +90,11 @@ def main(args):
     if not features:
         print("Error: No features found in", options.feature_def)
         return 1
-        
+
     generate_post_js(options.postjs_in, options.postjs_out, features)
     generate_exports(options.exports_in, options.exports_out, features)
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
