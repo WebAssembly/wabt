@@ -78,10 +78,8 @@ function allocateBuffer(buf) {
     addr = malloc(size);
     (new Uint8Array(HEAP8.buffer, addr, size)).set(buf);
   } else if (typeof buf == 'string') {
-    const encoded = new TextEncoder().encode(buf);
-    size = encoded.length;
-    addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(encoded);
+    addr = stringToNewUTF8(buf);
+    size = lengthBytesUTF8(buf);
   } else {
     throw new Error('unknown buffer type: ' + buf);
   }
@@ -89,11 +87,8 @@ function allocateBuffer(buf) {
 }
 
 function allocateCString(s) {
-  const encoded = new TextEncoder().encode(s);
-  const size = encoded.length;
-  const addr = malloc(size + 1);
-  (new Uint8Array(HEAP8.buffer, addr, size)).set(encoded);
-  HEAP8[addr + size] = 0;
+  const addr = stringToNewUTF8(s);
+  const size = lengthBytesUTF8(s);
   return {addr: addr, size: size};
 }
 
