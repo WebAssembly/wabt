@@ -5,12 +5,9 @@ let wrappedConsole = Object.create(console);
 
 wrappedConsole.log = (...args) => {
   const line = args.map(String).join('') + '\n';
-  postMessage({
-    type: "log",
-    data: line
-  });
+  postMessage({type: 'log', data: line});
   console.log(...args);
-}
+};
 
 self.onmessage = async (event) => {
   console.log("Running WebAssembly");
@@ -19,14 +16,10 @@ self.onmessage = async (event) => {
   try {
     wasm = new WebAssembly.Module(binaryBuffer);
   } catch (e) {
-    postMessage({
-      type: "log",
-      data: String(e)
-    });
+    postMessage({type: 'log', data: String(e)});
   }
-  const fn = new Function('wasmModule', 'console', js + '//# sourceURL=demo.js');
+  const fn =
+      new Function('wasmModule', 'console', js + '//# sourceURL=demo.js');
   fn(wasm, wrappedConsole);
-  postMessage({
-    type: "done"
-  });
-}
+  postMessage({type: 'done'});
+};

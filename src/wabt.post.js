@@ -42,18 +42,6 @@ const FEATURES = Object.freeze({
   'wide_arithmetic': false,
 });
 
-/// If value is not undefined, return it. Otherwise return default_.
-function maybeDefault(value, default_) {
-  if (value === undefined) {
-    return default_;
-  }
-  return value;
-}
-
-/// Coerce value to boolean if not undefined. Otherwise return default_.
-function booleanOrDefault(value, default_) {
-  return !!maybeDefault(value, default_);
-}
 
 /// Allocate memory in the Module.
 function malloc(size) {
@@ -72,35 +60,28 @@ function allocateBuffer(buf) {
   if (buf instanceof ArrayBuffer) {
     size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
+    new Uint8Array(HEAPU8.buffer, addr, size).set(new Uint8Array(buf));
   } else if (ArrayBuffer.isView(buf)) {
-    size = buf.buffer.byteLength;
+    size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(buf);
+    new Uint8Array(HEAPU8.buffer, addr, size)
+        .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
-    size = buf.length;
-    addr = malloc(size);
-    writeAsciiToMemory(buf, addr, true);  // don't null-terminate
+    addr = stringToNewUTF8(buf);
+    size = lengthBytesUTF8(buf);
   } else {
     throw new Error('unknown buffer type: ' + buf);
   }
   return {addr: addr, size: size};
 }
 
-function allocateCString(s) {
-  const size = s.length;
-  const addr = malloc(size);
-  writeAsciiToMemory(s, addr);
-  return {addr: addr, size: size};
-}
-
 
 /// Features
 class Features {
-  constructor(obj) {
+  constructor(obj = {}) {
     this.addr = Module._wabt_new_features();
     for (const [f, v] of Object.entries(FEATURES)) {
-      this[f] = booleanOrDefault(obj[f], v);
+      this[f] = obj[f] ?? v;
     }
   }
 
@@ -125,17 +106,16 @@ Object.keys(FEATURES).forEach(function(feature) {
 /// Lexer
 class Lexer {
   constructor(filename, buffer, errors) {
-    this.filenameObj = allocateCString(filename);
+    this.filename = stringToNewUTF8(filename);
     this.bufferObj = allocateBuffer(buffer);
     this.addr = Module._wabt_new_wast_buffer_lexer(
-        this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
-        errors.addr);
+        this.filename, this.bufferObj.addr, this.bufferObj.size, errors.addr);
   }
 
   destroy() {
     Module._wabt_destroy_wast_lexer(this.addr);
     Module._free(this.bufferObj.addr);
-    Module._free(this.filenameObj.addr);
+    Module._free(this.filename);
   }
 }
 
@@ -181,12 +161,12 @@ class Errors {
     this.addr = Module._wabt_new_errors();
   }
 
-  format() {
+  format(lexer = null) {
     let buffer;
     switch (this.kind) {
       case 'text':
         buffer = new OutputBuffer(
-            Module._wabt_format_text_errors(this.addr, this.lexer.addr));
+            Module._wabt_format_text_errors(this.addr, lexer.addr));
         break;
       case 'binary':
         buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
@@ -201,9 +181,6 @@ class Errors {
 
   destroy() {
     Module._wabt_destroy_errors(this.addr);
-    if (this.lexer) {
-      this.lexer.destroy();
-    }
   }
 }
 
@@ -211,8 +188,7 @@ class Errors {
 /// parseWat
 function parseWat(filename, buffer, options) {
   let errors = new Errors('text');
-  const lexer = new Lexer(filename, buffer, errors);
-  errors.lexer = lexer;
+  let lexer = new Lexer(filename, buffer, errors);
   const features = new Features(options || {});
 
   let parseResult_addr;
@@ -222,14 +198,15 @@ function parseWat(filename, buffer, options) {
 
     const result = Module._wabt_parse_wat_result_get_result(parseResult_addr);
     if (result !== WABT_OK) {
-      throw new Error('parseWat failed:\n' + errors.format());
+      throw new Error('parseWat failed:\n' + errors.format(lexer));
     }
 
     const module_addr =
         Module._wabt_parse_wat_result_release_module(parseResult_addr);
-    const wasmModule = new WasmModule(module_addr, errors);
-    // Clear errors so it isn't destroyed below.
+    const wasmModule = new WasmModule(module_addr, errors, lexer);
+    // Clear errors and lexer so they aren't destroyed below.
     errors = null;
+    lexer = null;
     return wasmModule;
   } finally {
     Module._wabt_destroy_parse_wat_result(parseResult_addr);
@@ -237,16 +214,19 @@ function parseWat(filename, buffer, options) {
     if (errors) {
       errors.destroy();
     }
+    if (lexer) {
+      lexer.destroy();
+    }
   }
 }
 
 
 // readWasm
-function readWasm(buffer, options) {
+function readWasm(buffer, options = {}) {
   const bufferObj = allocateBuffer(buffer);
   let errors = new Errors('binary');
-  const readDebugNames = booleanOrDefault(options.readDebugNames, false);
-  const check = booleanOrDefault(options.check, true);
+  const readDebugNames = options.readDebugNames ?? false;
+  const check = options.check ?? true;
   const features = new Features(options);
 
   let readBinaryResult_addr;
@@ -280,9 +260,10 @@ function readWasm(buffer, options) {
 
 // WasmModule (can't call it Module because emscripten has claimed it.)
 class WasmModule {
-  constructor(module_addr, errors) {
+  constructor(module_addr, errors, lexer = null) {
     this.module_addr = module_addr;
     this.errors = errors;
+    this.lexer = lexer;
   }
 
   validate(options) {
@@ -291,15 +272,11 @@ class WasmModule {
       const result = Module._wabt_validate_module(
           this.module_addr, features.addr, this.errors.addr);
       if (result !== WABT_OK) {
-        throw new Error('validate failed:\n' + this.errors.format());
+        throw new Error('validate failed:\n' + this.errors.format(this.lexer));
       }
     } finally {
       features.destroy();
     }
-  }
-
-  resolveNames() {
-    // No-op, this is now part of text parsing.
   }
 
   generateNames() {
@@ -316,9 +293,9 @@ class WasmModule {
     }
   }
 
-  toText(options) {
-    const foldExprs = booleanOrDefault(options.foldExprs, false);
-    const inlineExport = booleanOrDefault(options.inlineExport, false);
+  toText(options = {}) {
+    const foldExprs = options.foldExprs ?? false;
+    const inlineExport = options.inlineExport ?? false;
 
     const writeModuleResult_addr = Module._wabt_write_text_module(
         this.module_addr, foldExprs, inlineExport);
@@ -346,12 +323,11 @@ class WasmModule {
     }
   }
 
-  toBinary(options) {
-    const log = booleanOrDefault(options.log, false);
-    const canonicalize_lebs = booleanOrDefault(options.canonicalize_lebs, true);
-    const relocatable = booleanOrDefault(options.relocatable, false);
-    const write_debug_names =
-        booleanOrDefault(options.write_debug_names, false);
+  toBinary(options = {}) {
+    const log = options.log ?? false;
+    const canonicalize_lebs = options.canonicalize_lebs ?? true;
+    const relocatable = options.relocatable ?? false;
+    const write_debug_names = options.write_debug_names ?? false;
 
     const writeModuleResult_addr = Module._wabt_write_binary_module(
         this.module_addr, log, canonicalize_lebs, relocatable,
@@ -394,6 +370,9 @@ class WasmModule {
     Module._wabt_destroy_module(this.module_addr);
     if (this.errors) {
       this.errors.destroy();
+    }
+    if (this.lexer) {
+      this.lexer.destroy();
     }
   }
 }
