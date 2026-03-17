@@ -16,7 +16,7 @@
 
 export function getLocalStorageFeatures() {
   try {
-    return JSON.parse(localStorage && localStorage.getItem("features")) || {};
+    return JSON.parse(localStorage && localStorage.getItem('features')) || {};
   } catch (e) {
     console.log(e);
     return {};
@@ -31,7 +31,8 @@ export function saveLocalStorageFeatures(features) {
 
 export function renderFeatures(wabt, features, onChange) {
   const featuresEl = document.getElementById('features');
-  const featuresList = Object.entries(wabt.FEATURES).sort(([a], [b]) => a.localeCompare(b));
+  const featuresList =
+      Object.entries(wabt.FEATURES).sort(([a], [b]) => a.localeCompare(b));
   for (const [f, v] of featuresList) {
     const featureEl = document.createElement('input');
     featureEl.type = 'checkbox';
