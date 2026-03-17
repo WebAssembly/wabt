@@ -86,12 +86,6 @@ function allocateBuffer(buf) {
   return {addr: addr, size: size};
 }
 
-function allocateCString(s) {
-  const addr = stringToNewUTF8(s);
-  const size = lengthBytesUTF8(s);
-  return {addr: addr, size: size};
-}
-
 
 /// Features
 class Features {
@@ -123,17 +117,17 @@ Object.keys(FEATURES).forEach(function(feature) {
 /// Lexer
 class Lexer {
   constructor(filename, buffer, errors) {
-    this.filenameObj = allocateCString(filename);
+    this.filename = stringToNewUTF8(filename);
     this.bufferObj = allocateBuffer(buffer);
     this.addr = Module._wabt_new_wast_buffer_lexer(
-        this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
+        this.filename, this.bufferObj.addr, this.bufferObj.size,
         errors.addr);
   }
 
   destroy() {
     Module._wabt_destroy_wast_lexer(this.addr);
     Module._free(this.bufferObj.addr);
-    Module._free(this.filenameObj.addr);
+    Module._free(this.filename);
   }
 }
 
