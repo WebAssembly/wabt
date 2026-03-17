@@ -42,17 +42,9 @@ const FEATURES = Object.freeze({
   'wide_arithmetic': false,
 });
 
-/// If value is not undefined, return it. Otherwise return default_.
-function maybeDefault(value, default_) {
-  if (value === undefined) {
-    return default_;
-  }
-  return value;
-}
-
 /// Coerce value to boolean if not undefined. Otherwise return default_.
 function booleanOrDefault(value, default_) {
-  return !!maybeDefault(value, default_);
+  return !!(value !== undefined ? value : default_);
 }
 
 /// Allocate memory in the Module.
@@ -72,11 +64,11 @@ function allocateBuffer(buf) {
   if (buf instanceof ArrayBuffer) {
     size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
+    new Uint8Array(HEAPU8.buffer, addr, size).set(new Uint8Array(buf));
   } else if (ArrayBuffer.isView(buf)) {
-    size = buf.buffer.byteLength;
+    size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(buf);
+    new Uint8Array(HEAPU8.buffer, addr, size).set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
     addr = stringToNewUTF8(buf);
     size = lengthBytesUTF8(buf);
@@ -172,12 +164,12 @@ class Errors {
     this.addr = Module._wabt_new_errors();
   }
 
-  format() {
+  format(lexer = null) {
     let buffer;
     switch (this.kind) {
       case 'text':
         buffer = new OutputBuffer(
-            Module._wabt_format_text_errors(this.addr, this.lexer.addr));
+            Module._wabt_format_text_errors(this.addr, lexer.addr));
         break;
       case 'binary':
         buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
@@ -192,9 +184,6 @@ class Errors {
 
   destroy() {
     Module._wabt_destroy_errors(this.addr);
-    if (this.lexer) {
-      this.lexer.destroy();
-    }
   }
 }
 
@@ -202,8 +191,7 @@ class Errors {
 /// parseWat
 function parseWat(filename, buffer, options) {
   let errors = new Errors('text');
-  const lexer = new Lexer(filename, buffer, errors);
-  errors.lexer = lexer;
+  let lexer = new Lexer(filename, buffer, errors);
   const features = new Features(options || {});
 
   let parseResult_addr;
@@ -213,20 +201,24 @@ function parseWat(filename, buffer, options) {
 
     const result = Module._wabt_parse_wat_result_get_result(parseResult_addr);
     if (result !== WABT_OK) {
-      throw new Error('parseWat failed:\n' + errors.format());
+      throw new Error('parseWat failed:\n' + errors.format(lexer));
     }
 
     const module_addr =
         Module._wabt_parse_wat_result_release_module(parseResult_addr);
-    const wasmModule = new WasmModule(module_addr, errors);
-    // Clear errors so it isn't destroyed below.
+    const wasmModule = new WasmModule(module_addr, errors, lexer);
+    // Clear errors and lexer so they aren't destroyed below.
     errors = null;
+    lexer = null;
     return wasmModule;
   } finally {
     Module._wabt_destroy_parse_wat_result(parseResult_addr);
     features.destroy();
     if (errors) {
       errors.destroy();
+    }
+    if (lexer) {
+      lexer.destroy();
     }
   }
 }
@@ -271,9 +263,10 @@ function readWasm(buffer, options) {
 
 // WasmModule (can't call it Module because emscripten has claimed it.)
 class WasmModule {
-  constructor(module_addr, errors) {
+  constructor(module_addr, errors, lexer = null) {
     this.module_addr = module_addr;
     this.errors = errors;
+    this.lexer = lexer;
   }
 
   validate(options) {
@@ -282,15 +275,11 @@ class WasmModule {
       const result = Module._wabt_validate_module(
           this.module_addr, features.addr, this.errors.addr);
       if (result !== WABT_OK) {
-        throw new Error('validate failed:\n' + this.errors.format());
+        throw new Error('validate failed:\n' + this.errors.format(this.lexer));
       }
     } finally {
       features.destroy();
     }
-  }
-
-  resolveNames() {
-    // No-op, this is now part of text parsing.
   }
 
   generateNames() {
@@ -385,6 +374,9 @@ class WasmModule {
     Module._wabt_destroy_module(this.module_addr);
     if (this.errors) {
       this.errors.destroy();
+    }
+    if (this.lexer) {
+      this.lexer.destroy();
     }
   }
 }
