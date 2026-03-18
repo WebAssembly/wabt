@@ -14,88 +14,93 @@
  * limitations under the License.
  */
 
+import WabtModule from '../libwabt.js';
+import {getLocalStorageFeatures, renderFeatures, saveLocalStorageFeatures} from '../share.js';
+import {basicSetup, EditorState, EditorView, StreamLanguage, wast} from '../third_party.bundle.js';
 
-var features = getLocalStorageFeatures();
+import {examples} from './examples.js';
 
-function getLocalStorageFeatures() {
-  try {
-    return JSON.parse(localStorage && localStorage.getItem("features")) || {};
-  } catch (e) {
-    console.log(e);
-    return {};
+const features = getLocalStorageFeatures();
+
+const wabt = await WabtModule({
+  locateFile: (url) => {
+    if (url.endsWith('.wasm')) {
+      return '../' + url;
+    }
+    return url;
   }
-}
+});
 
-WabtModule().then(function(wabt) {
+const editorEl = document.querySelector('.editor');
+const uploadEl = document.getElementById('upload');
+const selectEl = document.getElementById('select');
+const uploadInputEl = document.getElementById('uploadInput');
+const generateNamesEl = document.getElementById('generateNames');
+const foldExprsEl = document.getElementById('foldExprs');
+const inlineExportEl = document.getElementById('inlineExport');
+const checkEl = document.getElementById('check');
+const readDebugNamesEl = document.getElementById('readDebugNames');
+const editor = new EditorView({
+  state: EditorState.create(
+      {extensions: [basicSetup, StreamLanguage.define(wast)]}),
+  parent: document.querySelector('main')
+});
 
-var editorEl = document.querySelector('.editor');
-var uploadEl = document.getElementById('upload');
-var selectEl = document.getElementById('select');
-var uploadInputEl = document.getElementById('uploadInput');
-var generateNamesEl = document.getElementById('generateNames');
-var foldExprsEl = document.getElementById('foldExprs');
-var inlineExportEl = document.getElementById('inlineExport');
-var checkEl = document.getElementById('check');
-var readDebugNamesEl = document.getElementById('readDebugNames');
-var options = {mode: 'wast', lineNumbers: true};
-var editor = CodeMirror.fromTextArea(editorEl, options);
+const editorContainer = editor.dom;
 
-var editorContainer = document.querySelector('.CodeMirror.cm-s-default');
-
-editorContainer.ondrop = function(e) {
+editorContainer.ondrop = (e) => {
   e.preventDefault();
   let file = e.dataTransfer.files[0];
   if (!file) {
     return;
   }
   readAndCompileFile(file);
-}
-var fileBuffer = null;
-for (const [f, v] of Object.entries(wabt.FEATURES)) {
-  var featureEl = document.getElementById(f);
-  featureEl.checked = !!(features[f] !== undefined ? features[f] : v);
-  featureEl.addEventListener('change', event => {
-    var feature = event.target.id;
-    features[feature] = event.target.checked;
-    compile(fileBuffer);
-    if (localStorage) {
-      localStorage.setItem('features', JSON.stringify(features))
-    }
-  });
-}
+};
+
+let fileBuffer = null;
+renderFeatures(wabt, features, () => {
+  saveLocalStorageFeatures(features);
+  compile(fileBuffer);
+});
 
 function compile(contents) {
   if (!contents) {
     return;
   }
 
-  var readDebugNames = readDebugNamesEl.checked;
-  var check = checkEl.checked;
-  var generateNames = generateNamesEl.checked;
-  var foldExprs = foldExprsEl.checked;
-  var inlineExport = inlineExportEl.checked;
+  const readDebugNames = readDebugNamesEl.checked;
+  const check = checkEl.checked;
+  const generateNames = generateNamesEl.checked;
+  const foldExprs = foldExprsEl.checked;
+  const inlineExport = inlineExportEl.checked;
 
+  let module;
   try {
-    var module =
-        wabt.readWasm(contents, {readDebugNames: readDebugNames, check: check, ...features});
+    module = wabt.readWasm(
+        contents,
+        {readDebugNames : readDebugNames, check : check, ...features});
     if (generateNames) {
       module.generateNames();
       module.applyNames();
     }
-    var result =
+    const result =
         module.toText({foldExprs: foldExprs, inlineExport: inlineExport});
-    editor.setValue(result);
+    editor.dispatch(
+        {changes: {from: 0, to: editor.state.doc.length, insert: result}});
   } catch (e) {
-    editor.setValue(e.toString());
+    editor.dispatch({
+      changes: {from: 0, to: editor.state.doc.length, insert: e.toString()}
+    });
   } finally {
-    if (module) module.destroy();
+    if (module)
+      module.destroy();
   }
 }
 
 function onUploadClicked(e) {
   uploadInput.value = '';
   // See https://developer.mozilla.com/en-US/docs/Web/API/MouseEvent
-  var event = new MouseEvent('click', {
+  const event = new MouseEvent('click', {
     view: window,
     bubbles: true,
     cancelable: true,
@@ -104,25 +109,23 @@ function onUploadClicked(e) {
 }
 
 function onUploadedFile(e) {
-  var file = e.target.files[0];
+  const file = e.target.files[0];
   readAndCompileFile(file);
 }
 // extract common util function
-function readAndCompileFile(file) {
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    fileBuffer = new Uint8Array(e.target.result);
-    compile(fileBuffer);
-  };
-  reader.readAsArrayBuffer(file);
+async function readAndCompileFile(file) {
+  fileBuffer = new Uint8Array(await file.arrayBuffer());
+  compile(fileBuffer);
 }
 
 function recompileIfChanged(el) {
-  el.addEventListener('change', function() { compile(fileBuffer); });
+  el.addEventListener('change', () => {
+    compile(fileBuffer);
+  });
 }
 
 function setExample(index) {
-  var contents = examples[index].contents;
+  const contents = examples[index].contents;
   fileBuffer = contents;
   compile(contents);
 }
@@ -139,13 +142,11 @@ recompileIfChanged(inlineExportEl);
 recompileIfChanged(readDebugNamesEl);
 selectEl.addEventListener('change', onSelectChanged);
 
-for (var i = 0; i < examples.length; ++i) {
-  var example = examples[i];
-  var option = document.createElement('option');
+for (let i = 0; i < examples.length; ++i) {
+  const example = examples[i];
+  const option = document.createElement('option');
   option.textContent = example.name;
   selectEl.appendChild(option);
 }
 selectEl.selectedIndex = 0;
 setExample(selectEl.selectedIndex);
-
-});

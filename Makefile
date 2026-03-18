@@ -20,7 +20,6 @@ MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
 ROOT_DIR := $(dir $(abspath $(MAKEFILE_NAME)))
 
 USE_NINJA ?= 1
-EMSCRIPTEN_DIR ?= $(dir $(shell which emcc))
 CMAKE_CMD ?= cmake
 
 DEFAULT_SUFFIX = clang-debug
@@ -54,7 +53,6 @@ GCC_I686_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
 CLANG_FLAG := -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 CLANG_I686_FLAG := -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
 	-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-EMCC_FLAG := -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN_DIR}/cmake/Modules/Platform/Emscripten.cmake
 DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
 RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
 NORMAL_FLAG :=
@@ -104,7 +102,7 @@ $(call CMAKE_DIR,$(1),$(2),$(3)):
 
 $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE): | $(call CMAKE_DIR,$(1),$(2),$(3))
 	cd $(call CMAKE_DIR,$(1),$(2),$(3)) && \
-	$$(CMAKE_CMD) -G $$(GENERATOR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
+	$$(if $$(filter EMCC,$(1)),emcmake ,)$$(CMAKE_CMD) -G $$(GENERATOR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
 endef
 
 define BUILD
@@ -151,6 +149,7 @@ update-wasm2c-fac:
 .PHONY: demo
 demo: emscripten-release
 	cp out/emscripten/Release/libwabt.js docs/demo
+	cp out/emscripten/Release/libwabt.wasm docs/demo
 
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \

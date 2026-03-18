@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-var WABT_OK = 0;
-var WABT_ERROR = 1;
+const WABT_OK = 0;
+const WABT_ERROR = 1;
 
 /// features and default enabled state
 const FEATURES = Object.freeze({
@@ -37,25 +37,15 @@ const FEATURES = Object.freeze({
   'multi_memory': false,
   'extended_const': false,
   'relaxed_simd': false,
+  'custom_page_sizes': false,
   'compact_imports': false,
+  'wide_arithmetic': false,
 });
 
-/// If value is not undefined, return it. Otherwise return default_.
-function maybeDefault(value, default_) {
-  if (value === undefined) {
-    return default_;
-  }
-  return value;
-}
-
-/// Coerce value to boolean if not undefined. Otherwise return default_.
-function booleanOrDefault(value, default_) {
-  return !!maybeDefault(value, default_);
-}
 
 /// Allocate memory in the Module.
 function malloc(size) {
-  var addr = Module._malloc(size);
+  const addr = Module._malloc(size);
   if (addr == 0) {
     throw new Error('out of memory');
   }
@@ -65,46 +55,40 @@ function malloc(size) {
 /// Convert an ArrayBuffer/TypedArray/string into a buffer that can be
 /// used by the Module.
 function allocateBuffer(buf) {
-  var addr;
-  var size;
+  let addr;
+  let size;
   if (buf instanceof ArrayBuffer) {
     size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
+    new Uint8Array(HEAPU8.buffer, addr, size).set(new Uint8Array(buf));
   } else if (ArrayBuffer.isView(buf)) {
-    size = buf.buffer.byteLength;
+    size = buf.byteLength;
     addr = malloc(size);
-    (new Uint8Array(HEAP8.buffer, addr, size)).set(buf);
+    new Uint8Array(HEAPU8.buffer, addr, size)
+        .set(new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   } else if (typeof buf == 'string') {
-    size = buf.length;
-    addr = malloc(size);
-    writeAsciiToMemory(buf, addr, true);  // don't null-terminate
+    addr = stringToNewUTF8(buf);
+    size = lengthBytesUTF8(buf);
   } else {
     throw new Error('unknown buffer type: ' + buf);
   }
   return {addr: addr, size: size};
 }
 
-function allocateCString(s) {
-  var size = s.length;
-  var addr = malloc(size);
-  writeAsciiToMemory(s, addr);
-  return {addr: addr, size: size};
-}
-
 
 /// Features
-function Features(obj) {
-  this.addr = Module._wabt_new_features();
-  for (var [f, v] of Object.entries(FEATURES)) {
-    this[f] = booleanOrDefault(obj[f], v);
+class Features {
+  constructor(obj = {}) {
+    this.addr = Module._wabt_new_features();
+    for (const [f, v] of Object.entries(FEATURES)) {
+      this[f] = obj[f] ?? v;
+    }
+  }
+
+  destroy() {
+    Module._wabt_destroy_features(this.addr);
   }
 }
-Features.prototype = Object.create(Object.prototype);
-
-Features.prototype.destroy = function() {
-  Module._wabt_destroy_features(this.addr);
-};
 
 Object.keys(FEATURES).forEach(function(feature) {
   Object.defineProperty(Features.prototype, feature, {
@@ -120,145 +104,149 @@ Object.keys(FEATURES).forEach(function(feature) {
 
 
 /// Lexer
-function Lexer(filename, buffer, errors) {
-  this.filenameObj = allocateCString(filename);
-  this.bufferObj = allocateBuffer(buffer);
-  this.addr = Module._wabt_new_wast_buffer_lexer(
-      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
-      errors.addr);
-}
-Lexer.prototype = Object.create(Object.prototype);
+class Lexer {
+  constructor(filename, buffer, errors) {
+    this.filename = stringToNewUTF8(filename);
+    this.bufferObj = allocateBuffer(buffer);
+    this.addr = Module._wabt_new_wast_buffer_lexer(
+        this.filename, this.bufferObj.addr, this.bufferObj.size, errors.addr);
+  }
 
-Lexer.prototype.destroy = function() {
-  Module._wabt_destroy_wast_lexer(this.addr);
-  Module._free(this.bufferObj.addr);
-  Module._free(this.filenameObj.addr);
-};
+  destroy() {
+    Module._wabt_destroy_wast_lexer(this.addr);
+    Module._free(this.bufferObj.addr);
+    Module._free(this.filename);
+  }
+}
 
 
 /// OutputBuffer
-function OutputBuffer(addr) {
-  this.addr = addr;
+class OutputBuffer {
+  constructor(addr) {
+    this.addr = addr;
+  }
+
+  toTypedArray() {
+    if (!this.addr) {
+      return null;
+    }
+
+    const addr = Module._wabt_output_buffer_get_data(this.addr);
+    const size = Module._wabt_output_buffer_get_size(this.addr);
+    const buffer = new Uint8Array(size);
+    buffer.set(new Uint8Array(HEAPU8.buffer, addr, size));
+    return buffer;
+  }
+
+  toString() {
+    if (!this.addr) {
+      return '';
+    }
+
+    const addr = Module._wabt_output_buffer_get_data(this.addr);
+    const size = Module._wabt_output_buffer_get_size(this.addr);
+    return UTF8ToString(addr, size);
+  }
+
+  destroy() {
+    Module._wabt_destroy_output_buffer(this.addr);
+  }
 }
-OutputBuffer.prototype = Object.create(Object.prototype);
-
-OutputBuffer.prototype.toTypedArray = function() {
-  if (!this.addr) {
-    return null;
-  }
-
-  var addr = Module._wabt_output_buffer_get_data(this.addr);
-  var size = Module._wabt_output_buffer_get_size(this.addr);
-  var buffer = new Uint8Array(size);
-  buffer.set(new Uint8Array(HEAPU8.buffer, addr, size));
-  return buffer;
-};
-
-OutputBuffer.prototype.toString = function() {
-  if (!this.addr) {
-    return '';
-  }
-
-  var addr = Module._wabt_output_buffer_get_data(this.addr);
-  var size = Module._wabt_output_buffer_get_size(this.addr);
-  return UTF8ToString(addr, size);
-};
-
-OutputBuffer.prototype.destroy = function() {
-  Module._wabt_destroy_output_buffer(this.addr);
-};
 
 
 /// Errors
-function Errors(kind) {
-  this.kind = kind;
-  this.addr = Module._wabt_new_errors();
+class Errors {
+  constructor(kind) {
+    this.kind = kind;
+    this.addr = Module._wabt_new_errors();
+  }
+
+  format(lexer = null) {
+    let buffer;
+    switch (this.kind) {
+      case 'text':
+        buffer = new OutputBuffer(
+            Module._wabt_format_text_errors(this.addr, lexer.addr));
+        break;
+      case 'binary':
+        buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
+        break;
+      default:
+        throw new Error(`Invalid Errors kind: ${this.kind}`);
+    }
+    const message = buffer.toString();
+    buffer.destroy();
+    return message;
+  }
+
+  destroy() {
+    Module._wabt_destroy_errors(this.addr);
+  }
 }
-Errors.prototype = Object.create(Object.prototype);
-
-Errors.prototype.format = function() {
-  var buffer;
-  switch (this.kind) {
-    case 'text':
-      buffer = new OutputBuffer(
-          Module._wabt_format_text_errors(this.addr, this.lexer.addr));
-      break;
-    case 'binary':
-      buffer = new OutputBuffer(Module._wabt_format_binary_errors(this.addr));
-      break;
-    default:
-      throw new Error('Invalid Errors kind: ' + this.kind);
-  }
-  var message = buffer.toString();
-  buffer.destroy();
-  return message;
-};
-
-Errors.prototype.destroy = function() {
-  Module._wabt_destroy_errors(this.addr);
-  if (this.lexer) {
-    this.lexer.destroy();
-  }
-};
 
 
 /// parseWat
 function parseWat(filename, buffer, options) {
-  var errors = new Errors('text');
-  var lexer = new Lexer(filename, buffer, errors);
-  errors.lexer = lexer;
-  var features = new Features(options || {});
+  let errors = new Errors('text');
+  let lexer = new Lexer(filename, buffer, errors);
+  const features = new Features(options || {});
 
+  let parseResult_addr;
   try {
-    var parseResult_addr =
+    parseResult_addr =
         Module._wabt_parse_wat(lexer.addr, features.addr, errors.addr);
 
-    var result = Module._wabt_parse_wat_result_get_result(parseResult_addr);
+    const result = Module._wabt_parse_wat_result_get_result(parseResult_addr);
     if (result !== WABT_OK) {
-      throw new Error('parseWat failed:\n' + errors.format());
+      throw new Error('parseWat failed:\n' + errors.format(lexer));
     }
 
-    var module_addr =
+    const module_addr =
         Module._wabt_parse_wat_result_release_module(parseResult_addr);
-    var result = new WasmModule(module_addr, errors);
-    // Clear errors so it isn't destroyed below.
+    const wasmModule = new WasmModule(module_addr, errors, lexer);
+    // Clear errors and lexer so they aren't destroyed below.
     errors = null;
-    return result;
+    lexer = null;
+    return wasmModule;
   } finally {
     Module._wabt_destroy_parse_wat_result(parseResult_addr);
     features.destroy();
     if (errors) {
       errors.destroy();
     }
+    if (lexer) {
+      lexer.destroy();
+    }
   }
 }
 
 
 // readWasm
-function readWasm(buffer, options) {
-  var bufferObj = allocateBuffer(buffer);
-  var errors = new Errors('binary');
-  var readDebugNames = booleanOrDefault(options.readDebugNames, false);
-  var check = booleanOrDefault(options.check, true);
-  var features = new Features(options);
+function readWasm(buffer, options = {}) {
+  const bufferObj = allocateBuffer(buffer);
+  let errors = new Errors('binary');
+  const readDebugNames = options.readDebugNames ?? false;
+  const check = options.check ?? true;
+  const features = new Features(options);
 
+  let readBinaryResult_addr;
   try {
-    var readBinaryResult_addr = Module._wabt_read_binary(
+    readBinaryResult_addr = Module._wabt_read_binary(
         bufferObj.addr, bufferObj.size, readDebugNames, features.addr,
         errors.addr);
 
-    var result =
+    const result =
         Module._wabt_read_binary_result_get_result(readBinaryResult_addr);
     if (check && result !== WABT_OK) {
       throw new Error('readWasm failed:\n' + errors.format());
     }
 
-    var module_addr =
+    const module_addr =
         Module._wabt_read_binary_result_release_module(readBinaryResult_addr);
-    var result = new WasmModule(module_addr, errors);
+    const wasmModule = new WasmModule(module_addr, errors);
     // Clear errors so it isn't destroyed below.
     errors = null;
-    return result;
+    return wasmModule;
   } finally {
     Module._wabt_destroy_read_binary_result(readBinaryResult_addr);
     features.destroy();
@@ -271,118 +259,123 @@ function readWasm(buffer, options) {
 
 
 // WasmModule (can't call it Module because emscripten has claimed it.)
-function WasmModule(module_addr, errors) {
-  this.module_addr = module_addr;
-  this.errors = errors;
+class WasmModule {
+  constructor(module_addr, errors, lexer = null) {
+    this.module_addr = module_addr;
+    this.errors = errors;
+    this.lexer = lexer;
+  }
+
+  validate(options) {
+    const features = new Features(options || {});
+    try {
+      const result = Module._wabt_validate_module(
+          this.module_addr, features.addr, this.errors.addr);
+      if (result !== WABT_OK) {
+        throw new Error('validate failed:\n' + this.errors.format(this.lexer));
+      }
+    } finally {
+      features.destroy();
+    }
+  }
+
+  generateNames() {
+    const result = Module._wabt_generate_names_module(this.module_addr);
+    if (result !== WABT_OK) {
+      throw new Error('generateNames failed.');
+    }
+  }
+
+  applyNames() {
+    const result = Module._wabt_apply_names_module(this.module_addr);
+    if (result !== WABT_OK) {
+      throw new Error('applyNames failed.');
+    }
+  }
+
+  toText(options = {}) {
+    const foldExprs = options.foldExprs ?? false;
+    const inlineExport = options.inlineExport ?? false;
+
+    const writeModuleResult_addr = Module._wabt_write_text_module(
+        this.module_addr, foldExprs, inlineExport);
+
+    const result =
+        Module._wabt_write_module_result_get_result(writeModuleResult_addr);
+
+    let outputBuffer;
+    try {
+      if (result !== WABT_OK) {
+        throw new Error('toText failed.');
+      }
+
+      outputBuffer = new OutputBuffer(
+          Module._wabt_write_module_result_release_output_buffer(
+              writeModuleResult_addr));
+
+      return outputBuffer.toString();
+
+    } finally {
+      if (outputBuffer) {
+        outputBuffer.destroy();
+      }
+      Module._wabt_destroy_write_module_result(writeModuleResult_addr);
+    }
+  }
+
+  toBinary(options = {}) {
+    const log = options.log ?? false;
+    const canonicalize_lebs = options.canonicalize_lebs ?? true;
+    const relocatable = options.relocatable ?? false;
+    const write_debug_names = options.write_debug_names ?? false;
+
+    const writeModuleResult_addr = Module._wabt_write_binary_module(
+        this.module_addr, log, canonicalize_lebs, relocatable,
+        write_debug_names);
+
+    const result =
+        Module._wabt_write_module_result_get_result(writeModuleResult_addr);
+
+    let binaryOutputBuffer;
+    let logOutputBuffer;
+    try {
+      if (result !== WABT_OK) {
+        throw new Error('toBinary failed.');
+      }
+
+      binaryOutputBuffer = new OutputBuffer(
+          Module._wabt_write_module_result_release_output_buffer(
+              writeModuleResult_addr));
+      logOutputBuffer = new OutputBuffer(
+          Module._wabt_write_module_result_release_log_output_buffer(
+              writeModuleResult_addr));
+
+      return {
+        buffer: binaryOutputBuffer.toTypedArray(),
+        log: logOutputBuffer.toString()
+      };
+
+    } finally {
+      if (binaryOutputBuffer) {
+        binaryOutputBuffer.destroy();
+      }
+      if (logOutputBuffer) {
+        logOutputBuffer.destroy();
+      }
+      Module._wabt_destroy_write_module_result(writeModuleResult_addr);
+    }
+  }
+
+  destroy() {
+    Module._wabt_destroy_module(this.module_addr);
+    if (this.errors) {
+      this.errors.destroy();
+    }
+    if (this.lexer) {
+      this.lexer.destroy();
+    }
+  }
 }
-WasmModule.prototype = Object.create(Object.prototype);
-
-WasmModule.prototype.validate = function(options) {
-  var features = new Features(options || {});
-  try {
-    var result = Module._wabt_validate_module(
-        this.module_addr, features.addr, this.errors.addr);
-    if (result !== WABT_OK) {
-      throw new Error('validate failed:\n' + this.errors.format());
-    }
-  } finally {
-    features.destroy();
-  }
-};
-
-WasmModule.prototype.resolveNames = function() {
-  // No-op, this is now part of text parsing.
-};
-
-WasmModule.prototype.generateNames = function() {
-  var result = Module._wabt_generate_names_module(this.module_addr);
-  if (result !== WABT_OK) {
-    throw new Error('generateNames failed.');
-  }
-};
-
-WasmModule.prototype.applyNames = function() {
-  var result = Module._wabt_apply_names_module(this.module_addr);
-  if (result !== WABT_OK) {
-    throw new Error('applyNames failed.');
-  }
-};
-
-WasmModule.prototype.toText = function(options) {
-  var foldExprs = booleanOrDefault(options.foldExprs, false);
-  var inlineExport = booleanOrDefault(options.inlineExport, false);
-
-  var writeModuleResult_addr =
-      Module._wabt_write_text_module(this.module_addr, foldExprs, inlineExport);
-
-  var result =
-      Module._wabt_write_module_result_get_result(writeModuleResult_addr);
-
-  try {
-    if (result !== WABT_OK) {
-      throw new Error('toText failed.');
-    }
-
-    var outputBuffer =
-        new OutputBuffer(Module._wabt_write_module_result_release_output_buffer(
-            writeModuleResult_addr));
-
-    return outputBuffer.toString();
-
-  } finally {
-    if (outputBuffer) {
-      outputBuffer.destroy();
-    }
-    Module._wabt_destroy_write_module_result(writeModuleResult_addr);
-  }
-};
-
-WasmModule.prototype.toBinary = function(options) {
-  var log = booleanOrDefault(options.log, false);
-  var canonicalize_lebs = booleanOrDefault(options.canonicalize_lebs, true);
-  var relocatable = booleanOrDefault(options.relocatable, false);
-  var write_debug_names = booleanOrDefault(options.write_debug_names, false);
-
-  var writeModuleResult_addr = Module._wabt_write_binary_module(
-      this.module_addr, log, canonicalize_lebs, relocatable, write_debug_names);
-
-  var result =
-      Module._wabt_write_module_result_get_result(writeModuleResult_addr);
-
-  try {
-    if (result !== WABT_OK) {
-      throw new Error('toBinary failed.');
-    }
-
-    var binaryOutputBuffer =
-        new OutputBuffer(Module._wabt_write_module_result_release_output_buffer(
-            writeModuleResult_addr));
-    var logOutputBuffer = new OutputBuffer(
-        Module._wabt_write_module_result_release_log_output_buffer(
-            writeModuleResult_addr));
-
-    return {
-      buffer: binaryOutputBuffer.toTypedArray(),
-      log: logOutputBuffer.toString()
-    };
-
-  } finally {
-    if (binaryOutputBuffer) {
-      binaryOutputBuffer.destroy();
-    }
-    if (logOutputBuffer) {
-      logOutputBuffer.destroy();
-    }
-    Module._wabt_destroy_write_module_result(writeModuleResult_addr);
-  }
-};
-
-WasmModule.prototype.destroy = function() {
-  Module._wabt_destroy_module(this.module_addr);
-  if (this.errors) {
-    this.errors.destroy();
-  }
-};
 
 Module['parseWat'] = parseWat;
 Module['readWasm'] = readWasm;

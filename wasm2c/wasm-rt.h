@@ -572,13 +572,27 @@ typedef struct {
 } wasm_rt_jmp_buf;
 
 #ifndef _WIN32
-#define WASM_RT_SETJMP_SETBUF(buf) sigsetjmp(buf, 1)
+#define WASM_RT_SETJMP_TRAP_SETBUF(buf) sigsetjmp(buf, 1)
+
+/**
+ * On macOS XNU, there is a bug where nested `sigsetjmp` and `siglongjmp` 
+ * across threads that have an allocated alternate signal stack (`SS_ONSTACK`) 
+ * will erroneously cause the kernel to preserve the `SS_ONSTACK` flag in the 
+ * thread state
+ *
+ * See: https://github.com/WebAssembly/wabt/issues/2654
+ * See: https://github.com/golang/go/issues/44501
+ */
+#define WASM_RT_SETJMP_EXN_SETBUF(buf) sigsetjmp(buf, 0)
 #else
-#define WASM_RT_SETJMP_SETBUF(buf) setjmp(buf)
+#define WASM_RT_SETJMP_TRAP_SETBUF(buf) setjmp(buf)
+#define WASM_RT_SETJMP_EXN_SETBUF(buf) setjmp(buf)
 #endif
 
 #define WASM_RT_SETJMP(buf) \
-  ((buf).initialized = true, WASM_RT_SETJMP_SETBUF((buf).buffer))
+  ((buf).initialized = true, WASM_RT_SETJMP_TRAP_SETBUF((buf).buffer))
+#define WASM_RT_SETJMP_EXN(buf) \
+  ((buf).initialized = true, WASM_RT_SETJMP_EXN_SETBUF((buf).buffer))
 
 #ifndef _WIN32
 #define WASM_RT_LONGJMP_UNCHECKED(buf, val) siglongjmp(buf, val)
@@ -604,7 +618,7 @@ WASM_RT_NO_RETURN void wasm_rt_trap(wasm_rt_trap_t);
 /** Return a human readable error string based on a trap type. */
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
 
-#define wasm_rt_try(target) WASM_RT_SETJMP(target)
+#define wasm_rt_try(target) WASM_RT_SETJMP_EXN(target)
 
 /** WebAssembly's default page size (64 KiB) */
 #define WASM_DEFAULT_PAGE_SIZE 65536

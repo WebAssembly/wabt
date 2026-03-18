@@ -1,0 +1,24 @@
+{
+  "name": "third_party",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild index.js --bundle --format=esm --minify --sourcemap --outfile=../third_party.bundle.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/language": "^6.12.2",
+    "@codemirror/legacy-modes": "^6.5.2",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.40.0",
+    "codemirror": "^6.0.2",
+    "esbuild": "^0.27.4",
+    "split.js": "^1.6.5"
+  }
+}
