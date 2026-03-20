@@ -40,6 +40,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
   Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
   Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
@@ -86,6 +87,23 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr*) override;
+  Result OnArrayFillExpr(ArrayFillExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr*) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnRefCastExpr(RefCastExpr*) override;
+  Result OnRefTestExpr(RefTestExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -107,9 +125,11 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
+  void ResolveStructFieldVar(Var* type, Var* var);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
+  void VisitType(TypeEntry* type);
   void VisitTag(Tag* tag);
   void VisitTable(Table* table);
   void VisitElemSegment(ElemSegment* segment);
@@ -249,6 +269,34 @@ void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
   }
 }
 
+void NameResolver::ResolveStructFieldVar(Var* type, Var* var) {
+  ResolveFuncTypeVar(type);
+
+  if (type->is_index() && var->is_name()) {
+    // If type is still a name, it cannot be resolved.
+    Index index = type->index();
+
+    if (index < current_module_->types.size() &&
+        current_module_->types[index]->kind() == TypeEntryKind::Struct) {
+      StructType* struct_type = cast<StructType>(current_module_->types[index]);
+
+      Index size = static_cast<Index>(struct_type->fields.size());
+
+      for (Index i = 0; i < size; i++) {
+        if (struct_type->fields[i].name == var->name()) {
+          var->set_index(i);
+          break;
+        }
+      }
+    }
+
+    if (var->is_name()) {
+      PrintError(&var->loc, "undefined struct field \"%s\"",
+                 var->name().c_str());
+    }
+  }
+}
+
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
   PushLabel(expr->block.label);
   ResolveBlockDeclarationVar(&expr->block.decl);
@@ -278,6 +326,13 @@ Result NameResolver::OnBrExpr(BrExpr* expr) {
 
 Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
   ResolveLabelVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  ResolveLabelVar(&expr->label_var);
+  ResolveFuncTypeVar(&expr->type1_var);
+  ResolveFuncTypeVar(&expr->type2_var);
   return Result::Ok;
 }
 
@@ -532,6 +587,96 @@ Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayFillExpr(ArrayFillExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayGetExpr(ArrayGetExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayInitDataExpr(ArrayInitDataExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  ResolveDataSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayInitElemExpr(ArrayInitElemExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  ResolveElemSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewExpr(ArrayNewExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  ResolveDataSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  ResolveElemSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  ResolveFuncTypeVar(&expr->type_var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnArraySetExpr(ArraySetExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnRefCastExpr(RefCastExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnRefTestExpr(RefTestExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructGetExpr(StructGetExpr* expr) {
+  ResolveStructFieldVar(&expr->type_var, &expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewExpr(StructNewExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnStructSetExpr(StructSetExpr* expr) {
+  ResolveStructFieldVar(&expr->type_var, &expr->var);
+  return Result::Ok;
+}
+
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type) {
@@ -577,6 +722,14 @@ void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
 }
 
+void NameResolver::VisitType(TypeEntry* type) {
+  size_t size = type->supertypes.sub_types.size();
+
+  for (size_t i = 0; i < size; i++) {
+    ResolveFuncTypeVar(&type->supertypes.sub_types[i]);
+  }
+}
+
 void NameResolver::VisitTag(Tag* tag) {
   if (tag->decl.has_func_type) {
     ResolveFuncTypeVar(&tag->decl.type_var);
@@ -593,10 +746,7 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
-    if (elem_expr.size() == 1 &&
-        elem_expr.front().type() == ExprType::RefFunc) {
-      ResolveFuncVar(&cast<RefFuncExpr>(&elem_expr.front())->var);
-    }
+    visitor_.VisitExprList(elem_expr);
   }
 }
 
@@ -621,6 +771,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
+  for (TypeEntry* type : module->types)
+    VisitType(type);
   for (Tag* tag : module->tags)
     VisitTag(tag);
   for (Table* table : module->tables)

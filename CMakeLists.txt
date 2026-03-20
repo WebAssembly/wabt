@@ -641,6 +641,13 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
+  # component
+  wabt_executable(
+    NAME component
+    SOURCES src/tools/component.cc
+    INSTALL
+  )
+
   if(BUILD_FUZZ_TOOLS)
     # wasm2wat-fuzz
     wabt_executable(
