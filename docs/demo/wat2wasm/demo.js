@@ -107,7 +107,6 @@ function compile() {
   try {
     module =
         wabt.parseWat('test.wast', watEditor.state.doc.toString(), features);
-    module.resolveNames();
     module.validate(features);
     const binaryOutput = module.toBinary({log: true, write_debug_names: true});
     outputLog = binaryOutput.log;
