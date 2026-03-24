@@ -141,25 +141,37 @@ int ProgramMain(int argc, char** argv) {
   }
 
   std::unique_ptr<Module> module;
-  WastParseOptions parse_wast_options(s_features);
-  result = ParseWatModule(lexer.get(), &module, &errors, &parse_wast_options);
+  std::unique_ptr<Component> component;
+  MemoryStream stream(s_log_stream.get());
 
-  if (Succeeded(result) && s_validate) {
-    ValidateOptions options(s_features);
-    result = ValidateModule(module.get(), &errors, options);
+  WastParseOptions parse_wast_options(s_features);
+  result = ParseWatComponent(lexer.get(), &component, &module, &errors,
+                             &parse_wast_options);
+
+  if (module) {
+    assert(Succeeded(result));
+    if (s_validate) {
+      ValidateOptions options(s_features);
+      result = ValidateModule(module.get(), &errors, options);
+    }
+
+    if (Succeeded(result)) {
+      s_write_binary_options.features = s_features;
+      result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
+    }
+  } else if (component) {
+    assert(Succeeded(result));
+
+    s_write_binary_options.features = s_features;
+    result =
+        WriteBinaryComponent(&stream, component.get(), s_write_binary_options);
   }
 
   if (Succeeded(result)) {
-    MemoryStream stream(s_log_stream.get());
-    s_write_binary_options.features = s_features;
-    result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
-
-    if (Succeeded(result)) {
-      if (s_outfile.empty()) {
-        s_outfile = DefaultOuputName(s_infile);
-      }
-      WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
+    if (s_outfile.empty()) {
+      s_outfile = DefaultOuputName(s_infile);
     }
+    WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
   }
 
   auto line_finder = lexer->MakeLineFinder();

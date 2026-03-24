@@ -4299,11 +4299,30 @@ void CWriter::Write(const ExprList& exprs) {
         return;
       }
 
+      case ExprType::ArrayCopy:
+      case ExprType::ArrayFill:
+      case ExprType::ArrayGet:
+      case ExprType::ArrayInitData:
+      case ExprType::ArrayInitElem:
+      case ExprType::ArrayNew:
+      case ExprType::ArrayNewData:
+      case ExprType::ArrayNewDefault:
+      case ExprType::ArrayNewElem:
+      case ExprType::ArrayNewFixed:
+      case ExprType::ArraySet:
       case ExprType::AtomicWait:
       case ExprType::AtomicNotify:
+      case ExprType::BrOnCast:
       case ExprType::CallRef:
-      case ExprType::ReturnCallRef:
+      case ExprType::GCUnary:
       case ExprType::Quaternary:
+      case ExprType::RefCast:
+      case ExprType::RefTest:
+      case ExprType::ReturnCallRef:
+      case ExprType::StructGet:
+      case ExprType::StructNew:
+      case ExprType::StructNewDefault:
+      case ExprType::StructSet:
         UNIMPLEMENTED("...");
         break;
     }
