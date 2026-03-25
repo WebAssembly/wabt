@@ -150,6 +150,14 @@ class WastParser {
   // Consume one token and return it.
   Token Consume();
 
+  // Drop tokens.
+  void DropToken() {
+    tokens_.pop_front();
+  }
+  void DropTwoTokens() {
+    tokens_.pop_both();
+  }
+
   // Give the Match() function a clearer name when used to optionally consume a
   // token (used for printing better error messages).
   void ConsumeIfLpar() { Match(TokenType::Lpar); }
@@ -334,6 +342,7 @@ class WastParser {
    public:
     void push_back(Token t);
     void pop_front();
+    void pop_both();
     const Token& at(size_t n) const;
     const Token& front() const;
     bool empty() const;
