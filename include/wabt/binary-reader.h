@@ -52,12 +52,19 @@ struct ReadBinaryOptions {
   bool skip_function_bodies = false;
 };
 
-// TODO: Move somewhere else?
+// TODO: Move both TypeMut and SupertypesInfo somewhere else?
 struct TypeMut {
   Type type;
   bool mutable_;
 };
 using TypeMutVector = std::vector<TypeMut>;
+
+// Type extension introduced by the Garbage Collector proposal
+struct SupertypesInfo {
+  bool is_final_sub_type;
+  Index sub_type_count;
+  Index* sub_types;
+};
 
 struct CatchClause {
   CatchKind kind;
@@ -104,15 +111,20 @@ class BinaryReaderDelegate {
   /* Type section */
   virtual Result BeginTypeSection(Offset size) = 0;
   virtual Result OnTypeCount(Index count) = 0;
+  virtual Result OnRecursiveGroup(Index first_type_index, Index type_count) = 0;
   virtual Result OnFuncType(Index index,
                             Index param_count,
                             Type* param_types,
                             Index result_count,
-                            Type* result_types) = 0;
+                            Type* result_types,
+                            SupertypesInfo* supertypes) = 0;
   virtual Result OnStructType(Index index,
                               Index field_count,
-                              TypeMut* fields) = 0;
-  virtual Result OnArrayType(Index index, TypeMut field) = 0;
+                              TypeMut* fields,
+                              SupertypesInfo* supertypes) = 0;
+  virtual Result OnArrayType(Index index,
+                             TypeMut field,
+                             SupertypesInfo* supertypes) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */
@@ -236,6 +248,17 @@ class BinaryReaderDelegate {
   virtual Result OnTernaryExpr(Opcode opcode) = 0;
   virtual Result OnQuaternaryExpr(Opcode opcode) = 0;
 
+  virtual Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) = 0;
+  virtual Result OnArrayFillExpr(Index type_index) = 0;
+  virtual Result OnArrayGetExpr(Opcode opcode, Index type_index) = 0;
+  virtual Result OnArrayInitDataExpr(Index type_index, Index data_index) = 0;
+  virtual Result OnArrayInitElemExpr(Index type_index, Index elem_index) = 0;
+  virtual Result OnArrayNewExpr(Index type_index) = 0;
+  virtual Result OnArrayNewDataExpr(Index type_index, Index data_index) = 0;
+  virtual Result OnArrayNewDefaultExpr(Index type_index) = 0;
+  virtual Result OnArrayNewElemExpr(Index type_index, Index elem_index) = 0;
+  virtual Result OnArrayNewFixedExpr(Index type_index, Index count) = 0;
+  virtual Result OnArraySetExpr(Index type_index) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   Index memidx,
                                   Address alignment_log2,
@@ -264,6 +287,10 @@ class BinaryReaderDelegate {
   virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
+  virtual Result OnBrOnCastExpr(Opcode opcode,
+                                Index depth,
+                                Type type1,
+                                Type type2) = 0;
   virtual Result OnBrOnNonNullExpr(Index depth) = 0;
   virtual Result OnBrOnNullExpr(Index depth) = 0;
   virtual Result OnBrTableExpr(Index num_targets,
@@ -283,6 +310,7 @@ class BinaryReaderDelegate {
   virtual Result OnF32ConstExpr(uint32_t value_bits) = 0;
   virtual Result OnF64ConstExpr(uint64_t value_bits) = 0;
   virtual Result OnV128ConstExpr(v128 value_bits) = 0;
+  virtual Result OnGCUnaryExpr(Opcode opcode) = 0;
   virtual Result OnGlobalGetExpr(Index global_index) = 0;
   virtual Result OnGlobalSetExpr(Index global_index) = 0;
   virtual Result OnI32ConstExpr(uint32_t value) = 0;
@@ -311,9 +339,11 @@ class BinaryReaderDelegate {
   virtual Result OnTableSizeExpr(Index table_index) = 0;
   virtual Result OnTableFillExpr(Index table_index) = 0;
   virtual Result OnRefAsNonNullExpr() = 0;
+  virtual Result OnRefCastExpr(Type type) = 0;
   virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr(Type type) = 0;
   virtual Result OnRefIsNullExpr() = 0;
+  virtual Result OnRefTestExpr(Type type) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr(Index depth) = 0;
   virtual Result OnReturnExpr() = 0;
@@ -326,6 +356,12 @@ class BinaryReaderDelegate {
                              Index memidx,
                              Address alignment_log2,
                              Address offset) = 0;
+  virtual Result OnStructGetExpr(Opcode opcode,
+                                 Index type_index,
+                                 Index field_index) = 0;
+  virtual Result OnStructNewExpr(Index type_index) = 0;
+  virtual Result OnStructNewDefaultExpr(Index type_index) = 0;
+  virtual Result OnStructSetExpr(Index type_index, Index field_index) = 0;
   virtual Result OnThrowExpr(Index tag_index) = 0;
   virtual Result OnThrowRefExpr() = 0;
   virtual Result OnTryExpr(Type sig_type) = 0;
