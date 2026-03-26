@@ -26,9 +26,12 @@ TypeVector SharedValidator::ToTypeVector(Index count, const Type* types) {
   return TypeVector(&types[0], &types[count]);
 }
 
-SharedValidator::SharedValidator(Errors* errors, const ValidateOptions& options)
+SharedValidator::SharedValidator(Errors* errors,
+                                 std::string_view filename,
+                                 const ValidateOptions& options)
     : options_(options),
       errors_(errors),
+      filename_(filename),
       typechecker_(options.features, func_types_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
@@ -38,7 +41,7 @@ Result WABT_PRINTF_FORMAT(3, 4) SharedValidator::PrintError(const Location& loc,
                                                             const char* format,
                                                             ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, loc, buffer);
+  errors_->emplace_back(ErrorLevel::Error, loc, filename_, buffer);
   return Result::Error;
 }
 

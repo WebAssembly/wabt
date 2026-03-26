@@ -417,6 +417,7 @@ class JSONParser {
   // Parsing info.
   std::vector<uint8_t> json_data_;
   size_t json_offset_ = 0;
+  std::string_view spec_json_filename_;
   Location loc_;
   Location prev_loc_;
   bool has_prev_loc_ = false;
@@ -428,7 +429,7 @@ class JSONParser {
   CHECK_RESULT(ParseKeyStringValue(key, value))
 
 wabt::Result JSONParser::ReadFile(std::string_view spec_json_filename) {
-  loc_.filename = spec_json_filename;
+  spec_json_filename_ = spec_json_filename;
   loc_.line = 1;
   loc_.first_column = 1;
 
@@ -437,7 +438,7 @@ wabt::Result JSONParser::ReadFile(std::string_view spec_json_filename) {
 
 void JSONParser::PrintError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", std::string(loc_.filename).c_str(),
+  fprintf(stderr, "%s:%d:%d: %s\n", std::string(spec_json_filename_).c_str(),
           loc_.line, loc_.first_column, buffer);
 }
 
@@ -1028,8 +1029,7 @@ static std::string_view GetDirname(std::string_view path) {
 }
 
 std::string JSONParser::CreateModulePath(std::string_view filename) {
-  std::string_view spec_json_filename = loc_.filename;
-  std::string_view dirname = GetDirname(spec_json_filename);
+  std::string_view dirname = GetDirname(spec_json_filename_);
   std::string path;
 
   if (dirname.size() == 0) {

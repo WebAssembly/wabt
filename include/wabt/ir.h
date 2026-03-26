@@ -1305,6 +1305,7 @@ struct Module {
 
   Location loc;
   std::string name;
+  std::string_view filename;
   ModuleFieldList fields;
 
   Index num_tag_imports = 0;
@@ -1578,6 +1579,7 @@ struct Script {
 
   CommandPtrVector commands;
   BindingHash module_bindings;
+  std::string_view filename;
 };
 
 void MakeTypeBindingReverseMapping(

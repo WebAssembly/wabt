@@ -49,7 +49,9 @@ class SharedValidator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(SharedValidator);
   using FuncType = TypeChecker::FuncType;
-  SharedValidator(Errors*, const ValidateOptions& options);
+  SharedValidator(Errors*,
+                  std::string_view filename,
+                  const ValidateOptions& options);
 
   // TODO: Move into SharedValidator?
   using Label = TypeChecker::Label;
@@ -347,6 +349,7 @@ class SharedValidator {
 
   ValidateOptions options_;
   Errors* errors_;
+  std::string_view filename_;
   TypeChecker typechecker_;  // TODO: Move into SharedValidator.
   // Cached for access by OnTypecheckerError.
   Location expr_loc_ = Location(kInvalidOffset);

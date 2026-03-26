@@ -32,8 +32,8 @@ std::string FormatError(const Error& error,
   result += color.MaybeBoldCode();
 
   const Location& loc = error.loc;
-  if (!loc.filename.empty()) {
-    result += loc.filename;
+  if (!error.filename.empty()) {
+    result += error.filename;
     result += ":";
   }
 
