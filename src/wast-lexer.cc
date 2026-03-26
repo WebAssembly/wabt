@@ -194,7 +194,7 @@ Location WastLexer::GetLocation() {
   auto column = [this](const char* p) {
     return std::max(1, static_cast<int>(p - line_start_ + 1));
   };
-  return Location(filename_, line_, column(token_start_), column(cursor_));
+  return Location(line_, column(token_start_), column(cursor_));
 }
 
 std::string_view WastLexer::GetText(size_t offset) {
@@ -638,7 +638,7 @@ Token WastLexer::GetReservedToken() {
 
 void WastLexer::Error(Location loc, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, loc, buffer);
+  errors_->emplace_back(ErrorLevel::Error, loc, filename_, buffer);
 }
 
 }  // namespace wabt

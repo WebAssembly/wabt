@@ -366,7 +366,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
 Location BinaryReaderInterp::GetLocation() const {
   Location loc;
-  loc.filename = filename_;
   loc.offset = state->offset;
   return loc;
 }
@@ -397,7 +396,7 @@ BinaryReaderInterp::BinaryReaderInterp(ModuleDesc* module,
     : errors_(errors),
       module_(*module),
       istream_(module->istream),
-      validator_(errors, ValidateOptions(features)),
+      validator_(errors, filename, ValidateOptions(features)),
       filename_(filename) {}
 
 Label* BinaryReaderInterp::GetLabel(Index depth) {
@@ -422,7 +421,8 @@ Label* BinaryReaderInterp::TopLabel() {
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderInterp::PrintError(const char* format,
                                                              ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
+  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), filename_,
+                        buffer);
 }
 
 Result BinaryReaderInterp::GetDropCount(Index keep_count,

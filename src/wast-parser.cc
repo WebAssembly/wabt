@@ -348,6 +348,7 @@ void ResolveImplicitlyDefinedFunctionType(const Location& loc,
 }
 
 Result CheckTypeIndex(const Location& loc,
+                      std::string_view filename,
                       Type actual,
                       Type expected,
                       const char* desc,
@@ -357,7 +358,7 @@ Result CheckTypeIndex(const Location& loc,
   // Types must match exactly; no subtyping should be allowed.
   if (actual != expected) {
     errors->emplace_back(
-        ErrorLevel::Error, loc,
+        ErrorLevel::Error, loc, filename,
         StringPrintf("type mismatch for %s %" PRIindex
                      " of %s. got %s, expected %s",
                      index_kind, index, desc, actual.GetName().c_str(),
@@ -368,6 +369,7 @@ Result CheckTypeIndex(const Location& loc,
 }
 
 Result CheckTypes(const Location& loc,
+                  std::string_view filename,
                   const TypeVector& actual,
                   const TypeVector& expected,
                   const char* desc,
@@ -376,12 +378,12 @@ Result CheckTypes(const Location& loc,
   Result result = Result::Ok;
   if (actual.size() == expected.size()) {
     for (size_t i = 0; i < actual.size(); ++i) {
-      result |= CheckTypeIndex(loc, actual[i], expected[i], desc, i, index_kind,
-                               errors);
+      result |= CheckTypeIndex(loc, filename, actual[i], expected[i], desc, i,
+                               index_kind, errors);
     }
   } else {
     errors->emplace_back(
-        ErrorLevel::Error, loc,
+        ErrorLevel::Error, loc, filename,
         StringPrintf("expected %" PRIzd " %ss, got %" PRIzd, expected.size(),
                      index_kind, actual.size()));
     result = Result::Error;
@@ -398,11 +400,11 @@ Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
     const FuncType* func_type = module.GetFuncType(decl.type_var);
     if (func_type) {
       result |=
-          CheckTypes(loc, decl.sig.result_types, func_type->sig.result_types,
-                     "function", "result", errors);
-      result |=
-          CheckTypes(loc, decl.sig.param_types, func_type->sig.param_types,
-                     "function", "argument", errors);
+          CheckTypes(loc, module.filename, decl.sig.result_types,
+                     func_type->sig.result_types, "function", "result", errors);
+      result |= CheckTypes(loc, module.filename, decl.sig.param_types,
+                           func_type->sig.param_types, "function", "argument",
+                           errors);
     } else if (!(decl.sig.param_types.empty() &&
                  decl.sig.result_types.empty())) {
       // We want to check whether the function type at the explicit index
@@ -412,11 +414,11 @@ Result CheckFuncTypeVarMatchesExplicit(const Location& loc,
       // have to check. If we get here then the type var is invalid, so we
       // can't check whether they match.
       if (decl.type_var.is_index()) {
-        errors->emplace_back(ErrorLevel::Error, loc,
+        errors->emplace_back(ErrorLevel::Error, loc, module.filename,
                              StringPrintf("invalid func type index %" PRIindex,
                                           decl.type_var.index()));
       } else {
-        errors->emplace_back(ErrorLevel::Error, loc,
+        errors->emplace_back(ErrorLevel::Error, loc, module.filename,
                              StringPrintf("expected func type identifier %s",
                                           decl.type_var.name().c_str()));
       }
@@ -563,7 +565,7 @@ WastParser::WastParser(WastLexer* lexer,
 
 void WastParser::Error(Location loc, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, loc, buffer);
+  errors_->emplace_back(ErrorLevel::Error, loc, lexer_->Filename(), buffer);
 }
 
 Token WastParser::GetToken() {
@@ -1264,6 +1266,7 @@ Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
 Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
   WABT_TRACE(ParseModule);
   auto module = std::make_unique<Module>();
+  module->filename = lexer_->Filename();
 
   if (PeekMatchLpar(TokenType::Module)) {
     // Starts with "(module". Allow text and binary modules, but no quoted
@@ -1282,7 +1285,8 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     CHECK_RESULT(ParseModuleFieldList(module.get()));
   } else if (PeekMatch(TokenType::Eof)) {
-    errors_->emplace_back(ErrorLevel::Warning, GetLocation(), "empty module");
+    errors_->emplace_back(ErrorLevel::Warning, GetLocation(),
+                          lexer_->Filename(), "empty module");
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a module"});
@@ -1300,6 +1304,7 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
 Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   WABT_TRACE(ParseScript);
   auto script = std::make_unique<Script>();
+  script->filename = lexer_->Filename();
 
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
@@ -1313,7 +1318,8 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   } else if (IsCommand(PeekPair())) {
     CHECK_RESULT(ParseCommandList(script.get(), &script->commands));
   } else if (PeekMatch(TokenType::Eof)) {
-    errors_->emplace_back(ErrorLevel::Warning, GetLocation(), "empty script");
+    errors_->emplace_back(ErrorLevel::Warning, GetLocation(),
+                          lexer_->Filename(), "empty script");
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a command"});
@@ -1404,7 +1410,7 @@ Result WastParser::ResolveTargetRefType(const Module& module,
   }
 
   errors->emplace_back(
-      ErrorLevel::Error, var.loc,
+      ErrorLevel::Error, var.loc, module.filename,
       StringPrintf("undefined reference type name %s", var.name().c_str()));
   return Result::Ok;
 }
@@ -3960,6 +3966,7 @@ Result WastParser::ParseScriptModule(
       auto tsm = std::make_unique<TextScriptModule>();
       tsm->module.name = name;
       tsm->module.loc = loc;
+      tsm->module.filename = lexer_->Filename();
       if (IsModuleField(PeekPair()) || PeekIsCustom()) {
         CHECK_RESULT(ParseModuleFieldList(&tsm->module));
       } else if (!PeekMatch(TokenType::Rpar)) {

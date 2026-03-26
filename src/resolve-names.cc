@@ -136,7 +136,8 @@ void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
                                                        ...) {
   result_ = Result::Error;
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
+  errors_->emplace_back(ErrorLevel::Error, *loc, current_module_->filename,
+                        buffer);
 }
 
 void NameResolver::PushLabel(const std::string& label) {

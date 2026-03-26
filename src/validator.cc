@@ -191,7 +191,7 @@ ScriptValidator::ScriptValidator(Errors* errors,
 void ScriptValidator::PrintError(const Location* loc, const char* format, ...) {
   result_ = Result::Error;
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
+  errors_->emplace_back(ErrorLevel::Error, *loc, script_->filename, buffer);
 }
 
 static Result CheckType(Type actual, Type expected) {
@@ -757,7 +757,7 @@ Validator::Validator(Errors* errors,
                      const ValidateOptions& options)
     : options_(options),
       errors_(errors),
-      validator_(errors_, options_),
+      validator_(errors_, module->filename, options_),
       current_module_(module) {}
 
 Result Validator::CheckModule() {

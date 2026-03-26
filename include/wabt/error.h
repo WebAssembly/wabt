@@ -43,11 +43,16 @@ static inline const char* GetErrorLevelName(ErrorLevel error_level) {
 class Error {
  public:
   Error() : error_level(ErrorLevel::Error) {}
-  Error(ErrorLevel error_level, Location loc, std::string_view message)
-      : error_level(error_level), loc(loc), message(message) {}
+  Error(ErrorLevel error_level,
+        Location loc,
+        std::string_view filename,
+        std::string_view message)
+      : error_level(error_level), loc(loc), filename(filename),
+        message(message) {}
 
   ErrorLevel error_level;
   Location loc;
+  std::string_view filename;
   std::string message;
 };
 

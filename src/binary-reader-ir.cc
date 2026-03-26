@@ -402,7 +402,6 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Func* current_func_ = nullptr;
   std::vector<LabelNode> label_stack_;
-  const char* filename_;
 
   CodeMetadataExprQueue code_metadata_queue_;
   std::string_view current_metadata_name_;
@@ -411,11 +410,12 @@ class BinaryReaderIR : public BinaryReaderNop {
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
                                const char* filename,
                                Errors* errors)
-    : errors_(errors), module_(out_module), filename_(filename) {}
+    : errors_(errors), module_(out_module) {
+  out_module->filename = filename;
+}
 
 Location BinaryReaderIR::GetLocation() const {
   Location loc;
-  loc.filename = filename_;
   loc.offset = state->offset;
   return loc;
 }
@@ -423,7 +423,8 @@ Location BinaryReaderIR::GetLocation() const {
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
                                                          ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
+  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset),
+                        std::string_view(), buffer);
 }
 
 Result BinaryReaderIR::PushLabel(LabelType label_type,

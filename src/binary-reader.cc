@@ -244,7 +244,7 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
           : ErrorLevel::Error;
 
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  Error error(error_level, Location(state_.offset), buffer);
+  Error error(error_level, Location(state_.offset), std::string_view(), buffer);
   bool handled = delegate_->OnError(error);
 
   if (!handled) {
