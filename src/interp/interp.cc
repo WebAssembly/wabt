@@ -94,45 +94,102 @@ std::unique_ptr<ExternType> FuncType::Clone() const {
   return std::make_unique<FuncType>(*this);
 }
 
-static bool RecursiveMatch(const ValueTypes& expected,
+static bool RecursiveMatch(Type expected,
+                           Index expected_recursive_start,
                            std::vector<FuncType>* expected_func_types,
-                           const ValueTypes& actual,
+                           Type actual,
+                           Index actual_recursive_start,
                            std::vector<FuncType>* actual_func_types) {
-  if (expected_func_types == nullptr || actual_func_types == nullptr) {
+  assert(expected_func_types != nullptr && actual_func_types != nullptr);
+
+  if (!expected.IsReferenceWithIndex()) {
+    return expected == actual;
+  } else if (!actual.IsReferenceWithIndex()) {
     return false;
   }
 
-  size_t size = expected.size();
-  if (size != actual.size()) {
+  Index expected_index = expected.GetReferenceIndex();
+  Index actual_index = actual.GetReferenceIndex();
+
+  const FuncType& expected_type = (*expected_func_types)[expected_index];
+  const FuncType& actual_type = (*actual_func_types)[actual_index];
+
+  // Relative reference.
+  if (expected_index >= expected_recursive_start) {
+    return (actual_index >= actual_recursive_start &&
+            expected_type.recursive_count == actual_type.recursive_count &&
+            expected_index - expected_recursive_start ==
+                actual_index - actual_recursive_start);
+  } else if (actual_index >= actual_recursive_start) {
     return false;
   }
 
-  for (size_t i = 0; i < size; i++) {
-    if (!expected[i].IsReferenceWithIndex()) {
-      if (expected[i] != actual[i]) {
+  // Absolute reference.
+  expected_recursive_start = expected_type.recursive_start;
+  actual_recursive_start = actual_type.recursive_start;
+  Index recursive_count = expected_type.recursive_count;
+
+  if (recursive_count != actual_type.recursive_count ||
+      expected_index - expected_recursive_start !=
+          actual_index - actual_recursive_start) {
+    return false;
+  }
+
+  // Recursive match of the whole recursive block.
+  for (Index i = 0; i < recursive_count; i++) {
+    const FuncType& expected_rec_type =
+        (*expected_func_types)[expected_recursive_start + i];
+    const FuncType& actual_rec_type =
+        (*actual_func_types)[actual_recursive_start + i];
+
+    if (expected_rec_type.kind != actual_rec_type.kind ||
+        expected_rec_type.is_final_sub_type !=
+            actual_rec_type.is_final_sub_type) {
+      return false;
+    }
+
+    if (expected_rec_type.canonical_sub_index != kInvalidIndex) {
+      if (actual_rec_type.canonical_sub_index == kInvalidIndex) {
         return false;
       }
-      continue;
-    }
 
-    if (static_cast<Type::Enum>(expected[i]) !=
-        static_cast<Type::Enum>(actual[i])) {
+      Type expected_sub_type(Type::Ref, expected_rec_type.canonical_sub_index);
+      Type actual_sub_type(Type::Ref, actual_rec_type.canonical_sub_index);
+
+      if (!RecursiveMatch(expected_sub_type, expected_recursive_start,
+                          expected_func_types, actual_sub_type,
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    } else if (actual_rec_type.canonical_sub_index != kInvalidIndex) {
       return false;
     }
 
-    const FuncType& expected_type =
-        (*expected_func_types)[expected[i].GetReferenceIndex()];
-    const FuncType& actual_type =
-        (*actual_func_types)[actual[i].GetReferenceIndex()];
-
-    assert(expected_type.func_types == expected_func_types);
-    assert(actual_type.func_types == actual_func_types);
-
-    if (!RecursiveMatch(expected_type.params, expected_func_types,
-                        actual_type.params, actual_func_types) ||
-        !RecursiveMatch(expected_type.results, expected_func_types,
-                        actual_type.results, actual_func_types)) {
+    size_t size = expected_rec_type.params.size();
+    if (size != actual_rec_type.params.size()) {
       return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.params[j], expected_recursive_start,
+                          expected_func_types, actual_rec_type.params[j],
+                          actual_recursive_start, actual_func_types)) {
+        return false;
+      }
+    }
+
+    size = expected_rec_type.results.size();
+    if (size != actual_rec_type.results.size()) {
+      return false;
+    }
+
+    for (size_t j = 0; j < size; j++) {
+      if (!RecursiveMatch(expected_rec_type.results[j],
+                          expected_recursive_start, expected_func_types,
+                          actual_rec_type.results[j], actual_recursive_start,
+                          actual_func_types)) {
+        return false;
+      }
     }
   }
 
@@ -142,36 +199,27 @@ static bool RecursiveMatch(const ValueTypes& expected,
 Result Match(const FuncType& expected,
              const FuncType& actual,
              std::string* out_msg) {
-  bool has_reference = false;
-
-  for (auto it : expected.params) {
-    if (it.IsReferenceWithIndex()) {
-      has_reference = true;
-      break;
-    }
-  }
-
-  if (!has_reference) {
-    for (auto it : expected.results) {
-      if (it.IsReferenceWithIndex()) {
-        has_reference = true;
-        break;
+  if (expected.kind == actual.kind) {
+    if (expected.func_types == nullptr || actual.func_types == nullptr) {
+      // Simple function, can be a callback without module.
+      if (expected.params == actual.params &&
+          expected.results == actual.results) {
+        return Result::Ok;
       }
-    }
-  }
+    } else {
+      Type expected_type(Type::Ref, expected.canonical_index);
+      Index actual_index = actual.canonical_index;
 
-  if (!has_reference) {
-    // Simple function, can be a callback without module.
-    if (expected.params == actual.params &&
-        expected.results == actual.results) {
-      return Result::Ok;
-    }
-  } else {
-    if (RecursiveMatch(expected.params, expected.func_types, actual.params,
-                       actual.func_types) &&
-        RecursiveMatch(expected.results, expected.func_types, actual.results,
-                       actual.func_types)) {
-      return Result::Ok;
+      do {
+        Type actual_type(Type::Ref, actual_index);
+
+        if (RecursiveMatch(expected_type, kInvalidIndex, expected.func_types,
+                           actual_type, kInvalidIndex, actual.func_types)) {
+          return Result::Ok;
+        }
+
+        actual_index = ((*actual.func_types)[actual_index]).canonical_sub_index;
+      } while (actual_index != kInvalidIndex);
     }
   }
 
