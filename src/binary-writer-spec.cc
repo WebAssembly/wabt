@@ -161,6 +161,10 @@ void BinaryWriterSpec::WriteVar(const Var& var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_->Writef("{");
   WriteKey("type");
+  if (type.IsReferenceWithIndex()) {
+    // This should happen only for invalid modules.
+    type = Type::AnyRef;
+  }
   WriteString(type.GetName().c_str());
   json_stream_->Writef("}");
 }
@@ -200,6 +204,8 @@ void BinaryWriterSpec::WriteF64(uint64_t f64_bits, ExpectedNan expected) {
 void BinaryWriterSpec::WriteRefBits(uintptr_t ref_bits) {
   if (ref_bits == Const::kRefNullBits) {
     json_stream_->Writef("\"null\"");
+  } else if (ref_bits == Const::kRefAnyValueBits) {
+    json_stream_->Writef("\"\"");
   } else {
     json_stream_->Writef("\"%" PRIuPTR "\"", ref_bits);
   }
@@ -240,8 +246,34 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteF64(const_.f64_bits(), const_.expected_nan());
       break;
 
-    case Type::FuncRef: {
-      WriteString("funcref");
+    case Type::AnyRef: {
+      // If ref_bits() is not equal to kRefNullBits or
+      // kRefAnyValueBits, it represents a host value.
+      WriteString("anyref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::ArrayRef: {
+      WriteString("arrayref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::EqRef: {
+      WriteString("eqref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::ExnRef: {
+      WriteString("exnref");
       WriteSeparator();
       WriteKey("value");
       WriteRefBits(const_.ref_bits());
@@ -256,8 +288,35 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       break;
     }
 
-    case Type::ExnRef: {
-      WriteString("exnref");
+    case Type::NullFuncRef:
+    case Type::FuncRef: {
+      WriteString("funcref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::I31Ref: {
+      WriteString("i31ref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::NullRef: {
+      assert(const_.type().IsBottomRef() &&
+             const_.ref_bits() == Const::kRefNullBits);
+      WriteString("botref");
+      WriteSeparator();
+      WriteKey("value");
+      WriteRefBits(const_.ref_bits());
+      break;
+    }
+
+    case Type::StructRef: {
+      WriteString("structref");
       WriteSeparator();
       WriteKey("value");
       WriteRefBits(const_.ref_bits());
