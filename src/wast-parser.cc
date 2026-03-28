@@ -40,14 +40,15 @@ bool IsPowerOfTwo(Address x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-template <typename OutputIter>
-void RemoveEscapes(std::string_view text, OutputIter dest) {
+void RemoveEscapes(std::string_view text, char* dest, size_t* out_length) {
   // Remove surrounding quotes; if any. This may be empty if the string was
   // invalid (e.g. if it contained a bad escape sequence).
   if (text.size() <= 2) {
+    *out_length = 0;
     return;
   }
 
+  const char* start = dest;
   const char* src = text.data();
   const char* end = text.data() + text.size() - 1;
 
@@ -146,14 +147,7 @@ void RemoveEscapes(std::string_view text, OutputIter dest) {
       *dest++ = *src++;
     }
   }
-}
-
-using TextVector = std::vector<std::string_view>;
-
-template <typename OutputIter>
-void RemoveEscapes(const TextVector& texts, OutputIter out) {
-  for (std::string_view text : texts)
-    RemoveEscapes(text, out);
+  *out_length = static_cast<size_t>(dest - start);
 }
 
 bool IsPlainInstr(TokenType token_type) {
@@ -753,11 +747,14 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
   return Result::Ok;
 }
 
+static const size_t kInlineBufferSize = 96;
+
 Result WastParser::ParseVarText(Token& token, std::string* out_text) {
   // Parses and validates identifiers.
   assert(token.token_type() == TokenType::Var);
 
-  if (token.text().length() >= 2) {
+  size_t length = token.text().length();
+  if (length >= 2) {
     if (token.text()[1] != '"') {
       *out_text = std::string(token.text());
       return Result::Ok;
@@ -769,14 +766,24 @@ Result WastParser::ParseVarText(Token& token, std::string* out_text) {
       return Result::Error;
     }
 
-    RemoveEscapes(token.text(), std::back_inserter(*out_text));
-    size_t length = out_text->length();
+    // The length of the output is always <= than original size.
+    char inline_buffer[kInlineBufferSize];
+    std::vector<char> buffer;
+    char* data = inline_buffer;
+
+    if (length > kInlineBufferSize) {
+      buffer.resize(length);
+      data = buffer.data();
+    }
+    RemoveEscapes(token.text(), data, &length);
+    assert(length <= token.text().length());
 
     if (length >= 2) {
-      if (!IsValidUtf8(out_text->data(), length)) {
+      if (!IsValidUtf8(data, length)) {
         Error(token.loc, "quoted identifier has an invalid utf-8 encoding");
         return Result::Error;
       }
+      *out_text = std::string(data, length);
       return Result::Ok;
     }
   }
@@ -868,11 +875,39 @@ Result WastParser::ParseTextList(std::vector<uint8_t>* out_data) {
 
 bool WastParser::ParseTextListOpt(std::vector<uint8_t>* out_data) {
   WABT_TRACE(ParseTextListOpt);
-  TextVector texts;
-  while (PeekMatch(TokenType::Text))
+  std::vector<std::string_view> texts;
+  size_t length = 0;
+  while (PeekMatch(TokenType::Text)) {
     texts.push_back(Consume().text());
+    length += texts.back().length();
+  }
 
-  RemoveEscapes(texts, std::back_inserter(*out_data));
+  // The length of the final data is
+  // always less or equal than original size.
+  char inline_buffer[kInlineBufferSize];
+  std::vector<char> buffer;
+  char* data;
+
+  if (length <= kInlineBufferSize) {
+    data = inline_buffer;
+  } else {
+    buffer.resize(length);
+    data = buffer.data();
+  }
+
+  char* current_data = data;
+  for (std::string_view text : texts) {
+    size_t current_length;
+    RemoveEscapes(text, current_data, &current_length);
+    current_data += current_length;
+  }
+  assert(static_cast<size_t>(current_data - data) <= length);
+  length = static_cast<size_t>(current_data - data);
+  out_data->resize(length);
+  if (length > 0) {
+    memcpy(out_data->data(), data, length);
+  }
+
   return !texts.empty();
 }
 
@@ -1110,10 +1145,25 @@ Result WastParser::ParseQuotedText(std::string* text, bool check_utf8) {
   }
 
   Token token = Consume();
-  RemoveEscapes(token.text(), std::back_inserter(*text));
-  if (check_utf8 && !IsValidUtf8(text->data(), text->length())) {
+  size_t length = token.text().length();
+
+  // The length of the output is always <= than original size.
+  char inline_buffer[kInlineBufferSize];
+  std::vector<char> buffer;
+  char* data = inline_buffer;
+
+  if (length > kInlineBufferSize) {
+    buffer.resize(length);
+    data = buffer.data();
+  }
+
+  RemoveEscapes(token.text(), data, &length);
+  assert(length <= token.text().length());
+
+  if (check_utf8 && !IsValidUtf8(data, length)) {
     Error(token.loc, "quoted string has an invalid utf-8 encoding");
   }
+  *text = std::string(data, length);
   return Result::Ok;
 }
 
