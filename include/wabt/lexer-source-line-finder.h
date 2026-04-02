@@ -52,8 +52,6 @@ class LexerSourceLineFinder {
   std::unique_ptr<LexerSource> source_;
   std::vector<OffsetRange> line_ranges_;
   Offset next_line_start_;
-  bool last_cr_;  // Last read character was a '\r' (carriage return).
-  bool eof_;
 };
 
 }  // namespace wabt
