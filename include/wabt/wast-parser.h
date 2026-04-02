@@ -170,6 +170,9 @@ class WastParser {
   // synchronized.
   Result Synchronize(SynchronizeFunc);
 
+  // Check the maximum allowed declarations.
+  Result CheckIndexRange(Location& loc, size_t size, const char* decl);
+
   Result ParseVarText(Token& token, std::string* out_text);
   Result ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
