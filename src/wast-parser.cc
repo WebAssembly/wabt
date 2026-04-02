@@ -706,6 +706,16 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
   return Result::Error;
 }
 
+Result WastParser::CheckIndexRange(Location& loc,
+                                   size_t size,
+                                   const char* decl) {
+  if (size >= kInvalidIndex) {
+    Error(loc, "too many %s declarations", decl);
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
 void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
   Opcode opcode = token.opcode();
   if (!opcode.IsEnabled(options_->features)) {
@@ -1506,6 +1516,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Data);
+  CHECK_RESULT(CheckIndexRange(loc, module->data_segments.size(), "data"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
   auto field = std::make_unique<DataSegmentModuleField>(loc, name);
@@ -1543,6 +1554,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Elem);
+  CHECK_RESULT(CheckIndexRange(loc, module->elem_segments.size(), "elem"));
 
   // With MVP text format the name here was intended to refer to the table
   // that the elem segment was part of, but we never did anything with this name
@@ -1620,7 +1632,7 @@ Result WastParser::ParseTagModuleField(Module* module) {
   EXPECT(Lpar);
   EXPECT(Tag);
   Location loc = GetLocation();
-
+  CHECK_RESULT(CheckIndexRange(loc, module->tags.size(), "tag"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -1629,6 +1641,7 @@ Result WastParser::ParseTagModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
+    CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
     auto import = std::make_unique<TagImport>(name);
     Tag& tag = import->tag;
     CHECK_RESULT(ParseInlineImport(import.get()));
@@ -1655,7 +1668,9 @@ Result WastParser::ParseExportModuleField(Module* module) {
   WABT_TRACE(ParseExportModuleField);
   EXPECT(Lpar);
   auto field = std::make_unique<ExportModuleField>(GetLocation());
+  Location loc = GetLocation();
   EXPECT(Export);
+  CHECK_RESULT(CheckIndexRange(loc, module->exports.size(), "export"));
   CHECK_RESULT(ParseQuotedText(&field->export_.name));
   CHECK_RESULT(ParseExportDesc(&field->export_));
   EXPECT(Rpar);
@@ -1668,6 +1683,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Func);
+  CHECK_RESULT(CheckIndexRange(loc, module->funcs.size(), "func"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -1676,6 +1692,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
+    CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
     auto import = std::make_unique<FuncImport>(name);
     Func& func = import->func;
     CHECK_RESULT(ParseInlineImport(import.get()));
@@ -1725,6 +1742,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   CHECK_RESULT(ParseBindVarOpt(&name));
   EXPECT(Lpar);
   Location loc = GetLocation();
+  CHECK_RESULT(CheckIndexRange(loc, module->types.size(), "type"));
 
   if (Match(TokenType::Func)) {
     auto func_type = std::make_unique<FuncType>(name);
@@ -1802,6 +1820,7 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Global);
+  CHECK_RESULT(CheckIndexRange(loc, module->globals.size(), "global"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -1810,6 +1829,7 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
+    CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
     auto import = std::make_unique<GlobalImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseGlobalType(&import->global));
@@ -1835,6 +1855,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
   Location loc = GetLocation();
   CheckImportOrdering(module);
   EXPECT(Import);
+  CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
   std::string module_name;
   std::string field_name;
   CHECK_RESULT(ParseQuotedText(&module_name));
@@ -1846,6 +1867,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
 
   switch (Peek()) {
     case TokenType::Func: {
+      CHECK_RESULT(CheckIndexRange(loc, module->funcs.size(), "func"));
       DropToken();
       CHECK_RESULT(ParseBindVarOpt(&name));
       auto import = std::make_unique<FuncImport>(name);
@@ -1859,6 +1881,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
     }
 
     case TokenType::Table: {
+      CHECK_RESULT(CheckIndexRange(loc, module->tables.size(), "table"));
       DropToken();
       CHECK_RESULT(ParseBindVarOpt(&name));
       auto import = std::make_unique<TableImport>(name);
@@ -1873,6 +1896,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
     }
 
     case TokenType::Memory: {
+      CHECK_RESULT(CheckIndexRange(loc, module->memories.size(), "memory"));
       DropToken();
       CHECK_RESULT(ParseBindVarOpt(&name));
       auto import = std::make_unique<MemoryImport>(name);
@@ -1886,6 +1910,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
     }
 
     case TokenType::Global: {
+      CHECK_RESULT(CheckIndexRange(loc, module->globals.size(), "global"));
       DropToken();
       CHECK_RESULT(ParseBindVarOpt(&name));
       auto import = std::make_unique<GlobalImport>(name);
@@ -1896,6 +1921,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
     }
 
     case TokenType::Tag: {
+      CHECK_RESULT(CheckIndexRange(loc, module->tags.size(), "tag"));
       DropToken();
       CHECK_RESULT(ParseBindVarOpt(&name));
       auto import = std::make_unique<TagImport>(name);
@@ -1923,6 +1949,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Memory);
+  CHECK_RESULT(CheckIndexRange(loc, module->memories.size(), "memory"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -1931,6 +1958,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
+    CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
     auto import = std::make_unique<MemoryImport>(name);
     import->memory.page_size = WABT_DEFAULT_PAGE_SIZE;
     CHECK_RESULT(ParseInlineImport(import.get()));
@@ -2004,6 +2032,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Table);
+  CHECK_RESULT(CheckIndexRange(loc, module->tables.size(), "table"));
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -2012,6 +2041,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
+    CHECK_RESULT(CheckIndexRange(loc, module->imports.size(), "import"));
     auto import = std::make_unique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimitsIndex(&import->table.elem_limits));
@@ -2032,6 +2062,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
       EXPECT(Lpar);
       EXPECT(Elem);
+      CHECK_RESULT(CheckIndexRange(loc, module->elem_segments.size(), "elem"));
 
       auto elem_segment_field = std::make_unique<ElemSegmentModuleField>(loc);
       ElemSegment& elem_segment = elem_segment_field->elem_segment;
