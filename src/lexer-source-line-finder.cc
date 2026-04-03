@@ -24,10 +24,7 @@ namespace wabt {
 
 LexerSourceLineFinder::LexerSourceLineFinder(
     std::unique_ptr<LexerSource> source)
-    : source_(std::move(source)),
-      next_line_start_(0),
-      last_cr_(false),
-      eof_(false) {
+    : source_(std::move(source)), next_line_start_(0) {
   source_->Seek(0);
   // Line 0 should not be used; but it makes indexing simpler.
   line_ranges_.emplace_back(0, 0);
@@ -82,34 +79,28 @@ Result LexerSourceLineFinder::GetLineOffsets(int find_line,
     return Result::Ok;
   }
 
-  const size_t kBufferSize = 1 << 16;
-  std::vector<char> buffer(kBufferSize);
+  assert(!line_ranges_.empty() && next_line_start_ <= source_->size());
+  const char* data = reinterpret_cast<const char*>(source_->data());
+  const char* end = data + source_->size();
+  const char* ptr = data + next_line_start_;
 
-  assert(!line_ranges_.empty());
-  Offset buffer_file_offset = 0;
-  while (!IsLineCached(find_line) && !eof_) {
-    CHECK_RESULT(source_->Tell(&buffer_file_offset));
-    size_t read_size = source_->Fill(buffer.data(), buffer.size());
-    if (read_size < buffer.size()) {
-      eof_ = true;
-    }
-
-    for (auto iter = buffer.begin(), end = iter + read_size; iter < end;
-         ++iter) {
-      if (*iter == '\n') {
-        // Don't include \n or \r in the line range.
-        Offset line_offset =
-            buffer_file_offset + (iter - buffer.begin()) - last_cr_;
+  if (ptr < end) {
+    while (!IsLineCached(find_line) && ptr < end) {
+      if (*ptr == '\n') {
+        Offset line_offset = static_cast<Offset>(ptr - data);
+        if (line_offset > next_line_start_ && ptr[-1] == '\r') {
+          line_offset--;
+        }
         line_ranges_.emplace_back(next_line_start_, line_offset);
-        next_line_start_ = line_offset + last_cr_ + 1;
+        next_line_start_ = static_cast<Offset>(ptr - data) + 1;
       }
-      last_cr_ = *iter == '\r';
+      ptr++;
     }
 
-    if (eof_) {
+    if (ptr == end) {
       // Add the final line as an empty range.
-      Offset end = buffer_file_offset + read_size;
-      line_ranges_.emplace_back(next_line_start_, end);
+      Offset line_offset = static_cast<Offset>(ptr - data);
+      line_ranges_.emplace_back(next_line_start_, line_offset);
     }
   }
 
@@ -117,7 +108,7 @@ Result LexerSourceLineFinder::GetLineOffsets(int find_line,
     *out_range = GetCachedLine(find_line);
     return Result::Ok;
   } else {
-    assert(eof_);
+    assert(ptr == end);
     return Result::Error;
   }
 }
