@@ -164,6 +164,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Select:
     case TokenType::Br:
     case TokenType::BrIf:
+    case TokenType::BrOnCast:
     case TokenType::BrOnNonNull:
     case TokenType::BrOnNull:
     case TokenType::BrTable:
@@ -220,6 +221,30 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::SimdLoadLane:
     case TokenType::SimdStoreLane:
     case TokenType::SimdShuffleOp:
+    case TokenType::ArrayCopy:
+    case TokenType::ArrayFill:
+    case TokenType::ArrayGet:
+    case TokenType::ArrayGetS:
+    case TokenType::ArrayGetU:
+    case TokenType::ArrayInitData:
+    case TokenType::ArrayInitElem:
+    case TokenType::ArrayNew:
+    case TokenType::ArrayNewData:
+    case TokenType::ArrayNewDefault:
+    case TokenType::ArrayNewFixed:
+    case TokenType::ArrayNewElem:
+    case TokenType::ArraySet:
+    case TokenType::GCUnary:
+    case TokenType::RefCast:
+    case TokenType::RefEq:
+    case TokenType::RefI31:
+    case TokenType::RefTest:
+    case TokenType::StructGet:
+    case TokenType::StructGetS:
+    case TokenType::StructGetU:
+    case TokenType::StructNew:
+    case TokenType::StructNewDefault:
+    case TokenType::StructSet:
       return true;
     default:
       return false;
@@ -277,6 +302,7 @@ bool IsModuleField(TokenTypePair pair) {
     case TokenType::Export:
     case TokenType::Func:
     case TokenType::Type:
+    case TokenType::Rec:
     case TokenType::Global:
     case TokenType::Import:
     case TokenType::Memory:
@@ -339,11 +365,34 @@ void ResolveImplicitlyDefinedFunctionType(const Location& loc,
     Index func_type_index = module->GetFuncTypeIndex(decl.sig);
     if (func_type_index == kInvalidIndex) {
       auto func_type_field = std::make_unique<TypeModuleField>(loc);
-      auto func_type = std::make_unique<FuncType>();
+      auto func_type = std::make_unique<FuncType>(true);
       func_type->sig = decl.sig;
       func_type_field->type = std::move(func_type);
       module->AppendField(std::move(func_type_field));
     }
+  }
+}
+
+bool IsTypeEnabled(Type::Enum type, WastParseOptions* options_) {
+  switch (type) {
+    case Type::V128:
+      return options_->features.simd_enabled();
+    case Type::FuncRef:
+    case Type::ExternRef:
+      return options_->features.reference_types_enabled();
+    case Type::ExnRef:
+      return options_->features.exceptions_enabled();
+    case Type::NullFuncRef:
+    case Type::NullExternRef:
+    case Type::NullRef:
+    case Type::AnyRef:
+    case Type::EqRef:
+    case Type::I31Ref:
+    case Type::StructRef:
+    case Type::ArrayRef:
+      return options_->features.gc_enabled();
+    default:
+      return true;
   }
 }
 
@@ -945,20 +994,41 @@ Result WastParser::ParseRefDeclaration(Var* out_type) {
   EXPECT(Lpar);
   EXPECT(Ref);
 
-  Type::Enum opt_type = Type::Reference;
+  Type::Enum opt_type = Type::Ref;
 
-  if (options_->features.function_references_enabled()) {
-    opt_type = Type::Ref;
-
-    if (Match(TokenType::Null)) {
-      opt_type = Type::RefNull;
-    }
+  if (options_->features.function_references_enabled() &&
+      Match(TokenType::Null)) {
+    opt_type = Type::RefNull;
   }
 
-  if (PeekMatch(TokenType::Func) || PeekMatch(TokenType::Extern)) {
-    TokenType token = Consume().token_type();
-    out_type->set_opt_type(token == TokenType::Func ? Type::FuncRef
-                                                    : Type::ExternRef);
+  TokenType token = Peek(0);
+  bool is_generic_ref = false;
+
+  switch (token) {
+    case TokenType::Func:
+    case TokenType::Extern:
+      is_generic_ref = true;
+      break;
+
+    case TokenType::Any:
+    case TokenType::Array:
+    case TokenType::Eq:
+    case TokenType::I31:
+    case TokenType::NoExtern:
+    case TokenType::NoFunc:
+    case TokenType::None:
+    case TokenType::Struct:
+      if (options_->features.gc_enabled()) {
+        is_generic_ref = true;
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  if (is_generic_ref) {
+    out_type->set_opt_type(Consume().type());
     out_type->set_index(opt_type == Type::Ref ? Type::ReferenceNonNull
                                               : Type::ReferenceOrNull);
   } else {
@@ -970,7 +1040,7 @@ Result WastParser::ParseRefDeclaration(Var* out_type) {
   return Result::Ok;
 }
 
-Result WastParser::ParseValueType(Var* out_type) {
+Result WastParser::ParseValueType(Var* out_type, bool is_field) {
   WABT_TRACE(ParseValueType);
 
   if (PeekMatchRefType()) {
@@ -978,30 +1048,20 @@ Result WastParser::ParseValueType(Var* out_type) {
   }
 
   if (!PeekMatch(TokenType::ValueType)) {
+    if (is_field) {
+      return ErrorExpected({"i8", "i16", "i32", "i64", "f32", "f64", "v128",
+                            "anyref", "arrayref", "eqref", "externref",
+                            "exnref", "funcref", "i31ref", "nullref",
+                            "nullexternref", "nullfuncref"});
+    }
     return ErrorExpected(
         {"i32", "i64", "f32", "f64", "v128", "externref", "exnref", "funcref"});
   }
 
   Token token = Consume();
   Type type = token.type();
-  bool is_enabled;
-  switch (type) {
-    case Type::V128:
-      is_enabled = options_->features.simd_enabled();
-      break;
-    case Type::FuncRef:
-    case Type::ExternRef:
-      is_enabled = options_->features.reference_types_enabled();
-      break;
-    case Type::ExnRef:
-      is_enabled = options_->features.exceptions_enabled();
-      break;
-    default:
-      is_enabled = true;
-      break;
-  }
 
-  if (!is_enabled) {
+  if ((!is_field || !type.IsPackedType()) && !IsTypeEnabled(type, options_)) {
     Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
   }
@@ -1047,16 +1107,17 @@ Result WastParser::ParseRefKind(Var* out_type) {
   }
 
   if (!IsTokenTypeRefKind(Peek())) {
+    if (options_->features.gc_enabled()) {
+      return ErrorExpected({"any", "array", "func", "eq", "extern", "exn",
+                            "i31", "noextern", "nofunc", "none", "struct"});
+    }
     return ErrorExpected({"func", "extern", "exn"});
   }
 
   Token token = Consume();
   Type type = token.type();
 
-  if ((type == Type::ExternRef &&
-       !options_->features.reference_types_enabled()) ||
-      ((type == Type::Struct || type == Type::Array) &&
-       !options_->features.gc_enabled())) {
+  if (!IsTypeEnabled(type, options_)) {
     Error(token.loc, "value type not allowed: %s", type.GetName().c_str());
     return Result::Error;
   }
@@ -1344,6 +1405,43 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   }
 }
 
+Result WastParser::ParseComponent(std::unique_ptr<Component>* out_component) {
+  WABT_TRACE(ParseComponent);
+  auto component = std::make_unique<Component>(lexer_->Filename());
+
+  if (PeekMatchLpar(TokenType::Component)) {
+    // Starts with "(component".
+    Component::StringTable string_table(component.get());
+    DropTwoTokens();
+
+    if (PeekMatch(TokenType::Var)) {
+      Token token = Consume();
+      const std::string* name = nullptr;
+      CHECK_RESULT(ParseComponentAppendVar(token, &string_table, &name));
+      component->SetName(name);
+    }
+    CHECK_RESULT(ParseComponent(component.get(), &string_table));
+  } else if (PeekMatch(TokenType::Eof)) {
+    errors_->emplace_back(ErrorLevel::Warning, GetLocation(),
+                          lexer_->Filename(), "empty component");
+  } else {
+    ConsumeIfLpar();
+    ErrorExpected({"a component field", "a component"});
+  }
+
+  EXPECT(Eof);
+  if (!HasError()) {
+    *out_component = std::move(component);
+    return Result::Ok;
+  } else {
+    return Result::Error;
+  }
+}
+
+bool WastParser::IsComponent() {
+  return PeekMatchLpar(TokenType::Component);
+}
+
 Result WastParser::ParseCustomSectionAnnotation(Module* module) {
   WABT_TRACE(ParseCustomSectionAnnotation);
   Location loc = GetLocation();
@@ -1449,6 +1547,30 @@ Result WastParser::ResolveTargetTypeVector(const Module& module,
   return Result::Ok;
 }
 
+Result WastParser::ResolveTargetFieldVector(const Module& module,
+                                            StructType* target_struct,
+                                            ReferenceVars* ref_vars,
+                                            Errors* errors) {
+  Result result = Result::Ok;
+
+  for (auto& ref_var : *ref_vars) {
+    uint32_t index = ref_var.index;
+
+    // The index of resolved variables is converted to kInvalidIndex.
+    if (index == kInvalidIndex) {
+      continue;
+    }
+
+    ref_var.index = kInvalidIndex;
+
+    assert(index < target_struct->fields.size());
+    result |= ResolveTargetRefType(module, &target_struct->fields[index].type,
+                                   ref_var.var, errors);
+  }
+
+  return Result::Ok;
+}
+
 Result WastParser::ParseModuleFieldList(Module* module) {
   WABT_TRACE(ParseModuleFieldList);
 
@@ -1456,6 +1578,7 @@ Result WastParser::ParseModuleFieldList(Module* module) {
   resolve_ref_types_.clear();
   resolve_type_vectors_.clear();
   resolve_funcs_.clear();
+  resolve_fields_.clear();
 
   while (IsModuleField(PeekPair()) || PeekIsCustom()) {
     if (PeekIsCustom()) {
@@ -1484,6 +1607,11 @@ Result WastParser::ParseModuleFieldList(Module* module) {
     it.target_func->local_types.Set(it.types);
   }
 
+  for (auto it : resolve_fields_) {
+    result |=
+        ResolveTargetFieldVector(*module, it.target_struct, &it.vars, errors_);
+  }
+
   CHECK_RESULT(result);
   CHECK_RESULT(ResolveFuncTypes(module, errors_));
   CHECK_RESULT(ResolveNamesModule(module, errors_));
@@ -1499,6 +1627,8 @@ Result WastParser::ParseModuleField(Module* module) {
     case TokenType::Export: return ParseExportModuleField(module);
     case TokenType::Func:   return ParseFuncModuleField(module);
     case TokenType::Type:   return ParseTypeModuleField(module);
+    case TokenType::Rec:
+      return ParseRecTypeModuleField(module);
     case TokenType::Global: return ParseGlobalModuleField(module);
     case TokenType::Import: return ParseImportModuleField(module);
     case TokenType::Memory: return ParseMemoryModuleField(module);
@@ -1739,79 +1869,170 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   EXPECT(Type);
 
   std::string name;
+  bool has_sub_type = false;
+  bool is_final_sub_type = true;
+  VarVector sub_types;
+
   CHECK_RESULT(ParseBindVarOpt(&name));
+
+  if (options_->features.gc_enabled() && MatchLpar(TokenType::Sub)) {
+    has_sub_type = true;
+
+    if (!Match(TokenType::Final)) {
+      is_final_sub_type = false;
+    }
+
+    Var var;
+
+    while (PeekMatchVar()) {
+      CHECK_RESULT(ParseVar(&var));
+      sub_types.emplace_back(var);
+    }
+  }
+
   EXPECT(Lpar);
   Location loc = GetLocation();
   CHECK_RESULT(CheckIndexRange(loc, module->types.size(), "type"));
 
   if (Match(TokenType::Func)) {
-    auto func_type = std::make_unique<FuncType>(name);
+    auto func_type = std::make_unique<FuncType>(is_final_sub_type, name);
     BindingHash bindings;
     CHECK_RESULT(ParseFuncSignature(&func_type->sig, &bindings));
     CHECK_RESULT(ErrorIfLpar({"param", "result"}));
+    func_type->supertypes.sub_types = std::move(sub_types);
     field->type = std::move(func_type);
   } else if (Match(TokenType::Struct)) {
     if (!options_->features.gc_enabled()) {
       Error(loc, "struct not allowed");
       return Result::Error;
     }
-    auto struct_type = std::make_unique<StructType>(name);
-    CHECK_RESULT(ParseFieldList(&struct_type->fields));
+    auto struct_type = std::make_unique<StructType>(is_final_sub_type, name);
+    CHECK_RESULT(ParseFieldList(struct_type.get()));
+    struct_type->supertypes.sub_types = std::move(sub_types);
     field->type = std::move(struct_type);
   } else if (Match(TokenType::Array)) {
     if (!options_->features.gc_enabled()) {
       Error(loc, "array type not allowed");
     }
-    auto array_type = std::make_unique<ArrayType>(name);
+    auto array_type = std::make_unique<ArrayType>(is_final_sub_type, name);
     CHECK_RESULT(ParseField(&array_type->field));
+    array_type->supertypes.sub_types = std::move(sub_types);
     field->type = std::move(array_type);
   } else {
     return ErrorExpected({"func", "struct", "array"});
   }
 
   EXPECT(Rpar);
+  if (has_sub_type) {
+    EXPECT(Rpar);
+  }
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
 }
 
+Result WastParser::ParseRecTypeModuleField(Module* module) {
+  WABT_TRACE(ParseTypeModuleField);
+
+  Location loc = Consume().loc;
+
+  if (!options_->features.gc_enabled()) {
+    Error(loc, "garbage collection not enabled");
+    return Result::Error;
+  }
+
+  EXPECT(Rec);
+
+  Index start_index = static_cast<Index>(module->types.size());
+
+  while (PeekMatchLpar(TokenType::Type)) {
+    CHECK_RESULT(ParseTypeModuleField(module));
+  }
+
+  Index type_count = static_cast<Index>(module->types.size()) - start_index;
+  // The type_count == 0 is ignored, because its support is not mandatory
+  if (type_count > 1) {
+    module->rec_group_ranges.push_back(RecGroupRange{start_index, type_count});
+  }
+
+  EXPECT(Rpar);
+  return Result::Ok;
+}
+
 Result WastParser::ParseField(Field* field) {
   WABT_TRACE(ParseField);
-  auto parse_mut_valuetype = [&]() -> Result {
-    // TODO: Share with ParseGlobalType?
-    if (MatchLpar(TokenType::Mut)) {
-      field->mutable_ = true;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
-      EXPECT(Rpar);
-    } else {
-      field->mutable_ = false;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
-    }
-    return Result::Ok;
-  };
 
-  if (MatchLpar(TokenType::Field)) {
-    CHECK_RESULT(ParseBindVarOpt(&field->name));
-    CHECK_RESULT(parse_mut_valuetype());
+  field->mutable_ = MatchLpar(TokenType::Mut);
+
+  Var type;
+  CHECK_RESULT(ParseValueType(&type, true));
+  VarToType(type, &field->type);
+
+  if (field->mutable_) {
     EXPECT(Rpar);
-  } else {
-    CHECK_RESULT(parse_mut_valuetype());
   }
 
   return Result::Ok;
 }
 
-Result WastParser::ParseFieldList(std::vector<Field>* fields) {
+Result WastParser::ParseFieldList(StructType* struct_type) {
   WABT_TRACE(ParseFieldList);
-  while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
+
+  std::set<std::string> known_fields;
+  ResolveField references(struct_type);
+
+  while (MatchLpar(TokenType::Field)) {
+    if (Match(TokenType::Rpar)) {
+      continue;
+    }
+
     Field field;
-    CHECK_RESULT(ParseField(&field));
-    fields->push_back(field);
+    bool has_name = false;
+    Location loc;
+
+    if (PeekMatch(TokenType::Var)) {
+      Token token = Consume();
+      CHECK_RESULT(ParseVarText(token, &field.name));
+
+      if (!known_fields.insert(field.name).second) {
+        Error(loc, "duplicate field %s", field.name.c_str());
+        return Result::Error;
+      }
+
+      has_name = true;
+      loc = token.loc;
+    }
+
+    do {
+      field.mutable_ = MatchLpar(TokenType::Mut);
+
+      Var type;
+      CHECK_RESULT(ParseValueType(&type, true));
+
+      if (field.mutable_) {
+        EXPECT(Rpar);
+      }
+
+      if (type.is_index()) {
+        field.type = type.to_type();
+      } else {
+        assert(type.is_name());
+        assert(options_->features.gc_enabled());
+        references.vars.push_back(
+            ReferenceVar(struct_type->fields.size(), type));
+        field.type = Type(type.opt_type(), kInvalidIndex);
+      }
+
+      struct_type->fields.push_back(field);
+    } while (!has_name && !PeekMatch(TokenType::Rpar));
+
+    EXPECT(Rpar);
   }
+
+  if (!references.vars.empty()) {
+    resolve_fields_.push_back(references);
+  }
+
   return Result::Ok;
 }
 
@@ -2330,6 +2551,16 @@ Result WastParser::ParsePlainInstrVar(Location loc,
 }
 
 template <typename T>
+Result WastParser::ParsePlainInstrVarVar(Location loc,
+                                         std::unique_ptr<Expr>* out_expr) {
+  Var first_var, second_var;
+  CHECK_RESULT(ParseVar(&first_var));
+  CHECK_RESULT(ParseVar(&second_var));
+  out_expr->reset(new T(first_var, second_var, loc));
+  return Result::Ok;
+}
+
+template <typename T>
 Result WastParser::ParseMemoryInstrVar(Location loc,
                                        std::unique_ptr<Expr>* out_expr) {
   Var memidx;
@@ -2502,6 +2733,18 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       DropToken();
       CHECK_RESULT(ParsePlainInstrVar<BrIfExpr>(loc, out_expr));
       break;
+
+    case TokenType::BrOnCast: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var label, type1, type2;
+      CHECK_RESULT(ParseVar(&label));
+      CHECK_RESULT(ParseRefType(&type1));
+      CHECK_RESULT(ParseRefType(&type2));
+      out_expr->reset(
+          new BrOnCastExpr(token.opcode(), label, type1, type2, loc));
+      break;
+    }
 
     case TokenType::BrOnNonNull:
       DropToken();
@@ -2850,6 +3093,152 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
+    case TokenType::ArrayCopy: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayCopyExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayFill: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayFillExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayInitData: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayInitDataExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayInitElem: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayInitElemExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayGet:
+    case TokenType::ArrayGetS:
+    case TokenType::ArrayGetU: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseVar(&type));
+      out_expr->reset(new ArrayGetExpr(token.opcode(), type, loc));
+      break;
+    }
+
+    case TokenType::ArrayNew: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayNewExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewData: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayNewDataExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewDefault: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArrayNewDefaultExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArrayNewFixed: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      uint64_t count;
+      CHECK_RESULT(ParseVar(&type));
+      CHECK_RESULT(ParseNat(&count, false));
+      out_expr->reset(
+          new ArrayNewFixedExpr(type, static_cast<Index>(count), loc));
+      break;
+    }
+
+    case TokenType::ArrayNewElem: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<ArrayNewElemExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::ArraySet: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<ArraySetExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::GCUnary:
+    case TokenType::RefEq:
+    case TokenType::RefI31: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new GCUnaryExpr(token.opcode(), loc));
+      break;
+    }
+
+    case TokenType::RefCast: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseRefType(&type));
+      out_expr->reset(new RefCastExpr(type, loc));
+      break;
+    }
+
+    case TokenType::RefTest: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type;
+      CHECK_RESULT(ParseRefType(&type));
+      out_expr->reset(new RefTestExpr(type, loc));
+      break;
+    }
+
+    case TokenType::StructGet:
+    case TokenType::StructGetS:
+    case TokenType::StructGetU: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Var type, field;
+      CHECK_RESULT(ParseVar(&type));
+      CHECK_RESULT(ParseVar(&field));
+      out_expr->reset(new StructGetExpr(token.opcode(), type, field, loc));
+      break;
+    }
+
+    case TokenType::StructNew: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<StructNewExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::StructNewDefault: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVar<StructNewDefaultExpr>(loc, out_expr));
+      break;
+    }
+
+    case TokenType::StructSet: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainInstrVarVar<StructSetExpr>(loc, out_expr));
+      break;
+    }
+
     case TokenType::SimdLaneOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
@@ -3164,7 +3553,7 @@ Result WastParser::ParseExternref(Const* const_) {
   WABT_TRACE(ParseExternref);
   Token token = Consume();
   if (!options_->features.reference_types_enabled()) {
-    Error(token.loc, "externref not allowed");
+    Error(token.loc, "externref/hostref not allowed");
     return Result::Error;
   }
 
@@ -3173,24 +3562,35 @@ Result WastParser::ParseExternref(Const* const_) {
   const_->loc = GetLocation();
   TokenType token_type = Peek();
 
+  uint64_t ref_bits = Const::kRefAnyValueBits;
+  Result result = Result::Ok;
+
   switch (token_type) {
     case TokenType::Nat:
     case TokenType::Int: {
       literal = Consume().literal();
       sv = literal.text;
+      result = ParseInt64(sv, &ref_bits, ParseIntType::UnsignedOnly);
       break;
     }
+    case TokenType::Rpar:
+      break;
     default:
       return ErrorExpected({"a numeric literal"}, "123");
   }
 
-  uint64_t ref_bits;
-  Result result = ParseInt64(sv, &ref_bits, ParseIntType::UnsignedOnly);
-
-  if (ref_bits != 0 && options_->features.function_references_enabled()) {
-    const_->set_extern(static_cast<uintptr_t>(ref_bits));
+  if (options_->features.function_references_enabled()) {
+    if (token.token_type() == TokenType::RefExtern) {
+      const_->set_extern(static_cast<uintptr_t>(ref_bits));
+    } else {
+      const_->set_any(static_cast<uintptr_t>(ref_bits));
+    }
   } else {
-    const_->set_externref(static_cast<uintptr_t>(ref_bits));
+    if (token.token_type() == TokenType::RefExtern) {
+      const_->set_externref(static_cast<uintptr_t>(ref_bits));
+    } else {
+      const_->set_anyref(static_cast<uintptr_t>(ref_bits));
+    }
   }
 
   if (Failed(result)) {
@@ -3205,9 +3605,13 @@ Result WastParser::ParseExternref(Const* const_) {
 
 Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
   WABT_TRACE(ParseConstList);
-  while (PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
-         PeekMatchLpar(TokenType::RefExtern) ||
-         PeekMatchLpar(TokenType::RefFunc)) {
+  while (
+      PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
+      PeekMatchLpar(TokenType::RefArray) || PeekMatchLpar(TokenType::RefEq) ||
+      PeekMatchLpar(TokenType::RefExtern) ||
+      PeekMatchLpar(TokenType::RefHost) || PeekMatchLpar(TokenType::RefI31) ||
+      PeekMatchLpar(TokenType::RefFunc) ||
+      PeekMatchLpar(TokenType::RefStruct)) {
     DropToken();
     Const const_;
     switch (Peek()) {
@@ -3216,13 +3620,58 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         break;
       case TokenType::RefNull: {
         auto token = Consume();
-        Var type;
+        Type type = Type::BottomRef();
+
         if (Peek() != TokenType::Rpar) {
-          CHECK_RESULT(ParseRefKind(&type));
+          Var var;
+          CHECK_RESULT(ParseRefKind(&var));
+          type = var.opt_type();
+          // Nulls are represented by "null" string.
+          if (type == Type::NullRef) {
+            type = Type::AnyRef;
+          } else if (type == Type::NullExternRef) {
+            type = Type::ExternRef;
+          } else if (type == Type::NullFuncRef) {
+            type = Type::FuncRef;
+          }
         }
         ErrorUnlessOpcodeEnabled(token);
         const_.loc = GetLocation();
-        const_.set_null(type.has_opt_type() ? type.opt_type() : Type::FuncRef);
+        const_.set_null(type);
+        break;
+      }
+      case TokenType::RefArray: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.array not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_arrayref();
+        break;
+      }
+      case TokenType::RefEq: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.eq not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_eqref();
+        break;
+      }
+      case TokenType::RefExtern:
+      case TokenType::RefHost:
+        CHECK_RESULT(ParseExternref(&const_));
+        break;
+      case TokenType::RefI31: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.i31 not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_i31ref();
         break;
       }
       case TokenType::RefFunc: {
@@ -3232,9 +3681,16 @@ Result WastParser::ParseConstList(ConstVector* consts, ConstType type) {
         const_.set_funcref();
         break;
       }
-      case TokenType::RefExtern:
-        CHECK_RESULT(ParseExternref(&const_));
+      case TokenType::RefStruct: {
+        auto token = Consume();
+        if (!options_->features.gc_enabled()) {
+          Error(token.loc, "ref.struct not allowed");
+          return Result::Error;
+        }
+        const_.loc = GetLocation();
+        const_.set_structref();
         break;
+      }
       default:
         assert(!"unreachable");
         return Result::Error;
@@ -3628,6 +4084,1381 @@ Result WastParser::ParseGlobalType(Global* global) {
     VarToType(type, &global->type);
   }
 
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentCoreSort(ComponentSort* out_sort) {
+  switch (Peek(0)) {
+    case TokenType::Func:
+      *out_sort = ComponentSort::CoreFunc;
+      break;
+    case TokenType::Table:
+      *out_sort = ComponentSort::CoreTable;
+      break;
+    case TokenType::Memory:
+      *out_sort = ComponentSort::CoreMemory;
+      break;
+    case TokenType::Global:
+      *out_sort = ComponentSort::CoreGlobal;
+      break;
+    case TokenType::Type:
+      *out_sort = ComponentSort::CoreType;
+      break;
+    case TokenType::Module:
+      *out_sort = ComponentSort::CoreModule;
+      break;
+    case TokenType::Instance:
+      *out_sort = ComponentSort::CoreInstance;
+      break;
+    default: {
+      Token token = Consume();
+      Error(token.loc, "unknown core sort %s",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+  DropToken();
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentSort(ComponentSort* out_sort) {
+  switch (Peek(0)) {
+    case TokenType::Core:
+      DropToken();
+      return ParseComponentCoreSort(out_sort);
+    case TokenType::Func:
+      *out_sort = ComponentSort::Func;
+      break;
+    case TokenType::Value:
+      *out_sort = ComponentSort::Value;
+      break;
+    case TokenType::Type:
+      *out_sort = ComponentSort::Type;
+      break;
+    case TokenType::Component:
+      *out_sort = ComponentSort::Component;
+      break;
+    case TokenType::Instance:
+      *out_sort = ComponentSort::Instance;
+      break;
+    default: {
+      Token token = Consume();
+      Error(token.loc, "unknown sort %s",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+  DropToken();
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentFindVar(Token& token,
+                                         Component::StringTable* string_table,
+                                         const std::string** out_text) {
+  assert(token.token_type() == TokenType::Var);
+
+  if (token.text().length() >= 2 && token.text()[1] != '"') {
+    *out_text = string_table->Find(token.text());
+    return Result::Ok;
+  }
+
+  std::string str;
+  CHECK_RESULT(ParseVarText(token, &str));
+  *out_text = string_table->Find(str);
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentAppendVar(Token& token,
+                                           Component::StringTable* string_table,
+                                           const std::string** out_text) {
+  assert(token.token_type() == TokenType::Var);
+
+  if (token.text().length() >= 2 && token.text()[1] != '"') {
+    *out_text = string_table->Append(token.text());
+    return Result::Ok;
+  }
+
+  std::string str;
+  CHECK_RESULT(ParseVarText(token, &str));
+  *out_text = string_table->Append(str);
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentName(ComponentSharedData* shared_data,
+                                      Component::StringTable* string_table,
+                                      ComponentSort sort,
+                                      const std::string** out_name) {
+  if (!PeekMatch(TokenType::Var)) {
+    return Result::Ok;
+  }
+
+  Token token = Consume();
+  const std::string* name = nullptr;
+  CHECK_RESULT(ParseComponentAppendVar(token, string_table, &name));
+
+  if (shared_data->Find(sort, name) != nullptr) {
+    Error(token.loc, "duplicated %s name %s", sort.GetName(), name->c_str());
+    return Result::Error;
+  }
+
+  *out_name = name;
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentIndex(ComponentSharedData* shared_data,
+                                       Component::StringTable* string_table,
+                                       ComponentSort sort,
+                                       ComponentIndexLoc* out_index) {
+  if (Peek(0) == TokenType::Nat) {
+    Location loc = GetLocation();
+    uint64_t index;
+    CHECK_RESULT(ParseNat(&index, false));
+    *out_index = ComponentIndexLoc(static_cast<Index>(index), loc);
+    return Result::Ok;
+  }
+
+  if (Peek(0) != TokenType::Var) {
+    return ErrorExpected({"a numeric index", "a name"}, "12 or $foo");
+  }
+
+  Token token = Consume();
+  const std::string* name = nullptr;
+  const ComponentSharedData* target = shared_data;
+  const ComponentDef* definition = nullptr;
+  Index counter = 0;
+  Index index = kInvalidIndex;
+
+  CHECK_RESULT(ParseComponentFindVar(token, string_table, &name));
+
+  if (name != nullptr) {
+    if (sort == ComponentSort::CoreModule || sort == ComponentSort::Component ||
+        sort == ComponentSort::Type) {
+      do {
+        definition = target->Find(sort, name, &index);
+        if (definition != nullptr) {
+          break;
+        }
+        target = target->GetParent();
+        counter++;
+      } while (target != nullptr);
+    } else {
+      definition = target->Find(sort, name, &index);
+    }
+  }
+
+  if (definition == nullptr) {
+    Error(token.loc, "failed to find %s name %s", sort.GetName(),
+          token.to_string_clamp(kMaxErrorTokenLength).c_str());
+    return Result::Error;
+  }
+
+  if (target == shared_data) {
+    *out_index = ComponentIndexLoc(index, token.loc);
+    return Result::Ok;
+  }
+
+  *out_index = ComponentIndexLoc(shared_data->TypeSize(), Location());
+  // This alias cannot be invalid, so its location is always valid.
+  auto value = std::make_unique<ComponentAliasOuter>(
+      counter, index, ComponentSort::Type, Location());
+  shared_data->AppendType(std::move(value));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentString(Component::StringTable* string_table,
+                                        ComponentDef::StringLoc* out_string) {
+  Location loc = GetLocation();
+  std::string str;
+  CHECK_RESULT(ParseQuotedText(&str));
+  out_string->str = string_table->Append(str);
+  out_string->loc = loc;
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentCanonOpts(
+    ComponentSharedData* shared_data,
+    Component::StringTable* string_table,
+    ComponentCanonOpts::OptionVector* out_options) {
+  while (true) {
+    ComponentCanonOption::Option option;
+    Location loc = GetLocation();
+
+    switch (Peek(0)) {
+      case TokenType::StringEncodingUtf8:
+        option = ComponentCanonOption::StrEncUtf8;
+        break;
+      case TokenType::StringEncodingUtf16:
+        option = ComponentCanonOption::StrEncUtf16;
+        break;
+      case TokenType::StringEncodingLatin1Utf16:
+        option = ComponentCanonOption::StrEncLatin1Utf16;
+        break;
+      case TokenType::Async:
+        option = ComponentCanonOption::Async;
+        break;
+      case TokenType::Lpar: {
+        ComponentSort sort = ComponentSort::CoreFunc;
+        switch (Peek(1)) {
+          case TokenType::Memory:
+            option = ComponentCanonOption::Memory;
+            sort = ComponentSort::CoreMemory;
+            break;
+          case TokenType::Realloc:
+            option = ComponentCanonOption::Realloc;
+            break;
+          case TokenType::PostReturn:
+            option = ComponentCanonOption::PostReturn;
+            break;
+          case TokenType::Callback:
+            option = ComponentCanonOption::Callback;
+            break;
+          default:
+            return Result::Ok;
+        }
+        DropTwoTokens();
+        ComponentIndexLoc index;
+        CHECK_RESULT(
+            ParseComponentIndex(shared_data, string_table, sort, &index));
+        EXPECT(Rpar);
+        out_options->push_back(ComponentCanonOption{option, index.index, loc});
+        continue;
+      }
+      default:
+        return Result::Ok;
+    }
+
+    DropToken();
+    out_options->push_back(ComponentCanonOption{option, kInvalidIndex, loc});
+  }
+}
+
+Result WastParser::ParseComponentAlias(ComponentSharedData* shared_data,
+                                       Component::StringTable* string_table) {
+  Location loc = Consume().loc;
+  TokenType token_type = Peek(0);
+
+  if (token_type == TokenType::Export ||
+      (token_type == TokenType::Core && Peek(1) == TokenType::Export)) {
+    bool is_core = token_type == TokenType::Core;
+    ComponentSort sort =
+        is_core ? ComponentSort::CoreInstance : ComponentSort::Instance;
+    ComponentIndexLoc instance_index;
+
+    DropToken();
+    if (is_core) {
+      DropToken();
+    }
+    CHECK_RESULT(
+        ParseComponentIndex(shared_data, string_table, sort, &instance_index));
+    ComponentDef::StringLoc export_name;
+    CHECK_RESULT(ParseComponentString(string_table, &export_name));
+    EXPECT(Lpar);
+    ParseComponentSort(&sort);
+
+    const std::string* name;
+    CHECK_RESULT(ParseComponentName(shared_data, string_table, sort, &name));
+    EXPECT(Rpar);
+    EXPECT(Rpar);
+
+    auto value = std::make_unique<ComponentAliasExport>(is_core, instance_index,
+                                                        export_name, sort);
+    value->SetName(name);
+    shared_data->AppendAny(std::move(value));
+    return Result::Ok;
+  } else if (token_type != TokenType::Outer) {
+    Token token = Consume();
+    Error(token.loc, "unexpected alias type %s.",
+          token.to_string_clamp(kMaxErrorTokenLength).c_str());
+    return Result::Error;
+  }
+
+  DropToken();
+  const ComponentSharedData* target = nullptr;
+  Index counter = 0;
+
+  if (PeekMatch(TokenType::Nat)) {
+    uint64_t number;
+    CHECK_RESULT(ParseNat(&number, false));
+    counter = static_cast<Index>(number);
+    target = shared_data;
+
+    while (target != nullptr && number > 0) {
+      target = target->GetParent();
+      number--;
+    }
+  } else {
+    Token token = Consume();
+
+    if (token.token_type() == TokenType::Var) {
+      const std::string* target_name = nullptr;
+      CHECK_RESULT(ParseComponentFindVar(token, string_table, &target_name));
+      target = shared_data;
+
+      if (target_name != nullptr) {
+        while (target != nullptr && target->Name() != target_name) {
+          target = target->GetParent();
+          counter++;
+        }
+      }
+    }
+
+    if (target == nullptr) {
+      Error(token.loc, "unknown outer target %s.",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+
+  Peek(0);
+  Token token = Consume();
+  Index index = kInvalidIndex;
+
+  if (token.token_type() == TokenType::Nat) {
+    std::string_view sv = token.literal().text;
+
+    uint64_t number;
+    if (Failed(ParseUint64(sv, &number)) || number >= kInvalidIndex) {
+      Error(token.loc, "invalid int \"" PRIstringview "\"",
+            WABT_PRINTF_STRING_VIEW_ARG(sv));
+      return Result::Error;
+    }
+
+    index = static_cast<Index>(number);
+  }
+
+  EXPECT(Lpar);
+  ComponentSort sort;
+
+  switch (Peek(0)) {
+    case TokenType::Component:
+      sort = ComponentSort::Component;
+      break;
+    case TokenType::Type:
+      sort = ComponentSort::Type;
+      break;
+    case TokenType::Core:
+      if (Peek(1) == TokenType::Module) {
+        DropToken();
+        sort = ComponentSort::CoreModule;
+        break;
+      }
+      [[fallthrough]];
+    default: {
+      return ErrorExpected({"core module", "component", "type"}, "(type i)");
+    }
+  }
+
+  DropToken();
+  if (token.token_type() != TokenType::Nat) {
+    if (token.token_type() == TokenType::Var) {
+      const std::string* name = nullptr;
+      CHECK_RESULT(ParseComponentFindVar(token, string_table, &name));
+      if (target != nullptr) {
+        target->Find(sort, name, &index);
+      }
+    }
+
+    if (index == kInvalidIndex) {
+      Error(token.loc, "unknown name %s.",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+
+  const std::string* name;
+  CHECK_RESULT(ParseComponentName(shared_data, string_table, sort, &name));
+  EXPECT(Rpar);
+  EXPECT(Rpar);
+
+  auto value = std::make_unique<ComponentAliasOuter>(counter, index, sort, loc);
+  value->SetName(name);
+  shared_data->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentExtern(ComponentSharedData* shared_data,
+                                        Component::StringTable* string_table) {
+  assert(Peek(0) == TokenType::Import || Peek(0) == TokenType::Export);
+  // This value cannot be an import/export sort.
+  const ComponentSort unused_sort = ComponentSort::CoreMemory;
+  bool is_import = Peek(0) == TokenType::Import;
+  bool is_component = shared_data->section() == ComponentSection::Component;
+  DropToken();
+
+  if (is_import && !is_component &&
+      shared_data->type() == ComponentTypeDef::Instance) {
+    Token token = Consume();
+    Error(token.loc, "imports are not allowed for instances");
+    return Result::Error;
+  }
+
+  const std::string* name = nullptr;
+  Location name_location;
+
+  if (!is_import && PeekMatch(TokenType::Var)) {
+    Token token = Consume();
+    CHECK_RESULT(ParseComponentAppendVar(token, string_table, &name));
+    name_location = token.loc;
+  }
+
+  bool has_suffix = false;
+  ComponentDef::StringLoc external_name;
+  std::string suffix;
+  ComponentSort sort = unused_sort;
+  ComponentDef::External external = ComponentDef::External::Unused;
+  ComponentIndexLoc export_index;
+  ComponentIndexLoc descriptor_index;
+
+  CHECK_RESULT(ParseComponentString(string_table, &external_name));
+
+  if (MatchLpar(TokenType::VersionSuffix)) {
+    has_suffix = true;
+    CHECK_RESULT(ParseQuotedText(&suffix));
+    EXPECT(Rpar);
+  }
+
+  if (is_component && !is_import) {
+    // Read sort index part.
+    EXPECT(Lpar);
+    switch (Peek(0)) {
+      case TokenType::Func:
+        sort = ComponentSort::Func;
+        break;
+      case TokenType::Type:
+        sort = ComponentSort::Type;
+        break;
+      case TokenType::Component:
+        sort = ComponentSort::Component;
+        break;
+      case TokenType::Instance:
+        sort = ComponentSort::Instance;
+        break;
+      default:
+        Token token = Consume();
+        Error(token.loc, "unexpected export sort %s.",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+    }
+
+    DropToken();
+    CHECK_RESULT(
+        ParseComponentIndex(shared_data, string_table, sort, &export_index));
+    EXPECT(Rpar);
+  }
+
+  if (!is_component || is_import || !PeekMatch(TokenType::Rpar)) {
+    // Read descriptor part.
+    EXPECT(Lpar);
+    TokenType token_type = Peek(0);
+
+    switch (token_type) {
+      case TokenType::Func:
+        if (sort == unused_sort) {
+          sort = ComponentSort::Func;
+        }
+        external = ComponentDef::External::Func;
+        break;
+      case TokenType::Type:
+        if (sort == unused_sort) {
+          sort = ComponentSort::Type;
+        }
+        break;
+      case TokenType::Component:
+        if (sort == unused_sort) {
+          sort = ComponentSort::Component;
+        }
+        external = ComponentDef::External::Component;
+        break;
+      case TokenType::Instance:
+        if (sort == unused_sort) {
+          sort = ComponentSort::Instance;
+        }
+        external = ComponentDef::External::Instance;
+        break;
+      default: {
+        Token token = Consume();
+        Error(token.loc, "unexpected descriptor type %s.",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+      }
+    }
+
+    DropToken();
+    if (is_import && PeekMatch(TokenType::Var)) {
+      Token token = Consume();
+      CHECK_RESULT(ParseComponentAppendVar(token, string_table, &name));
+      name_location = token.loc;
+    }
+
+    ComponentSort parse_sort = unused_sort;
+    switch (token_type) {
+      case TokenType::Func:
+        if (MatchLpar(TokenType::Type)) {
+          parse_sort = ComponentSort::Type;
+          break;
+        }
+        CHECK_RESULT(ParseComponentFuncType(shared_data, string_table));
+        EXPECT(Rpar);
+        descriptor_index.index = shared_data->TypeSize() - 1;
+        break;
+      case TokenType::Type:
+        EXPECT(Lpar);
+
+        if (Match(TokenType::Eq)) {
+          external = ComponentDef::External::TypeEq;
+          parse_sort = ComponentSort::Type;
+          break;
+        }
+        if (Match(TokenType::Sub)) {
+          EXPECT(Resource);
+          EXPECT(Rpar);
+          EXPECT(Rpar);
+          external = ComponentDef::External::TypeSubResource;
+          break;
+        }
+        return ErrorExpected({"eq", "sub resource"},
+                             "(eq i) or (sub resource)");
+      case TokenType::Component:
+      case TokenType::Instance: {
+        if (MatchLpar(TokenType::Type)) {
+          token_type = Peek(0);
+          if ((token_type == TokenType::Var && Peek(1) == TokenType::Rpar) ||
+              token_type == TokenType::Nat) {
+            parse_sort = ComponentSort::Type;
+            break;
+          }
+          token_type = TokenType::Type;
+        }
+
+        auto type_data = std::make_unique<ComponentTypeData>(
+            shared_data, external == ComponentDef::External::Component);
+
+        if (token_type == TokenType::Type) {
+          CHECK_RESULT(ParseComponentType(type_data.get(), string_table));
+        }
+
+        CHECK_RESULT(ParseComponentInstanceType(type_data.get(), string_table));
+        descriptor_index.index = shared_data->TypeSize();
+        shared_data->AppendType(std::move(type_data));
+        break;
+      }
+      default:
+        assert(0);
+        break;
+    }
+
+    if (parse_sort != unused_sort) {
+      CHECK_RESULT(ParseComponentIndex(shared_data, string_table, parse_sort,
+                                       &descriptor_index));
+      EXPECT(Rpar);
+      EXPECT(Rpar);
+    }
+  }
+
+  assert(sort != unused_sort);
+  EXPECT(Rpar);
+
+  if (name != nullptr && shared_data->Find(sort, name) != nullptr) {
+    Error(name_location, "duplicated %s name %s", sort.GetName(),
+          name->c_str());
+    return Result::Error;
+  }
+
+  const std::string* version_suffix =
+      has_suffix ? string_table->Append(suffix) : nullptr;
+  auto value = std::make_unique<ComponentExternal>(
+      is_import, external_name, version_suffix, external, sort,
+      descriptor_index, export_index);
+  value->SetName(name);
+  shared_data->AppendAny(std::move(value));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentDefValType(
+    ComponentSharedData* shared_data,
+    Component::StringTable* string_table,
+    ComponentTypeLoc* out_type) {
+  if (!Match(TokenType::Lpar)) {
+    ComponentType::Enum type;
+
+    if (Peek(0) == TokenType::ValueType) {
+      Token token = Consume();
+      Type token_type = token.type();
+
+      if (token_type == Type::F32) {
+        type = ComponentType::F32;
+      } else if (token_type == Type::F64) {
+        type = ComponentType::F64;
+      } else {
+        Error(token.loc, "unexpected value type %s.",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+      }
+
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(type);
+        out_type->loc = Location();
+        return Result::Ok;
+      }
+
+      auto value = std::make_unique<ComponentValueType>(
+          ComponentTypeDef::ValueType, ComponentTypeLoc{type, token.loc});
+      shared_data->AppendType(std::move(value));
+      return Result::Ok;
+    }
+
+    switch (Peek(0)) {
+      case TokenType::S8:
+        type = ComponentType::S8;
+        break;
+      case TokenType::U8:
+        type = ComponentType::U8;
+        break;
+      case TokenType::S16:
+        type = ComponentType::S16;
+        break;
+      case TokenType::U16:
+        type = ComponentType::U16;
+        break;
+      case TokenType::S32:
+        type = ComponentType::S32;
+        break;
+      case TokenType::U32:
+        type = ComponentType::U32;
+        break;
+      case TokenType::S64:
+        type = ComponentType::S64;
+        break;
+      case TokenType::U64:
+        type = ComponentType::U64;
+        break;
+      case TokenType::Char:
+        type = ComponentType::Char;
+        break;
+      case TokenType::String:
+        type = ComponentType::String;
+        break;
+      case TokenType::ErrorContext:
+        type = ComponentType::ErrorContext;
+        break;
+      default: {
+        Token token = Consume();
+        Error(token.loc, "unexpected value type %s.",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+      }
+    }
+
+    Location loc = Consume().loc;
+    if (out_type != nullptr) {
+      out_type->type = ComponentType(type);
+      out_type->loc = Location();
+      return Result::Ok;
+    }
+
+    auto value = std::make_unique<ComponentValueType>(
+        ComponentTypeDef::ValueType, ComponentTypeLoc{type, loc});
+    shared_data->AppendType(std::move(value));
+    return Result::Ok;
+  }
+
+  GetToken();
+  Token token = Consume();
+  switch (token.token_type()) {
+    case TokenType::Record: {
+      ComponentTypeItems::ItemVector items;
+      while (MatchLpar(TokenType::Field)) {
+        ComponentTypeLoc type;
+        ComponentDef::StringLoc name;
+        CHECK_RESULT(ParseComponentString(string_table, &name));
+        CHECK_RESULT(ParseComponentValType(shared_data, string_table, &type));
+        items.emplace_back(ComponentTypeItems::Item{name, type});
+        EXPECT(Rpar);
+      }
+
+      EXPECT(Rpar);
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      auto type = std::make_unique<ComponentTypeItems>(ComponentTypeDef::Record,
+                                                       &items, token.loc);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Variant: {
+      ComponentTypeItems::ItemVector items;
+      while (MatchLpar(TokenType::Case)) {
+        ComponentTypeLoc type;
+        ComponentDef::StringLoc case_name;
+        CHECK_RESULT(ParseComponentString(string_table, &case_name));
+        if (!PeekMatch(TokenType::Rpar)) {
+          CHECK_RESULT(ParseComponentValType(shared_data, string_table, &type));
+        }
+
+        items.emplace_back(ComponentTypeItems::Item{case_name, type});
+        EXPECT(Rpar);
+      }
+
+      EXPECT(Rpar);
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      auto type = std::make_unique<ComponentTypeItems>(
+          ComponentTypeDef::Variant, &items, token.loc);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::List: {
+      ComponentTypeLoc value_type;
+      CHECK_RESULT(
+          ParseComponentValType(shared_data, string_table, &value_type));
+
+      uint64_t size = 0;
+      bool has_size = PeekMatch(TokenType::Nat);
+      if (has_size) {
+        CHECK_RESULT(ParseNat(&size, false));
+      }
+
+      EXPECT(Rpar);
+
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      if (!has_size) {
+        auto type = std::make_unique<ComponentValueType>(ComponentTypeDef::List,
+                                                         value_type);
+        shared_data->AppendType(std::move(type));
+        return Result::Ok;
+      }
+
+      auto type = std::make_unique<ComponentTypeListFixed>(
+          value_type, static_cast<uint32_t>(size), token.loc);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Tuple: {
+      ComponentTypeTuple::ItemVector items;
+      while (!PeekMatch(TokenType::Rpar)) {
+        ComponentTypeLoc type;
+        CHECK_RESULT(ParseComponentValType(shared_data, string_table, &type));
+        items.emplace_back(type);
+      }
+
+      DropToken();
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      auto type = std::make_unique<ComponentTypeTuple>(&items, token.loc);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Flags:
+    case TokenType::Enum: {
+      bool is_flags = token.token_type() == TokenType::Flags;
+      ComponentTypeNames::ItemVector items;
+
+      while (!Match(TokenType::Rpar)) {
+        ComponentDef::StringLoc name;
+        CHECK_RESULT(ParseComponentString(string_table, &name));
+        items.emplace_back(name);
+      }
+
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      ComponentTypeDef type_value =
+          is_flags ? ComponentTypeDef::Flags : ComponentTypeDef::Enum;
+      auto type =
+          std::make_unique<ComponentTypeNames>(type_value, &items, token.loc);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Option:
+    case TokenType::Stream:
+    case TokenType::Future: {
+      ComponentTypeLoc value_type;
+
+      if (token.token_type() == TokenType::Option ||
+          !PeekMatch(TokenType::Rpar)) {
+        CHECK_RESULT(
+            ParseComponentValType(shared_data, string_table, &value_type));
+      }
+
+      EXPECT(Rpar);
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      ComponentTypeDef type_value = ComponentTypeDef::Option;
+      if (token.token_type() == TokenType::Stream) {
+        type_value = ComponentTypeDef::Stream;
+      } else if (token.token_type() == TokenType::Future) {
+        type_value = ComponentTypeDef::Future;
+      }
+
+      auto type = std::make_unique<ComponentValueType>(type_value, value_type);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Result: {
+      ComponentTypeLoc result;
+      ComponentTypeLoc error;
+
+      if (!PeekMatch(TokenType::Rpar)) {
+        if (!PeekMatchLpar(TokenType::Error)) {
+          CHECK_RESULT(
+              ParseComponentValType(shared_data, string_table, &result));
+        }
+
+        if (MatchLpar(TokenType::Error)) {
+          CHECK_RESULT(
+              ParseComponentValType(shared_data, string_table, &error));
+          EXPECT(Rpar);
+        }
+      }
+
+      EXPECT(Rpar);
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      auto type = std::make_unique<ComponentTypeResult>(result, error);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    case TokenType::Own:
+    case TokenType::Borrow: {
+      ComponentTypeDef type_value = (token.token_type() == TokenType::Own)
+                                        ? ComponentTypeDef::Own
+                                        : ComponentTypeDef::Borrow;
+      ComponentIndexLoc index;
+      CHECK_RESULT(ParseComponentIndex(shared_data, string_table,
+                                       ComponentSort::Type, &index));
+
+      EXPECT(Rpar);
+      if (out_type != nullptr) {
+        out_type->type = ComponentType(shared_data->TypeSize());
+        out_type->loc = token.loc;
+      }
+
+      auto type = std::make_unique<ComponentTypeIndex>(type_value, index);
+      shared_data->AppendType(std::move(type));
+      return Result::Ok;
+    }
+    default: {
+      Error(token.loc, "unexpected value type %s.",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+}
+
+Result WastParser::ParseComponentValType(ComponentSharedData* shared_data,
+                                         Component::StringTable* string_table,
+                                         ComponentTypeLoc* out_type) {
+  if (PeekMatchVar()) {
+    ComponentIndexLoc index;
+    CHECK_RESULT(ParseComponentIndex(shared_data, string_table,
+                                     ComponentSort::Type, &index));
+    *out_type = ComponentTypeLoc(ComponentType(index.index), index.loc);
+    return Result::Ok;
+  }
+
+  return ParseComponentDefValType(shared_data, string_table, out_type);
+}
+
+Result WastParser::ParseComponentFuncType(
+    ComponentSharedData* shared_data,
+    Component::StringTable* string_table) {
+  bool is_async = Match(TokenType::Async);
+  ComponentTypeFunc::ParamVector params;
+  ComponentTypeLoc result;
+
+  while (MatchLpar(TokenType::Param)) {
+    ComponentTypeLoc type;
+    ComponentDef::StringLoc param_name;
+    CHECK_RESULT(ParseComponentString(string_table, &param_name));
+    CHECK_RESULT(ParseComponentValType(shared_data, string_table, &type));
+
+    params.emplace_back(ComponentTypeFunc::Param{param_name, type});
+    EXPECT(Rpar);
+  }
+
+  if (MatchLpar(TokenType::Result)) {
+    CHECK_RESULT(ParseComponentValType(shared_data, string_table, &result));
+    EXPECT(Rpar);
+  }
+
+  auto func = std::make_unique<ComponentTypeFunc>(is_async, &params, result);
+  shared_data->AppendType(std::move(func));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentResourceType(
+    ComponentSharedData* shared_data,
+    Component::StringTable* string_table) {
+  EXPECT(Lpar);
+  EXPECT(Rep);
+  GetToken();
+  Token token = Consume();
+  if (token.token_type() != TokenType::ValueType || token.type() != Type::I32) {
+    return ErrorExpected({"i32"});
+  }
+  EXPECT(Rpar);
+
+  ComponentIndexLoc dtor;
+  if (PeekMatch(TokenType::Rpar)) {
+    auto type =
+        std::make_unique<ComponentTypeIndex>(ComponentTypeDef::Resource, dtor);
+    shared_data->AppendType(std::move(type));
+    return Result::Ok;
+  }
+
+  EXPECT(Lpar);
+  EXPECT(Dtor);
+  bool async = Match(TokenType::Async);
+  EXPECT(Lpar);
+  EXPECT(Func);
+  CHECK_RESULT(ParseComponentIndex(shared_data, string_table,
+                                   ComponentSort::Func, &dtor));
+  EXPECT(Rpar);
+
+  ComponentIndexLoc callback;
+  if (async && MatchLpar(TokenType::Callback)) {
+    CHECK_RESULT(ParseComponentIndex(shared_data, string_table,
+                                     ComponentSort::Func, &callback));
+    EXPECT(Rpar);
+  }
+  EXPECT(Rpar);
+
+  if (!async) {
+    auto type =
+        std::make_unique<ComponentTypeIndex>(ComponentTypeDef::Resource, dtor);
+    shared_data->AppendType(std::move(type));
+    return Result::Ok;
+  }
+
+  auto type =
+      std::make_unique<ComponentTypeResourceAsync>(dtor, callback);
+  shared_data->AppendType(std::move(type));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentInstanceType(
+    ComponentSharedData* shared_data,
+    Component::StringTable* string_table) {
+  while (!Match(TokenType::Rpar)) {
+    EXPECT(Lpar);
+
+    switch (Peek(0)) {
+      case TokenType::Alias: {
+        CHECK_RESULT(ParseComponentAlias(shared_data, string_table));
+        break;
+      }
+      case TokenType::Type: {
+        DropToken();
+        CHECK_RESULT(ParseComponentType(shared_data, string_table));
+        break;
+      }
+      case TokenType::Import:
+      case TokenType::Export: {
+        CHECK_RESULT(ParseComponentExtern(shared_data, string_table));
+        break;
+      }
+      default: {
+        Token token = Consume();
+        Error(token.loc, "unexpected instance type %s.",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+      }
+    }
+  }
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentType(ComponentSharedData* shared_data,
+                                      Component::StringTable* string_table) {
+  WABT_TRACE(ParseComponentType);
+
+  const std::string* name = nullptr;
+  CHECK_RESULT(ParseComponentName(shared_data, string_table,
+                                  ComponentSort::Type, &name));
+
+  if (Peek(0) == TokenType::Lpar) {
+    TokenType token_type = Peek(1);
+    switch (token_type) {
+      case TokenType::Instance:
+      case TokenType::Component: {
+        bool is_component = (token_type == TokenType::Component);
+        DropTwoTokens();
+
+        auto type_data =
+            std::make_unique<ComponentTypeData>(shared_data, is_component);
+        type_data->SetName(name);
+
+        CHECK_RESULT(ParseComponentInstanceType(type_data.get(), string_table));
+        shared_data->AppendType(std::move(type_data));
+        break;
+      }
+      case TokenType::Func: {
+        DropTwoTokens();
+        CHECK_RESULT(ParseComponentFuncType(shared_data, string_table));
+        EXPECT(Rpar);
+        break;
+      }
+      case TokenType::Resource: {
+        DropTwoTokens();
+        CHECK_RESULT(ParseComponentResourceType(shared_data, string_table));
+        EXPECT(Rpar);
+        break;
+      }
+      default:
+        CHECK_RESULT(
+            ParseComponentDefValType(shared_data, string_table, nullptr));
+        break;
+    }
+  } else {
+    CHECK_RESULT(ParseComponentDefValType(shared_data, string_table, nullptr));
+  }
+
+  EXPECT(Rpar);
+  shared_data->SetLastTypeName(name);
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentInlineCoreInstance(
+    const std::string* name,
+    ComponentData* component,
+    Component::StringTable* string_table) {
+  assert(PeekMatchLpar(TokenType::Export));
+  ComponentInstance::ArgumentVector arguments;
+  while (!PeekMatch(TokenType::Rpar)) {
+    EXPECT(Lpar);
+    EXPECT(Export);
+
+    ComponentDef::StringLoc export_name;
+    ComponentIndexLoc index;
+    ComponentSort sort;
+    CHECK_RESULT(ParseComponentString(string_table, &export_name));
+
+    EXPECT(Lpar);
+    CHECK_RESULT(ParseComponentCoreSort(&sort));
+
+    CHECK_RESULT(ParseComponentIndex(component, string_table, sort, &index));
+    EXPECT(Rpar);
+    EXPECT(Rpar);
+    arguments.push_back(ComponentInstance::Argument{export_name, sort, index});
+  }
+
+  EXPECT(Rpar);
+  auto instance = std::make_unique<ComponentInstance>(&arguments);
+  instance->SetName(name);
+  component->Append(std::move(instance));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentInlineInstance(
+    const std::string* name,
+    ComponentData* component,
+    Component::StringTable* string_table) {
+  assert(PeekMatchLpar(TokenType::Export));
+  ComponentInlineInstance::ArgumentVector arguments;
+  while (!PeekMatch(TokenType::Rpar)) {
+    EXPECT(Lpar);
+    EXPECT(Export);
+
+    bool has_suffix = false;
+    ComponentDef::StringLoc export_name;
+    std::string suffix;
+    ComponentIndexLoc index;
+    ComponentSort sort = ComponentSort::CoreModule;
+    CHECK_RESULT(ParseComponentString(string_table, &export_name));
+
+    if (MatchLpar(TokenType::VersionSuffix)) {
+      has_suffix = true;
+      CHECK_RESULT(ParseQuotedText(&suffix));
+      EXPECT(Rpar);
+    }
+
+    EXPECT(Lpar);
+    if (Match(TokenType::Core)) {
+      EXPECT(Module);
+    } else {
+      CHECK_RESULT(ParseComponentSort(&sort));
+    }
+
+    CHECK_RESULT(ParseComponentIndex(component, string_table, sort, &index));
+    EXPECT(Rpar);
+    EXPECT(Rpar);
+    const std::string* version_suffix =
+        has_suffix ? string_table->Append(suffix) : nullptr;
+    arguments.push_back(ComponentInlineInstance::Argument{
+        export_name, version_suffix, sort, index});
+  }
+
+  EXPECT(Rpar);
+  auto instance = std::make_unique<ComponentInlineInstance>(&arguments);
+  instance->SetName(name);
+  component->Append(std::move(instance));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentInstance(
+    bool is_core,
+    ComponentData* component,
+    Component::StringTable* string_table) {
+  DropToken();
+  ComponentSort sort =
+      is_core ? ComponentSort::CoreInstance : ComponentSort::Instance;
+  const std::string* name = nullptr;
+  CHECK_RESULT(ParseComponentName(component, string_table, sort, &name));
+
+  if (PeekMatchLpar(TokenType::Export)) {
+    if (is_core) {
+      return ParseComponentInlineCoreInstance(name, component, string_table);
+    }
+    return ParseComponentInlineInstance(name, component, string_table);
+  }
+
+  EXPECT(Lpar);
+  EXPECT(Instantiate);
+
+  sort = is_core ? ComponentSort::CoreModule : ComponentSort::Component;
+  ComponentIndexLoc from_index;
+  CHECK_RESULT(ParseComponentIndex(component, string_table, sort, &from_index));
+
+  ComponentInstance::ArgumentVector arguments;
+  sort = ComponentSort::CoreInstance;
+  while (!PeekMatch(TokenType::Rpar)) {
+    EXPECT(Lpar);
+    EXPECT(With);
+
+    ComponentDef::StringLoc name;
+    ComponentIndexLoc index;
+    CHECK_RESULT(ParseComponentString(string_table, &name));
+
+    EXPECT(Lpar);
+    if (is_core) {
+      EXPECT(Instance);
+    } else if (Match(TokenType::Core)) {
+      EXPECT(Module);
+      sort = ComponentSort::CoreModule;
+    } else {
+      CHECK_RESULT(ParseComponentSort(&sort));
+    }
+
+    if ((is_core || sort == ComponentSort::Instance) &&
+        PeekMatchLpar(TokenType::Export)) {
+      index = ComponentIndexLoc{component->SortSize(sort), Location()};
+      if (is_core) {
+        CHECK_RESULT(
+            ParseComponentInlineCoreInstance(nullptr, component, string_table));
+      } else {
+        CHECK_RESULT(
+            ParseComponentInlineInstance(nullptr, component, string_table));
+      }
+    } else {
+      CHECK_RESULT(ParseComponentIndex(component, string_table, sort, &index));
+      EXPECT(Rpar);
+    }
+    EXPECT(Rpar);
+    arguments.push_back(ComponentInstance::Argument{name, sort, index});
+  }
+
+  EXPECT(Rpar);
+  EXPECT(Rpar);
+  auto instance =
+      std::make_unique<ComponentInstance>(is_core, from_index, &arguments);
+  instance->SetName(name);
+  component->Append(std::move(instance));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentCoreFunc(
+    ComponentData* component,
+    Component::StringTable* string_table) {
+  const std::string* name = nullptr;
+  DropToken();
+  CHECK_RESULT(ParseComponentName(component, string_table,
+                                  ComponentSort::CoreFunc, &name));
+  EXPECT(Lpar);
+  EXPECT(Canon);
+
+  std::unique_ptr<ComponentDef> definition;
+  switch (Peek(0)) {
+    case TokenType::Lower: {
+      ComponentIndexLoc func_index;
+      ComponentCanonOpts::OptionVector options;
+
+      DropToken();
+      EXPECT(Lpar);
+      EXPECT(Func);
+      CHECK_RESULT(ParseComponentIndex(component, string_table,
+                                       ComponentSort::Func, &func_index));
+      EXPECT(Rpar);
+      CHECK_RESULT(ParseComponentCanonOpts(component, string_table, &options));
+      definition = std::make_unique<ComponentCanonLower>(func_index, &options);
+      break;
+    }
+    case TokenType::ResourceDrop: {
+      ComponentIndexLoc type_index;
+      DropToken();
+      CHECK_RESULT(ParseComponentIndex(component, string_table,
+                                       ComponentSort::Type, &type_index));
+      definition = std::make_unique<ComponentCanonType>(
+          ComponentDef::Canon::ResourceDrop, type_index);
+      break;
+    }
+    default: {
+      Token token = Consume();
+      Error(token.loc, "unexpected canonical definition %s.",
+            token.to_string_clamp(kMaxErrorTokenLength).c_str());
+      return Result::Error;
+    }
+  }
+
+  EXPECT(Rpar);
+  EXPECT(Rpar);
+  definition->SetName(name);
+  component->Append(std::move(definition));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponentFunc(ComponentData* component,
+                                      Component::StringTable* string_table) {
+  const std::string* name = nullptr;
+  DropToken();
+  CHECK_RESULT(ParseComponentName(component, string_table,
+                                  ComponentSort::CoreFunc, &name));
+
+  ComponentIndexLoc type_index, core_func_index;
+  ComponentCanonOpts::OptionVector options;
+
+  if (MatchLpar(TokenType::Type)) {
+    CHECK_RESULT(ParseComponentIndex(component, string_table,
+                                     ComponentSort::Type, &type_index));
+    EXPECT(Rpar);
+  } else {
+    CHECK_RESULT(ParseComponentFuncType(component, string_table));
+    type_index.index = component->TypeSize() - 1;
+  }
+
+  EXPECT(Lpar);
+  EXPECT(Canon);
+  EXPECT(Lift);
+
+  EXPECT(Lpar);
+  EXPECT(Core);
+  EXPECT(Func);
+  CHECK_RESULT(ParseComponentIndex(component, string_table,
+                                   ComponentSort::CoreFunc, &core_func_index));
+  EXPECT(Rpar);
+
+  CHECK_RESULT(ParseComponentCanonOpts(component, string_table, &options));
+  EXPECT(Rpar);
+  EXPECT(Rpar);
+
+  auto lift = std::make_unique<ComponentCanonLift>(core_func_index, &options,
+                                                   type_index);
+  lift->SetName(name);
+  component->Append(std::move(lift));
+  return Result::Ok;
+}
+
+Result WastParser::ParseComponent(ComponentData* component,
+                                  Component::StringTable* string_table) {
+  WABT_TRACE(ParseComponent);
+
+  while (!Match(TokenType::Rpar)) {
+    EXPECT(Lpar);
+
+    switch (Peek(0)) {
+      case TokenType::Core:
+        DropToken();
+        switch (Peek(0)) {
+          case TokenType::Module: {
+            DropToken();
+
+            const std::string* name = nullptr;
+            CHECK_RESULT(ParseComponentName(component, string_table,
+                                            ComponentSort::CoreModule, &name));
+            auto coreModule = std::make_unique<ComponentCoreModule>();
+            coreModule->SetName(name);
+            CHECK_RESULT(ParseModuleFieldList(coreModule->module()));
+            EXPECT(Rpar);
+            component->Append(std::move(coreModule));
+            break;
+          }
+          case TokenType::Instance: {
+            CHECK_RESULT(ParseComponentInstance(true, component, string_table));
+            break;
+          }
+          case TokenType::Func: {
+            CHECK_RESULT(ParseComponentCoreFunc(component, string_table));
+            break;
+          }
+          default: {
+            Token token = Consume();
+            Error(token.loc, "unexpected core definition %s.",
+                  token.to_string_clamp(kMaxErrorTokenLength).c_str());
+            return Result::Error;
+          }
+        }
+        break;
+      case TokenType::Component: {
+        DropToken();
+        const std::string* name = nullptr;
+        CHECK_RESULT(ParseComponentName(component, string_table,
+                                        ComponentSort::Component, &name));
+
+        auto component_data = std::make_unique<ComponentData>(component);
+        component_data->SetName(name);
+        CHECK_RESULT(ParseComponent(component_data.get(), string_table));
+        component->Append(std::move(component_data));
+        break;
+      }
+      case TokenType::Instance: {
+        CHECK_RESULT(ParseComponentInstance(false, component, string_table));
+        break;
+      }
+      case TokenType::Alias: {
+        CHECK_RESULT(ParseComponentAlias(component, string_table));
+        break;
+      }
+      case TokenType::Type: {
+        DropToken();
+        CHECK_RESULT(ParseComponentType(component, string_table));
+        break;
+      }
+      case TokenType::Func: {
+        CHECK_RESULT(ParseComponentFunc(component, string_table));
+        break;
+      }
+      case TokenType::Import:
+      case TokenType::Export: {
+        CHECK_RESULT(ParseComponentExtern(component, string_table));
+        break;
+      }
+      default: {
+        Token token = Consume();
+        Error(token.loc, "unexpected definition %s",
+              token.to_string_clamp(kMaxErrorTokenLength).c_str());
+        return Result::Error;
+      }
+    }
+  }
   return Result::Ok;
 }
 
@@ -4079,6 +5910,15 @@ bool WastParser::CheckRefType(Type::Enum type) {
       return options_->features.reference_types_enabled();
     case Type::ExnRef:
       return options_->features.exceptions_enabled();
+    case Type::NullFuncRef:
+    case Type::NullExternRef:
+    case Type::NullRef:
+    case Type::AnyRef:
+    case Type::EqRef:
+    case Type::I31Ref:
+    case Type::StructRef:
+    case Type::ArrayRef:
+      return options_->features.gc_enabled();
     default:
       assert(!Type::EnumIsNonTypedRef(type));
       return false;
@@ -4152,6 +5992,24 @@ Result ParseWastScript(WastLexer* lexer,
   WastParser parser(lexer, errors, options);
   CHECK_RESULT(parser.ParseScript(out_script));
   CHECK_RESULT(ResolveNamesScript(out_script->get(), errors));
+  return Result::Ok;
+}
+
+Result ParseWatComponent(WastLexer* lexer,
+                         std::unique_ptr<Component>* out_component,
+                         std::unique_ptr<Module>* out_module,
+                         Errors* errors,
+                         WastParseOptions* options) {
+  assert(out_component != nullptr);
+  assert(options != nullptr);
+  WastParser parser(lexer, errors, options);
+
+  if (out_module != nullptr && !parser.IsComponent()) {
+    CHECK_RESULT(parser.ParseModule(out_module));
+    return Result::Ok;
+  }
+
+  CHECK_RESULT(parser.ParseComponent(out_component));
   return Result::Ok;
 }
 

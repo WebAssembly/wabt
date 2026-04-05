@@ -23,6 +23,7 @@
 
 #include "wabt/binary.h"
 #include "wabt/common.h"
+#include "wabt/component.h"
 #include "wabt/error.h"
 #include "wabt/feature.h"
 #include "wabt/opcode.h"
@@ -52,12 +53,19 @@ struct ReadBinaryOptions {
   bool skip_function_bodies = false;
 };
 
-// TODO: Move somewhere else?
+// TODO: Move both TypeMut and SupertypesInfo somewhere else?
 struct TypeMut {
   Type type;
   bool mutable_;
 };
 using TypeMutVector = std::vector<TypeMut>;
+
+// Type extension introduced by the Garbage Collector proposal
+struct SupertypesInfo {
+  bool is_final_sub_type;
+  Index sub_type_count;
+  Index* sub_types;
+};
 
 struct CatchClause {
   CatchKind kind;
@@ -104,15 +112,20 @@ class BinaryReaderDelegate {
   /* Type section */
   virtual Result BeginTypeSection(Offset size) = 0;
   virtual Result OnTypeCount(Index count) = 0;
+  virtual Result OnRecursiveGroup(Index first_type_index, Index type_count) = 0;
   virtual Result OnFuncType(Index index,
                             Index param_count,
                             Type* param_types,
                             Index result_count,
-                            Type* result_types) = 0;
+                            Type* result_types,
+                            SupertypesInfo* supertypes) = 0;
   virtual Result OnStructType(Index index,
                               Index field_count,
-                              TypeMut* fields) = 0;
-  virtual Result OnArrayType(Index index, TypeMut field) = 0;
+                              TypeMut* fields,
+                              SupertypesInfo* supertypes) = 0;
+  virtual Result OnArrayType(Index index,
+                             TypeMut field,
+                             SupertypesInfo* supertypes) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */
@@ -236,6 +249,17 @@ class BinaryReaderDelegate {
   virtual Result OnTernaryExpr(Opcode opcode) = 0;
   virtual Result OnQuaternaryExpr(Opcode opcode) = 0;
 
+  virtual Result OnArrayCopyExpr(Index dst_type_index, Index src_type_index) = 0;
+  virtual Result OnArrayFillExpr(Index type_index) = 0;
+  virtual Result OnArrayGetExpr(Opcode opcode, Index type_index) = 0;
+  virtual Result OnArrayInitDataExpr(Index type_index, Index data_index) = 0;
+  virtual Result OnArrayInitElemExpr(Index type_index, Index elem_index) = 0;
+  virtual Result OnArrayNewExpr(Index type_index) = 0;
+  virtual Result OnArrayNewDataExpr(Index type_index, Index data_index) = 0;
+  virtual Result OnArrayNewDefaultExpr(Index type_index) = 0;
+  virtual Result OnArrayNewElemExpr(Index type_index, Index elem_index) = 0;
+  virtual Result OnArrayNewFixedExpr(Index type_index, Index count) = 0;
+  virtual Result OnArraySetExpr(Index type_index) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   Index memidx,
                                   Address alignment_log2,
@@ -264,6 +288,10 @@ class BinaryReaderDelegate {
   virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
+  virtual Result OnBrOnCastExpr(Opcode opcode,
+                                Index depth,
+                                Type type1,
+                                Type type2) = 0;
   virtual Result OnBrOnNonNullExpr(Index depth) = 0;
   virtual Result OnBrOnNullExpr(Index depth) = 0;
   virtual Result OnBrTableExpr(Index num_targets,
@@ -283,6 +311,7 @@ class BinaryReaderDelegate {
   virtual Result OnF32ConstExpr(uint32_t value_bits) = 0;
   virtual Result OnF64ConstExpr(uint64_t value_bits) = 0;
   virtual Result OnV128ConstExpr(v128 value_bits) = 0;
+  virtual Result OnGCUnaryExpr(Opcode opcode) = 0;
   virtual Result OnGlobalGetExpr(Index global_index) = 0;
   virtual Result OnGlobalSetExpr(Index global_index) = 0;
   virtual Result OnI32ConstExpr(uint32_t value) = 0;
@@ -311,9 +340,11 @@ class BinaryReaderDelegate {
   virtual Result OnTableSizeExpr(Index table_index) = 0;
   virtual Result OnTableFillExpr(Index table_index) = 0;
   virtual Result OnRefAsNonNullExpr() = 0;
+  virtual Result OnRefCastExpr(Type type) = 0;
   virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr(Type type) = 0;
   virtual Result OnRefIsNullExpr() = 0;
+  virtual Result OnRefTestExpr(Type type) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr(Index depth) = 0;
   virtual Result OnReturnExpr() = 0;
@@ -326,6 +357,12 @@ class BinaryReaderDelegate {
                              Index memidx,
                              Address alignment_log2,
                              Address offset) = 0;
+  virtual Result OnStructGetExpr(Opcode opcode,
+                                 Index type_index,
+                                 Index field_index) = 0;
+  virtual Result OnStructNewExpr(Index type_index) = 0;
+  virtual Result OnStructNewDefaultExpr(Index type_index) = 0;
+  virtual Result OnStructSetExpr(Index type_index, Index field_index) = 0;
   virtual Result OnThrowExpr(Index tag_index) = 0;
   virtual Result OnThrowRefExpr() = 0;
   virtual Result OnTryExpr(Type sig_type) = 0;
@@ -522,10 +559,120 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
+class ComponentBinaryReaderDelegate {
+ public:
+  virtual ~ComponentBinaryReaderDelegate() {}
+
+  virtual bool OnError(const Error&) = 0;
+  virtual void OnSetState(const BinaryReaderDelegate::State* s) { state = s; }
+
+  virtual Result OnCoreModule(const void* data,
+                              size_t size,
+                              const ReadBinaryOptions& options) = 0;
+  virtual Result BeginComponent(uint32_t version, size_t depth) = 0;
+  virtual Result EndComponent() = 0;
+
+  virtual Result BeginCoreInstanceSection(uint32_t count) = 0;
+  virtual Result EndCoreInstanceSection() = 0;
+  virtual Result OnCoreInstance(const ComponentIndexLoc& module_index,
+                                uint32_t argument_count,
+                                ComponentNamedSort* arguments) = 0;
+  virtual Result OnInlineCoreInstance(uint32_t argument_count,
+                                      ComponentNamedSort* arguments) = 0;
+
+  virtual Result BeginInstanceSection(uint32_t count) = 0;
+  virtual Result EndInstanceSection() = 0;
+  virtual Result OnInstance(const ComponentIndexLoc& module_index,
+                            uint32_t argument_count,
+                            ComponentNamedSort* arguments) = 0;
+  virtual Result OnInlineInstance(uint32_t argument_count,
+                                  ComponentNamedExportInfo* arguments) = 0;
+
+  virtual Result BeginAliasSection(uint32_t count) = 0;
+  virtual Result EndAliasSection() = 0;
+  virtual Result OnAliasExport(ComponentSort sort,
+                               const ComponentIndexLoc& instance_index,
+                               const ComponentStringLoc& name) = 0;
+  virtual Result OnAliasCoreExport(ComponentSort sort,
+                                   const ComponentIndexLoc& core_instance_index,
+                                   const ComponentStringLoc& name) = 0;
+  virtual Result OnAliasOuter(ComponentSort sort,
+                              uint32_t counter,
+                              uint32_t index) = 0;
+
+  virtual Result BeginTypeSection(uint32_t count) = 0;
+  virtual Result EndTypeSection() = 0;
+  virtual Result OnPrimitiveType(const ComponentTypeLoc type) = 0;
+  virtual Result OnRecordType(uint32_t field_count,
+                              ComponentNamedType* fields) = 0;
+  virtual Result OnVariantType(uint32_t case_count,
+                               ComponentNamedType* cases) = 0;
+  virtual Result OnListType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnListFixedType(const ComponentTypeLoc& type,
+                                 uint32_t size) = 0;
+  virtual Result OnTupleType(uint32_t type_count,
+                             const ComponentTypeLoc* types) = 0;
+  virtual Result OnFlagsType(uint32_t flag_count,
+                             const ComponentStringLoc* flags) = 0;
+  virtual Result OnEnumType(uint32_t enum_count,
+                            const ComponentStringLoc* enums) = 0;
+  virtual Result OnOptionType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnResultType(const ComponentTypeLoc& result,
+                              const ComponentTypeLoc& error) = 0;
+  virtual Result OnOwnType(const ComponentIndexLoc& index) = 0;
+  virtual Result OnBorrowType(const ComponentIndexLoc& index) = 0;
+  virtual Result OnStreamType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnFutureType(const ComponentTypeLoc& type) = 0;
+  virtual Result OnFuncType(ComponentTypeDef type,
+                            uint32_t param_count,
+                            const ComponentNamedType* params,
+                            const ComponentTypeLoc& result) = 0;
+  virtual Result OnResourceType(const ComponentIndexLoc& dtor) = 0;
+  virtual Result OnResourceAsyncType(const ComponentIndexLoc& dtor,
+                                     const ComponentIndexLoc& callback) = 0;
+  virtual Result BeginInstanceType(uint32_t count) = 0;
+  virtual Result EndInstanceType() = 0;
+  virtual Result BeginComponentType(uint32_t count) = 0;
+  virtual Result EndComponentType() = 0;
+
+  virtual Result BeginCanonSection(uint32_t count) = 0;
+  virtual Result EndCanonSection() = 0;
+  virtual Result OnCanonLift(const ComponentIndexLoc& core_func_index,
+                             uint32_t option_count,
+                             ComponentCanonOption* options,
+                             const ComponentIndexLoc& type_index) = 0;
+  virtual Result OnCanonLower(const ComponentIndexLoc& func_index,
+                              uint32_t option_count,
+                              ComponentCanonOption* options) = 0;
+  virtual Result OnCanonType(ComponentBinaryCanon canon,
+                             const ComponentIndexLoc& type_index) = 0;
+
+  virtual Result BeginImportSection(uint32_t count) = 0;
+  virtual Result EndImportSection() = 0;
+  virtual Result OnImport(const ComponentStringLoc& external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info) = 0;
+
+  virtual Result BeginExportSection(uint32_t count) = 0;
+  virtual Result EndExportSection() = 0;
+  virtual Result OnExport(const ComponentStringLoc& external_name,
+                          std::string_view* version_suffix,
+                          ComponentExternalInfo* external_info,
+                          ComponentExportInfo* export_info) = 0;
+  const BinaryReaderDelegate::State* state = nullptr;
+};
+
 Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
+
+Result ReadBinaryComponent(const void* data,
+                           size_t size,
+                           ComponentBinaryReaderDelegate* component_delegate,
+                           const ReadBinaryOptions& options);
+
+bool ReadBinaryIsComponent(const void* data, size_t size);
 
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,
