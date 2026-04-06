@@ -30,7 +30,7 @@ struct Range {
 };
 
 using OffsetRange = Range<Offset>;
-using ColumnRange = Range<int>;
+using ColumnRange = Range<unsigned int>;
 
 }  // namespace wabt
 

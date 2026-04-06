@@ -59,8 +59,8 @@ TEST(WastParser, LongToken) {
   ASSERT_EQ(1u, errors.size());
 
   ASSERT_EQ(ErrorLevel::Error, errors[0].error_level);
-  ASSERT_EQ(1, errors[0].loc.line);
-  ASSERT_EQ(17, errors[0].loc.first_column);
+  ASSERT_EQ(1u, errors[0].loc.line);
+  ASSERT_EQ(17u, errors[0].loc.first_column);
   ASSERT_STREQ(
       R"(unexpected token "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...", expected a natural number (e.g. 123).)",
       errors[0].message.c_str());
@@ -76,14 +76,14 @@ TEST(WastParser, LongTokenSpace) {
   ASSERT_EQ(2u, errors.size());
 
   ASSERT_EQ(ErrorLevel::Error, errors[0].error_level);
-  ASSERT_EQ(1, errors[0].loc.line);
-  ASSERT_EQ(1, errors[0].loc.first_column);
+  ASSERT_EQ(1u, errors[0].loc.line);
+  ASSERT_EQ(1u, errors[0].loc.first_column);
   ASSERT_STREQ(
       R"(unexpected token "notparen", expected a module field or a module.)",
       errors[0].message.c_str());
 
-  ASSERT_EQ(1, errors[1].loc.line);
-  ASSERT_EQ(65545, errors[1].loc.first_column);
+  ASSERT_EQ(1u, errors[1].loc.line);
+  ASSERT_EQ(65545u, errors[1].loc.first_column);
   ASSERT_STREQ(R"(unexpected token notmodule, expected EOF.)",
                errors[1].message.c_str());
 }

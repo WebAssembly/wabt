@@ -31,7 +31,7 @@ class LexerSourceLineFinder {
  public:
   struct SourceLine {
     std::string line;
-    int column_offset;
+    unsigned int column_offset;
   };
 
   explicit LexerSourceLineFinder(std::unique_ptr<LexerSource>);
