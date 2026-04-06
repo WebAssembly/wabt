@@ -37,7 +37,6 @@
 
 using namespace wabt;
 
-static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
 static unsigned int s_num_outputs = 1;
@@ -73,10 +72,8 @@ static bool IsFeatureSupported(const std::string& feature) {
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2c", s_description);
 
-  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
-    s_verbose++;
-    s_log_stream = FileStream::CreateStderr();
-  });
+  parser.AddOption('v', "verbose", "Use multiple times for more info",
+                   []() { s_log_stream = FileStream::CreateStderr(); });
   parser.AddOption(
       'o', "output", "FILENAME",
       "Output file for the generated C source file, by default use stdout",

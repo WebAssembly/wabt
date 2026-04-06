@@ -30,7 +30,6 @@
 
 using namespace wabt;
 
-static int s_verbose;
 static std::string s_infile;
 static Features s_features;
 static bool s_read_debug_names = true;
@@ -48,10 +47,8 @@ examples:
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-validate", s_description);
 
-  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
-    s_verbose++;
-    s_log_stream = FileStream::CreateStderr();
-  });
+  parser.AddOption('v', "verbose", "Use multiple times for more info",
+                   []() { s_log_stream = FileStream::CreateStderr(); });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });

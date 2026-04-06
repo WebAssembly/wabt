@@ -34,7 +34,6 @@
 
 using namespace wabt;
 
-static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
 static size_t s_cutoff = 0;
@@ -56,7 +55,6 @@ static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-stats", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
-    s_verbose++;
     s_log_stream = FileStream::CreateStderr();
     s_read_binary_options.log_stream = s_log_stream.get();
   });

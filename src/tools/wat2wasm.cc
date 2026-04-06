@@ -43,7 +43,6 @@ static bool s_dump_module;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
 static bool s_validate = true;
-static bool s_debug_parsing;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
@@ -71,8 +70,6 @@ static void ParseOptions(int argc, char* argv[]) {
     s_verbose++;
     s_log_stream = FileStream::CreateStderr();
   });
-  parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
-                   []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",
                    "Print a hexdump of the module to stdout",
                    []() { s_dump_module = true; });

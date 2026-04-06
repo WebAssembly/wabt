@@ -34,7 +34,6 @@ struct WastParseOptions {
   WastParseOptions(const Features& features) : features(features) {}
 
   Features features;
-  bool debug_parsing = false;
   bool parse_binary_modules = true;
 };
 

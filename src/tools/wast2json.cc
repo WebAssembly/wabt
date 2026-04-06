@@ -40,10 +40,8 @@ using namespace wabt;
 
 static const char* s_infile;
 static std::string s_outfile;
-static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
 static bool s_validate = true;
-static bool s_debug_parsing;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
@@ -61,12 +59,8 @@ examples:
 static void ParseOptions(int argc, char* argv[]) {
   OptionParser parser("wast2json", s_description);
 
-  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
-    s_verbose++;
-    s_log_stream = FileStream::CreateStderr();
-  });
-  parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
-                   []() { s_debug_parsing = true; });
+  parser.AddOption('v', "verbose", "Use multiple times for more info",
+                   []() { s_log_stream = FileStream::CreateStderr(); });
   s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILE", "output JSON file",
                    [](const char* argument) { s_outfile = argument; });

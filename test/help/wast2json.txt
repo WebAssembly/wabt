@@ -15,7 +15,6 @@ options:
       --help                                   Print this help message
       --version                                Print version information
   -v, --verbose                                Use multiple times for more info
-      --debug-parser                           Turn on debugging the parser of wast files
       --enable-exceptions                      Enable Experimental exception handling
       --disable-mutable-globals                Disable Import/export mutable globals
       --disable-saturating-float-to-int        Disable Saturating float-to-int operators
