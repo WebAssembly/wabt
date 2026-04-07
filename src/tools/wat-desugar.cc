@@ -37,7 +37,6 @@ using namespace wabt;
 
 static const char* s_infile;
 static const char* s_outfile;
-static bool s_debug_parsing;
 static bool s_fold_exprs;
 static bool s_generate_names;
 static bool s_inline_import;
@@ -63,8 +62,6 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
-  parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
-                   []() { s_debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_fold_exprs = true; });
   parser.AddOption("inline-exports", "Write all exports inline",

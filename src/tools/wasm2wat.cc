@@ -34,7 +34,6 @@
 
 using namespace wabt;
 
-static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
 static Features s_features;
@@ -62,10 +61,8 @@ examples:
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2wat", s_description);
 
-  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
-    s_verbose++;
-    s_log_stream = FileStream::CreateStderr();
-  });
+  parser.AddOption('v', "verbose", "Use multiple times for more info",
+                   []() { s_log_stream = FileStream::CreateStderr(); });
   parser.AddOption(
       'o', "output", "FILENAME",
       "Output file for the generated wast file, by default use stdout",
