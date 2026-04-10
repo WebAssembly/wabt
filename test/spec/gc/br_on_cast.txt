@@ -1,0 +1,27 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/br_on_cast.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+init(externref:1) =>
+test-sub() =>
+test-canon() =>
+out/test/spec/gc/br_on_cast.wast:226: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.3.wasm:0000028: error: type mismatch in br_on_cast, expected [(ref 0)] but got [(ref null 0)]
+  0000028: error: OnBrOnCastExpr callback failed
+out/test/spec/gc/br_on_cast.wast:235: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.4.wasm:0000028: error: type mismatch: (ref null 0) is not a subtype of (ref any)
+  0000028: error: OnBrOnCastExpr callback failed
+out/test/spec/gc/br_on_cast.wast:244: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.5.wasm:0000028: error: type mismatch in block, expected [(ref any)] but got [anyref]
+  0000028: error: OnEndExpr callback failed
+out/test/spec/gc/br_on_cast.wast:253: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.6.wasm:000001f: error: type mismatch: anyref is not a subtype of eqref
+  000001f: error: OnBrOnCastExpr callback failed
+out/test/spec/gc/br_on_cast.wast:261: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.7.wasm:000001f: error: type mismatch: arrayref is not a subtype of structref
+  000001f: error: OnBrOnCastExpr callback failed
+out/test/spec/gc/br_on_cast.wast:272: assert_invalid passed:
+  out/test/spec/gc/br_on_cast/br_on_cast.8.wasm:0000036: error: type mismatch in call, expected [(ref null 0)] but got [funcref]
+  0000036: error: OnCallExpr callback failed
+37/37 tests passed.
+;;; STDOUT ;;)

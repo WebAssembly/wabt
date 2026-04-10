@@ -29,8 +29,6 @@
 #include "wabt/opcode.h"
 #include "wabt/type-checker.h"
 
-#include "wabt/binary-reader.h"  // For TypeMut.
-
 namespace wabt {
 
 struct ValidateOptions {
@@ -48,7 +46,11 @@ enum class TableImportStatus {
 class SharedValidator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(SharedValidator);
+  using TypeEntry = TypeChecker::TypeEntry;
   using FuncType = TypeChecker::FuncType;
+  using StructType = TypeChecker::StructType;
+  using ArrayType = TypeChecker::ArrayType;
+  using RecGroup = TypeChecker::RecGroup;
   SharedValidator(Errors*,
                   std::string_view filename,
                   const ValidateOptions& options);
@@ -70,22 +72,35 @@ class SharedValidator {
 
   Index GetLocalCount() const;
 
+  // The canonical index is the lowest index, which represents
+  // the same type as the type_index. The canonical index is
+  // always less or equal than type_index.
+  Index GetCanonicalTypeIndex(Index type_index);
+
   Result EndModule();
 
+  Result OnRecursiveGroup(Index first_type_index, Index type_count);
   Result OnFuncType(const Location&,
                     Index param_count,
                     const Type* param_types,
                     Index result_count,
                     const Type* result_types,
-                    Index type_index);
-  Result OnStructType(const Location&, Index field_count, TypeMut* fields);
-  Result OnArrayType(const Location&, TypeMut field);
+                    Index type_index,
+                    SupertypesInfo* supertypes);
+  Result OnStructType(const Location&,
+                      Index field_count,
+                      TypeMut* fields,
+                      SupertypesInfo* supertypes);
+  Result OnArrayType(const Location&,
+                     TypeMut field,
+                     SupertypesInfo* supertypes);
 
   Result OnFunction(const Location&, Var sig_var);
   Result OnTable(const Location&, Type elem_type, const Limits&, TableImportStatus import_status, TableInitExprStatus init_provided);
   Result OnMemory(const Location&, const Limits&, uint32_t page_size);
   Result OnGlobalImport(const Location&, Type type, bool mutable_);
-  Result OnGlobal(const Location&, Type type, bool mutable_);
+  Result BeginGlobal(const Location&, Type type, bool mutable_);
+  Result EndGlobal(const Location&);
   Result OnTag(const Location&, Var sig_var);
 
   Result OnExport(const Location&,
@@ -108,6 +123,17 @@ class SharedValidator {
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
+  Result OnArrayCopy(const Location&, Var dst_type, Var src_type);
+  Result OnArrayFill(const Location&, Var type);
+  Result OnArrayGet(const Location&, Opcode, Var type);
+  Result OnArrayInitData(const Location&, Var type, Var segment_var);
+  Result OnArrayInitElem(const Location&, Var type, Var segment_var);
+  Result OnArrayNew(const Location&, Var type);
+  Result OnArrayNewData(const Location&, Var type, Var segment_var);
+  Result OnArrayNewDefault(const Location&, Var type);
+  Result OnArrayNewElem(const Location&, Var type, Var segment_var);
+  Result OnArrayNewFixed(const Location&, Var type, Index count);
+  Result OnArraySet(const Location&, Var type);
   Result OnAtomicFence(const Location&, uint32_t consistency_model);
   Result OnAtomicLoad(const Location&,
                       Opcode,
@@ -145,6 +171,10 @@ class SharedValidator {
   Result OnBlock(const Location&, Type sig_type);
   Result OnBr(const Location&, Var depth);
   Result OnBrIf(const Location&, Var depth);
+  Result OnBrOnCast(const Location&,
+                    Opcode, Var depth,
+                    Var type1_var,
+                    Var type2_var);
   Result OnBrOnNonNull(const Location&, Var depth);
   Result OnBrOnNull(const Location&, Var depth);
   Result BeginBrTable(const Location&);
@@ -163,6 +193,7 @@ class SharedValidator {
   Result OnElemDrop(const Location&, Var segment_var);
   Result OnElse(const Location&);
   Result OnEnd(const Location&);
+  Result OnGCUnary(const Location&, Opcode);
   Result OnGlobalGet(const Location&, Var);
   Result OnGlobalSet(const Location&, Var);
   Result OnIf(const Location&, Type sig_type);
@@ -188,9 +219,11 @@ class SharedValidator {
   Result OnMemorySize(const Location&, Var memidx);
   Result OnNop(const Location&);
   Result OnRefAsNonNull(const Location&);
+  Result OnRefCast(const Location&, Var type_var);
   Result OnRefFunc(const Location&, Var func_var);
   Result OnRefIsNull(const Location&);
   Result OnRefNull(const Location&, Var func_type_var);
+  Result OnRefTest(const Location&, Var type_var);
   Result OnRethrow(const Location&, Var depth);
   Result OnReturnCall(const Location&, Var func_var);
   Result OnReturnCallIndirect(const Location&, Var sig_var, Var table_var);
@@ -216,6 +249,10 @@ class SharedValidator {
                  Var memidx,
                  Address align,
                  Address offset);
+  Result OnStructGet(const Location&, Opcode, Var type, Var field);
+  Result OnStructNew(const Location&, Var type);
+  Result OnStructNewDefault(const Location&, Var type);
+  Result OnStructSet(const Location&, Var type, Var field);
   Result OnTableCopy(const Location&, Var dst_var, Var src_var);
   Result OnTableFill(const Location&, Var table_var);
   Result OnTableGet(const Location&, Var table_var);
@@ -233,20 +270,6 @@ class SharedValidator {
   Result OnUnreachable(const Location&);
 
  private:
-  struct StructType {
-    StructType() = default;
-    StructType(const TypeMutVector& fields) : fields(fields) {}
-
-    TypeMutVector fields;
-  };
-
-  struct ArrayType {
-    ArrayType() = default;
-    ArrayType(TypeMut field) : field(field) {}
-
-    TypeMut field;
-  };
-
   struct TableType {
     TableType() = default;
     TableType(Type element, Limits limits) : element(element), limits(limits) {}
@@ -302,7 +325,11 @@ class SharedValidator {
                    Type actual,
                    Type expected,
                    const char* desc);
-  Result CheckReferenceType(const Location&, Type type, const char* desc);
+  Result CheckReferenceType(const Location&,
+                            Type type,
+                            Index end_index,
+                            const char* desc);
+  Result CheckSupertypes(const Location&, SupertypesInfo* supertypes);
   Result CheckLimits(const Location&,
                      const Limits&,
                      uint64_t absolute_max,
@@ -318,7 +345,9 @@ class SharedValidator {
                              const std::vector<T>& values,
                              T* out,
                              const char* desc);
-  Result CheckFuncTypeIndex(Var sig_var, FuncType* out = nullptr);
+  Result CheckFuncTypeIndex(Var sig_var, FuncType* out);
+  Result CheckStructTypeIndex(Var type_var, Type* out_ref, StructType* out);
+  Result CheckArrayTypeIndex(Var type_var, Type* out_ref, TypeMut* out);
   Result CheckFuncIndex(Var func_var, FuncType* out = nullptr);
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
@@ -347,6 +376,8 @@ class SharedValidator {
   void RestoreLocalRefs(Result result);
   void IgnoreLocalRefs();
 
+  Index GetRecGroupEnd();
+
   ValidateOptions options_;
   Errors* errors_;
   std::string_view filename_;
@@ -355,10 +386,7 @@ class SharedValidator {
   Location expr_loc_ = Location(kInvalidOffset);
   bool in_init_expr_ = false;
 
-  Index num_types_ = 0;
-  std::map<Index, FuncType> func_types_;
-  std::map<Index, StructType> struct_types_;
-  std::map<Index, ArrayType> array_types_;
+  TypeChecker::TypeFields type_fields_;
 
   std::vector<FuncType> funcs_;       // Includes imported and defined.
   std::vector<TableType> tables_;     // Includes imported and defined.
@@ -367,8 +395,11 @@ class SharedValidator {
   std::vector<TagType> tags_;         // Includes imported and defined.
   std::vector<ElemType> elems_;
   Index starts_ = 0;
-  Index num_imported_globals_ = 0;
+  Index last_initialized_global_ = 0;
   Index data_segments_ = 0;
+  Index last_rec_type_end_ = 0;
+  // Recursive type checks may enter to infinite loop for invalid values.
+  Result type_validation_result_ = Result::Ok;
 
   // Includes parameters, since this is only used for validating
   // local.{get,set,tee} instructions.
@@ -379,6 +410,324 @@ class SharedValidator {
   std::set<std::string> export_names_;  // Used to check for duplicates.
   std::set<Index> declared_funcs_;      // TODO: optimize?
   std::vector<Var> check_declared_funcs_;
+};
+
+class SharedComponentValidator {
+ public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(SharedComponentValidator);
+  SharedComponentValidator(Errors* errors,
+                           std::string_view filename,
+                           const ValidateOptions& options);
+
+  Result WABT_PRINTF_FORMAT(3, 4)
+      PrintError(const Location& loc, const char* format, ...);
+
+  Result BeginComponent();
+  Result EndComponent();
+
+  Result OnCoreInstance(const ComponentIndexLoc& module_index);
+  Result OnCoreInstanceArg(const ComponentStringLoc& name,
+                           ComponentSort sort,
+                           const ComponentIndexLoc& index);
+  Result OnInlineCoreInstance();
+  Result OnInlineCoreInstanceArg(const ComponentStringLoc& name,
+                                 ComponentSort sort,
+                                 const ComponentIndexLoc& index);
+
+  Result OnInstance(const ComponentIndexLoc& module_index);
+  Result OnInstanceArg(const ComponentStringLoc& name,
+                       ComponentSort sort,
+                       const ComponentIndexLoc& index);
+  Result OnInlineInstance();
+  Result OnInlineInstanceArg(const ComponentStringLoc& name,
+                             bool has_version_suffix,
+                             std::string_view version_suffix,
+                             ComponentSort sort,
+                             const ComponentIndexLoc& index);
+
+  Result OnAliasExport(ComponentSort sort,
+                       const ComponentIndexLoc& instance_index,
+                       const ComponentStringLoc& name);
+  Result OnAliasCoreExport(ComponentSort sort,
+                           const ComponentIndexLoc& core_instance_index,
+                           const ComponentStringLoc& name);
+  Result OnAliasOuter(const Location& loc,
+                      ComponentSort sort,
+                      uint32_t counter,
+                      uint32_t index);
+
+  Result OnPrimitiveType(const ComponentType& type);
+  Result OnRecordType(const Location& loc, uint32_t field_count);
+  Result OnRecordField(const ComponentStringLoc& field_name,
+                       const ComponentTypeLoc& field_type);
+  Result OnVariantType(const Location& loc, uint32_t case_count);
+  Result OnVariantCase(const ComponentStringLoc& case_name,
+                       const ComponentTypeLoc& case_type);
+  Result OnListType(const ComponentTypeLoc& type);
+  Result OnListFixedType(const Location& loc,
+                         const ComponentTypeLoc& type,
+                         uint32_t size);
+  Result OnTupleType(const Location& loc, uint32_t type_count);
+  Result OnTupleItem(const ComponentTypeLoc& item);
+  Result OnFlagsType(const Location& loc, uint32_t flag_count);
+  Result OnFlagsLabel(const ComponentStringLoc& label);
+  Result OnEnumType(const Location& loc, uint32_t enum_count);
+  Result OnEnumLabel(const ComponentStringLoc& label);
+  Result OnOptionType(const ComponentTypeLoc& type);
+  Result OnResultType(const ComponentTypeLoc& result,
+                      const ComponentTypeLoc& error);
+  Result OnOwnType(const ComponentIndexLoc& index);
+  Result OnBorrowType(const ComponentIndexLoc& index);
+  Result OnStreamType(const ComponentTypeLoc& type);
+  Result OnFutureType(const ComponentTypeLoc& type);
+  Result OnFuncType(ComponentTypeDef type,
+                    uint32_t param_count);
+  Result OnFuncParam(ComponentStringLoc name,
+                     ComponentTypeLoc type);
+  Result OnFuncResult(const ComponentTypeLoc& result);
+  Result OnResourceType(const ComponentIndexLoc& dtor);
+  Result OnResourceAsyncType(const ComponentIndexLoc& dtor,
+                             const ComponentIndexLoc& callback);
+  Result BeginInstanceType(uint32_t count);
+  Result EndInstanceType();
+  Result BeginComponentType(uint32_t count);
+  Result EndComponentType();
+
+  Result OnCanonLift(const ComponentIndexLoc& core_func_index,
+                     uint32_t option_count,
+                     const ComponentCanonOption* options,
+                     const ComponentIndexLoc& type_index);
+  Result OnCanonLower(const ComponentIndexLoc& func_index,
+                      uint32_t option_count,
+                      const ComponentCanonOption* options);
+  Result OnCanonType(ComponentCanon canon,
+                     const ComponentIndexLoc& type_index);
+
+  Result OnImport(const ComponentStringLoc& external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info);
+  Result OnExport(const ComponentStringLoc& external_name,
+                  std::string_view* version_suffix,
+                  ComponentExternalInfo* external_info,
+                  ComponentExportInfo* export_info);
+
+ private:
+  struct ObjectBase {
+    virtual ~ObjectBase() {}
+  };
+
+  struct ValueType;
+  struct ValueTypePair;
+  struct TypeItems;
+  struct TypeTuple;
+  struct TypeLabels;
+  struct TypeFunc;
+
+  struct TypeBase : public ObjectBase {
+    TypeBase(ComponentTypeDef type_def)
+        : type_def(type_def) {}
+
+    bool IsValueType() const {
+      return type_def == ComponentTypeDef::ValueType ||
+             type_def == ComponentTypeDef::List ||
+             type_def == ComponentTypeDef::Option ||
+             type_def == ComponentTypeDef::Own ||
+             type_def == ComponentTypeDef::Borrow ||
+             type_def == ComponentTypeDef::Stream ||
+             type_def == ComponentTypeDef::Future ||
+             type_def == ComponentTypeDef::Resource;
+    }
+
+    ValueType* AsValueType() {
+      assert(IsValueType());
+      return reinterpret_cast<ValueType*>(this);
+    }
+
+    bool IsValueTypePair() const {
+      return type_def == ComponentTypeDef::Result ||
+             type_def == ComponentTypeDef::ResourceAsync;
+    }
+
+    ValueTypePair* AsValueTypePair() {
+      assert(IsValueTypePair());
+      return reinterpret_cast<ValueTypePair*>(this);
+    }
+
+    bool IsTypeItems() const {
+      return type_def == ComponentTypeDef::Record ||
+             type_def == ComponentTypeDef::Variant;
+    }
+
+    TypeItems* AsTypeItems() {
+      assert(IsTypeItems());
+      return reinterpret_cast<TypeItems*>(this);
+    }
+
+    TypeTuple* AsTypeTuple() {
+      assert(type_def == ComponentTypeDef::Tuple);
+      return reinterpret_cast<TypeTuple*>(this);
+    }
+
+    bool IsTypeLabels() const {
+      return type_def == ComponentTypeDef::Flags ||
+             type_def == ComponentTypeDef::Enum;
+    }
+
+    TypeLabels* AsTypeLabels() {
+      assert(IsTypeLabels());
+      return reinterpret_cast<TypeLabels*>(this);
+    }
+
+    bool IsTypeFunc() const {
+      return type_def == ComponentTypeDef::Func ||
+             type_def == ComponentTypeDef::AsyncFunc;
+    }
+
+    TypeFunc* AsTypeFunc() {
+      assert(IsTypeFunc());
+      return reinterpret_cast<TypeFunc*>(this);
+    }
+
+    ComponentTypeDef type_def;
+  };
+
+  struct TypeRef {
+    TypeRef()
+        : type(ComponentType::TypeNone), ref(nullptr) {}
+
+    TypeRef(const TypeBase* ref)
+        : type(ComponentType::TypeIndex), ref(ref) {}
+
+    TypeRef(ComponentType::Enum type)
+        : type(type), ref(nullptr) {}
+
+    ComponentType::Enum type;
+    const TypeBase* ref;
+  };
+
+  struct ValueType : public TypeBase {
+    ValueType(ComponentTypeDef type_def, const TypeRef& type)
+        : TypeBase(type_def), type(type) {
+      assert(IsValueType());
+    }
+
+    TypeRef type;
+  };
+
+  struct ValueTypePair : public TypeBase {
+    ValueTypePair(ComponentTypeDef type_def,
+                  const TypeRef& first,
+                  const TypeRef& second)
+        : TypeBase(type_def), first(first), second(second) {
+      assert(IsValueTypePair());
+    }
+
+    TypeRef first;
+    TypeRef second;
+  };
+
+  struct TypeItems : public TypeBase {
+    struct Item {
+      const std::string* name;
+      TypeRef type;
+    };
+
+    TypeItems(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeItems());
+    }
+
+    std::vector<Item> items;
+  };
+
+  struct TypeListFixed : public TypeBase {
+    TypeListFixed(const TypeRef& type, uint32_t size)
+        : TypeBase(ComponentTypeDef::ListFixed), type(type), size(size) {
+      assert(IsValueType());
+    }
+
+    TypeRef type;
+    uint32_t size;
+  };
+
+  struct TypeTuple : public TypeBase {
+    TypeTuple()
+        : TypeBase(ComponentTypeDef::Tuple) {}
+
+    std::vector<TypeRef> items;
+  };
+
+  struct TypeLabels : public TypeBase {
+    TypeLabels(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeLabels());
+    }
+
+    std::vector<const std::string*> items;
+  };
+
+  struct TypeFunc : public TypeBase {
+    struct Param {
+      const std::string* name;
+      TypeRef type;
+    };
+
+    TypeFunc(ComponentTypeDef type_def)
+        : TypeBase(type_def) {
+      assert(IsTypeFunc());
+    }
+
+    std::vector<Param> params;
+    TypeRef result;
+  };
+
+  struct SharedData : public TypeBase {
+    SharedData(ComponentTypeDef type, SharedData* parent, bool is_object)
+        : TypeBase(type), parent(parent), is_object(is_object) {
+      assert(type == ComponentTypeDef::Instance
+             || type == ComponentTypeDef::Component);
+    }
+
+    SharedData* parent;
+    // When is_object is false, only the descriptor is known.
+    bool is_object;
+
+    // Sorts.
+    std::vector<TypeBase*> types;
+  };
+
+  struct Component : public SharedData {
+    Component(SharedData* parent)
+        : SharedData(ComponentTypeDef::Component, parent, true) {}
+
+    // Sorts.
+    std::vector<Component*> components;
+  };
+
+  Component* currentAsComponent() {
+    assert(current_->type_def == ComponentTypeDef::Component &&
+           current_->is_object);
+    return reinterpret_cast<Component*>(current_);
+  }
+
+  Result CheckIndex(const Location& loc,
+                    Index index,
+                    Index max,
+                    TypeRef* out_type_ref);
+  Result CheckIndex(const ComponentIndexLoc& index,
+                    TypeRef* out_type_ref);
+  Result CheckType(const ComponentTypeLoc& type,
+                   TypeRef* out_type_ref);
+  Result CheckTypeIgnoreLast(const ComponentTypeLoc& type,
+                             TypeRef* out_type_ref);
+
+  std::vector<std::unique_ptr<ObjectBase>> objects_;
+  SharedData* current_;
+  ValidateOptions options_;
+  Errors* errors_;
+  std::string_view filename_;
+  std::vector<std::unique_ptr<std::string>> string_list_;
+  wabt::Component::StringTable string_table_;
 };
 
 }  // namespace wabt

@@ -99,6 +99,7 @@ class Validator : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnCastExpr(BrOnCastExpr*) override;
   Result OnBrOnNonNullExpr(BrOnNonNullExpr*) override;
   Result OnBrOnNullExpr(BrOnNullExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
@@ -171,6 +172,24 @@ class Validator : public ExprVisitor::Delegate {
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
   Result OnLoadSplatExpr(LoadSplatExpr*) override;
   Result OnLoadZeroExpr(LoadZeroExpr*) override;
+  Result OnArrayCopyExpr(ArrayCopyExpr*) override;
+  Result OnArrayFillExpr(ArrayFillExpr*) override;
+  Result OnArrayGetExpr(ArrayGetExpr*) override;
+  Result OnArrayInitDataExpr(ArrayInitDataExpr*) override;
+  Result OnArrayInitElemExpr(ArrayInitElemExpr*) override;
+  Result OnArrayNewExpr(ArrayNewExpr*) override;
+  Result OnArrayNewDataExpr(ArrayNewDataExpr*) override;
+  Result OnArrayNewDefaultExpr(ArrayNewDefaultExpr*) override;
+  Result OnArrayNewElemExpr(ArrayNewElemExpr*) override;
+  Result OnArrayNewFixedExpr(ArrayNewFixedExpr*) override;
+  Result OnArraySetExpr(ArraySetExpr*) override;
+  Result OnGCUnaryExpr(GCUnaryExpr*) override;
+  Result OnRefCastExpr(RefCastExpr*) override;
+  Result OnRefTestExpr(RefTestExpr*) override;
+  Result OnStructGetExpr(StructGetExpr*) override;
+  Result OnStructNewExpr(StructNewExpr*) override;
+  Result OnStructNewDefaultExpr(StructNewDefaultExpr*) override;
+  Result OnStructSetExpr(StructSetExpr*) override;
 
  private:
   Type GetDeclarationType(const FuncDeclaration&);
@@ -204,34 +223,62 @@ static Result CheckType(Type actual, Type expected) {
   Type::Enum expected_type = expected;
 
   if (actual_type == expected_type) {
-    switch (actual_type) {
-      case Type::ExternRef:
-      case Type::FuncRef:
-        return (expected.IsNullableNonTypedRef() ||
-                !actual.IsNullableNonTypedRef())
-                   ? Result::Ok
-                   : Result::Error;
-
-      case Type::Reference:
-      case Type::Ref:
-      case Type::RefNull:
-        if (actual == expected) {
-          return Result::Ok;
-        }
-        break;
-
-      default:
-        return Result::Ok;
-    }
-  }
-
-  if (actual_type == Type::FuncRef && expected_type == Type::RefNull) {
-    // The ref.null constant should be a valid value to any
-    // (ref null...) definition, regarless of its actual type.
     return Result::Ok;
   }
 
-  return Result::Error;
+  if (!expected.IsRef() || !actual.IsRef()) {
+    return Result::Error;
+  }
+
+  if (actual.IsBottomRef()) {
+    return Result::Ok;
+  }
+
+  switch (expected_type) {
+    case Type::RefNull:
+      if (actual_type == Type::FuncRef) {
+        // Specification tests pass expected functions
+        // directly, their type is not relevant.
+        return Result::Ok;
+      }
+      return Result::Error;
+    case Type::Ref:
+      if (actual_type == Type::ArrayRef || actual_type == Type::EqRef ||
+          actual_type == Type::StructRef) {
+        return Result::Ok;
+      }
+      return Result::Error;
+    case Type::NullFuncRef:
+    case Type::FuncRef:
+      if (actual_type == Type::FuncRef) {
+        break;
+      }
+      return Result::Error;
+    case Type::NullExternRef:
+    case Type::ExternRef:
+      if (actual_type == Type::ExternRef) {
+        break;
+      }
+      return Result::Error;
+    case Type::NullRef:
+    case Type::AnyRef:
+      if (actual_type == Type::EqRef) {
+        break;
+      }
+      [[fallthrough]];
+    case Type::EqRef:
+      if (actual_type == Type::I31Ref || actual_type == Type::StructRef ||
+          actual_type == Type::ArrayRef) {
+        break;
+      }
+      break;
+    default:
+      return Result::Error;
+  }
+
+  return (expected.IsNullableNonTypedRef() || !actual.IsNullableNonTypedRef())
+             ? Result::Ok
+             : Result::Error;
 }
 
 void ScriptValidator::CheckTypeIndex(const Location* loc,
@@ -346,6 +393,12 @@ Result Validator::OnBrExpr(BrExpr* expr) {
 
 Result Validator::OnBrIfExpr(BrIfExpr* expr) {
   result_ |= validator_.OnBrIf(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnBrOnCastExpr(BrOnCastExpr* expr) {
+  result_ |= validator_.OnBrOnCast(expr->loc, expr->opcode, expr->label_var,
+                                   expr->type1_var, expr->type2_var);
   return Result::Ok;
 }
 
@@ -752,6 +805,97 @@ Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnArrayCopyExpr(ArrayCopyExpr* expr) {
+  result_ |= validator_.OnArrayCopy(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayFillExpr(ArrayFillExpr* expr) {
+  result_ |= validator_.OnArrayFill(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayGetExpr(ArrayGetExpr* expr) {
+  result_ |= validator_.OnArrayGet(expr->loc, expr->opcode, expr->type_var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayInitDataExpr(ArrayInitDataExpr* expr) {
+  result_ |= validator_.OnArrayInitData(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayInitElemExpr(ArrayInitElemExpr* expr) {
+  result_ |= validator_.OnArrayInitElem(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewExpr(ArrayNewExpr* expr) {
+  result_ |= validator_.OnArrayNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewDataExpr(ArrayNewDataExpr* expr) {
+  result_ |= validator_.OnArrayNewData(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewDefaultExpr(ArrayNewDefaultExpr* expr) {
+  result_ |= validator_.OnArrayNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewElemExpr(ArrayNewElemExpr* expr) {
+  result_ |= validator_.OnArrayNewElem(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnArrayNewFixedExpr(ArrayNewFixedExpr* expr) {
+  result_ |= validator_.OnArrayNewFixed(expr->loc, expr->type_var, expr->count);
+  return Result::Ok;
+}
+
+Result Validator::OnArraySetExpr(ArraySetExpr* expr) {
+  result_ |= validator_.OnArraySet(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnGCUnaryExpr(GCUnaryExpr* expr) {
+  result_ |= validator_.OnGCUnary(expr->loc, expr->opcode);
+  return Result::Ok;
+}
+
+Result Validator::OnRefCastExpr(RefCastExpr* expr) {
+  result_ |= validator_.OnRefCast(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnRefTestExpr(RefTestExpr* expr) {
+  result_ |= validator_.OnRefTest(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructGetExpr(StructGetExpr* expr) {
+  result_ |= validator_.OnStructGet(expr->loc, expr->opcode, expr->type_var,
+                                    expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructNewExpr(StructNewExpr* expr) {
+  result_ |= validator_.OnStructNew(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructNewDefaultExpr(StructNewDefaultExpr* expr) {
+  result_ |= validator_.OnStructNewDefault(expr->loc, expr->var);
+  return Result::Ok;
+}
+
+Result Validator::OnStructSetExpr(StructSetExpr* expr) {
+  result_ |= validator_.OnStructSet(expr->loc, expr->type_var, expr->var);
+  return Result::Ok;
+}
+
 Validator::Validator(Errors* errors,
                      const Module* module,
                      const ValidateOptions& options)
@@ -760,44 +904,94 @@ Validator::Validator(Errors* errors,
       validator_(errors_, module->filename, options_),
       current_module_(module) {}
 
+static void GetSupertypesInfo(const TypeEntrySupertypesInfo& supertypes_in,
+                              SupertypesInfo* supertypes_out,
+                              std::vector<Index>& sub_types) {
+  Index sub_type_count = static_cast<Index>(supertypes_in.sub_types.size());
+
+  supertypes_out->is_final_sub_type = supertypes_in.is_final_sub_type;
+  supertypes_out->sub_type_count = sub_type_count;
+
+  sub_types.resize(sub_type_count);
+  for (Index i = 0; i < sub_type_count; i++) {
+    sub_types[i] = supertypes_in.sub_types[i].index();
+  }
+
+  supertypes_out->sub_types = sub_types.data();
+}
+
 Result Validator::CheckModule() {
   const Module* module = current_module_;
 
   // Type section.
+  Index type_index = 0;
+  Index first_type_index = kInvalidIndex;
+  Index range_index = 0;
+  SupertypesInfo supertypes;
+  std::vector<Index> sub_types;
+
+  if (!module->rec_group_ranges.empty()) {
+    first_type_index = module->rec_group_ranges[0].first_type_index;
+  }
+
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<TypeModuleField>(&field)) {
+      if (type_index == first_type_index) {
+        const RecGroupRange& range = module->rec_group_ranges[range_index];
+        validator_.OnRecursiveGroup(range.first_type_index, range.type_count);
+
+        first_type_index = kInvalidIndex;
+        if (++range_index < module->rec_group_ranges.size()) {
+          first_type_index =
+              module->rec_group_ranges[range_index].first_type_index;
+        }
+      }
+
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
+          GetSupertypesInfo(func_type->supertypes, &supertypes, sub_types);
+
           result_ |= validator_.OnFuncType(
               field.loc, func_type->sig.param_types.size(),
               func_type->sig.param_types.data(),
               func_type->sig.result_types.size(),
-              func_type->sig.result_types.data(),
-              module->GetFuncTypeIndex(func_type->sig));
+              func_type->sig.result_types.data(), type_index, &supertypes);
           break;
         }
 
         case TypeEntryKind::Struct: {
           StructType* struct_type = cast<StructType>(f->type.get());
+          GetSupertypesInfo(struct_type->supertypes, &supertypes, sub_types);
           TypeMutVector type_muts;
           for (auto&& field : struct_type->fields) {
             type_muts.push_back(TypeMut{field.type, field.mutable_});
           }
           result_ |= validator_.OnStructType(field.loc, type_muts.size(),
-                                             type_muts.data());
+                                             type_muts.data(), &supertypes);
           break;
         }
 
         case TypeEntryKind::Array: {
           ArrayType* array_type = cast<ArrayType>(f->type.get());
+          GetSupertypesInfo(array_type->supertypes, &supertypes, sub_types);
           result_ |= validator_.OnArrayType(
               field.loc,
-              TypeMut{array_type->field.type, array_type->field.mutable_});
+              TypeMut{array_type->field.type, array_type->field.mutable_},
+              &supertypes);
           break;
         }
       }
+
+      type_index++;
     }
+  }
+
+  while (range_index < module->rec_group_ranges.size()) {
+    // Should be 0 for valid modules.
+    const RecGroupRange& range = module->rec_group_ranges[range_index];
+    validator_.OnRecursiveGroup(range.first_type_index, range.type_count);
+    ++range_index;
   }
 
   // Import section.
@@ -886,7 +1080,7 @@ Result Validator::CheckModule() {
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
       result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
+          validator_.BeginGlobal(field.loc, f->global.type, f->global.mutable_);
 
       // Init expr.
       result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
@@ -894,6 +1088,7 @@ Result Validator::CheckModule() {
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
       result_ |= validator_.EndInitExpr();
+      result_ |= validator_.EndGlobal(field.loc);
     }
   }
 
@@ -1168,6 +1363,415 @@ Result ScriptValidator::CheckScript() {
   return result_;
 }
 
+class ComponentValidator {
+ public:
+  ComponentValidator(Errors*,
+                     const Component* component,
+                     const ValidateOptions& options);
+
+  Result CheckComponent();
+
+ private:
+  Result CheckAlias(const ComponentDef* definition);
+  Result CheckType(const ComponentDef* type);
+  Result CheckExternal(const ComponentExternal* external);
+
+  const ValidateOptions& options_;
+  Errors* errors_ = nullptr;
+  SharedComponentValidator validator_;
+  const Component* current_component_ = nullptr;
+};
+
+ComponentValidator::ComponentValidator(Errors* errors,
+                                       const Component* component,
+                                       const ValidateOptions& options)
+    : options_(options),
+      errors_(errors),
+      validator_(errors_, component->Filename(), options_),
+      current_component_(component) {}
+
+Result ComponentValidator::CheckComponent() {
+  const ComponentSharedData* shared_data = current_component_;
+  std::vector<size_t> parent_data;
+  size_t i = 0;
+
+  while (true) {
+    while (i < shared_data->Size()) {
+      const ComponentDef* definition = shared_data->Get(i++);
+      ComponentSection section = definition->section();
+
+      switch (section) {
+        case ComponentSection::CoreModule:
+          CHECK_RESULT(ValidateModule(definition->AsCoreModule()->module(),
+                                      errors_, options_));
+          break;
+        case ComponentSection::CoreInstance:
+        case ComponentSection::Instance: {
+          if (section == ComponentSection::Instance &&
+              definition->instance() == ComponentDef::Instance::Inline) {
+            const ComponentInlineInstance* instance =
+                definition->AsInlineInstance();
+            CHECK_RESULT(validator_.OnInlineInstance());
+
+            for (auto& arg : instance->Arguments()) {
+              bool has_suffix = arg.version_suffix != nullptr;
+              std::string_view version_suffix(has_suffix ? *arg.version_suffix
+                                                         : std::string_view());
+              CHECK_RESULT(validator_.OnInlineInstanceArg(
+                  arg.name.ToStringLoc(), has_suffix, version_suffix, arg.sort,
+                  arg.index));
+            }
+            break;
+          }
+
+          const ComponentInstance* instance = definition->AsInstance();
+          if (definition->instance() == ComponentDef::Instance::Inline) {
+            CHECK_RESULT(validator_.OnInlineCoreInstance());
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnInlineCoreInstanceArg(
+                  arg.name.ToStringLoc(), arg.sort, arg.index));
+            }
+          } else if (section == ComponentSection::Instance) {
+            CHECK_RESULT(validator_.OnInstance(instance->FromIndexLoc()));
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnInstanceArg(arg.name.ToStringLoc(),
+                                                    arg.sort, arg.index));
+            }
+          } else {
+            CHECK_RESULT(validator_.OnCoreInstance(instance->FromIndexLoc()));
+
+            for (auto& arg : instance->Arguments()) {
+              CHECK_RESULT(validator_.OnCoreInstanceArg(arg.name.ToStringLoc(),
+                                                        arg.sort, arg.index));
+            }
+          }
+          break;
+        }
+        case ComponentSection::Component:
+          parent_data.push_back(i);
+          shared_data = definition->AsComponent();
+          i = 0;
+          validator_.BeginComponent();
+          continue;
+        case ComponentSection::Alias:
+          CHECK_RESULT(CheckAlias(definition));
+          break;
+        case ComponentSection::Type:
+          CHECK_RESULT(CheckType(definition));
+          break;
+        case ComponentSection::Canon:
+          switch (definition->canon()) {
+            case ComponentCanon::Lift: {
+              const ComponentCanonLift* lift = definition->AsCanonLift();
+              CHECK_RESULT(validator_.OnCanonLift(
+                  lift->CoreFuncIndexLoc(), lift->OptionsSize(),
+                  lift->Options().data(), lift->TypeIndexLoc()));
+              break;
+            }
+            case ComponentCanon::Lower: {
+              const ComponentCanonLower* lower = definition->AsCanonLower();
+              CHECK_RESULT(validator_.OnCanonLower(lower->FuncIndexLoc(),
+                                                   lower->OptionsSize(),
+                                                   lower->Options().data()));
+              break;
+            }
+            case ComponentCanon::ResourceDrop: {
+              CHECK_RESULT(validator_.OnCanonType(
+                  definition->canon(),
+                  definition->AsCanonType()->TypeIndexLoc()));
+              break;
+            }
+          }
+          break;
+        case ComponentSection::Import:
+        case ComponentSection::Export:
+          CHECK_RESULT(CheckExternal(definition->AsExternal()));
+          break;
+        default:
+          assert(0);
+          break;
+      }
+    }
+
+    if (shared_data->GetParent() == nullptr) {
+      assert(parent_data.empty());
+      break;
+    }
+
+    if (shared_data->section() == ComponentSection::Component) {
+      validator_.EndComponent();
+    } else if (shared_data->type() == ComponentTypeDef::Instance) {
+      validator_.EndInstanceType();
+    } else {
+      assert(shared_data->type() == ComponentTypeDef::Component);
+      validator_.EndComponentType();
+    }
+
+    assert(parent_data.size() > 0);
+    shared_data = shared_data->GetParent();
+    i = parent_data.back();
+    parent_data.pop_back();
+  }
+
+  return Result::Ok;
+}
+
+Result ComponentValidator::CheckAlias(const ComponentDef* definition) {
+  if (definition->alias() == ComponentDef::Alias::Outer) {
+    const ComponentAliasOuter* alias = definition->AsAliasOuter();
+    return validator_.OnAliasOuter(alias->GetLocation(), alias->sort(),
+                                   alias->GetCounter(), alias->GetIndex());
+  }
+
+  const ComponentAliasExport* alias = definition->AsAliasExport();
+  if (definition->alias() == ComponentDef::Alias::Export) {
+    return validator_.OnAliasExport(alias->sort(), alias->InstanceIndexLoc(),
+                                    alias->ExportNameLoc().ToStringLoc());
+  }
+
+  return validator_.OnAliasCoreExport(alias->sort(), alias->InstanceIndexLoc(),
+                                      alias->ExportNameLoc().ToStringLoc());
+}
+
+Result ComponentValidator::CheckType(const ComponentDef* type) {
+  std::vector<size_t> type_stack;
+  const ComponentSharedData* shared_data = nullptr;
+
+  while (true) {
+    assert(type != nullptr);
+
+    switch (type->type()) {
+      case ComponentTypeDef::ValueType:
+        CHECK_RESULT(
+            validator_.OnPrimitiveType(type->AsValueType()->ValueType()));
+        break;
+      case ComponentTypeDef::Record: {
+        const ComponentTypeItems* record = type->AsTypeItems();
+        uint32_t field_count = static_cast<uint32_t>(record->Items().size());
+        CHECK_RESULT(
+            validator_.OnRecordType(record->GetLocation(), field_count));
+        for (auto& item : record->Items()) {
+          ComponentStringLoc field_name = item.name.ToStringLoc();
+          CHECK_RESULT(validator_.OnRecordField(field_name, item.type));
+        }
+        break;
+      }
+      case ComponentTypeDef::Variant: {
+        const ComponentTypeItems* variant = type->AsTypeItems();
+        uint32_t case_count = static_cast<uint32_t>(variant->Items().size());
+        CHECK_RESULT(
+            validator_.OnVariantType(variant->GetLocation(), case_count));
+        for (auto& item : variant->Items()) {
+          ComponentStringLoc case_name = item.name.ToStringLoc();
+          CHECK_RESULT(validator_.OnRecordField(case_name, item.type));
+        }
+        break;
+      }
+      case ComponentTypeDef::List:
+        CHECK_RESULT(
+            validator_.OnListType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::ListFixed: {
+        const ComponentTypeListFixed* list = type->AsTypeListFixed();
+        CHECK_RESULT(validator_.OnListFixedType(
+            list->GetLocation(), list->ValueTypeLoc(), list->Size()));
+        break;
+      }
+      case ComponentTypeDef::Tuple: {
+        const ComponentTypeTuple* tuple = type->AsTypeTuple();
+        uint32_t item_count = static_cast<uint32_t>(tuple->Items().size());
+        CHECK_RESULT(validator_.OnTupleType(tuple->GetLocation(), item_count));
+        for (auto& item : tuple->Items()) {
+          CHECK_RESULT(validator_.OnTupleItem(item));
+        }
+        break;
+      }
+      case ComponentTypeDef::Flags: {
+        const ComponentTypeLabels* flags = type->AsTypeLabels();
+        uint32_t label_count = static_cast<uint32_t>(flags->Labels().size());
+        CHECK_RESULT(validator_.OnFlagsType(flags->GetLocation(), label_count));
+        for (auto& label : flags->Labels()) {
+          ComponentStringLoc label_name = label.ToStringLoc();
+          CHECK_RESULT(validator_.OnFlagsLabel(label_name));
+        }
+        break;
+      }
+      case ComponentTypeDef::Enum: {
+        const ComponentTypeLabels* enum_ = type->AsTypeLabels();
+        uint32_t label_count = static_cast<uint32_t>(enum_->Labels().size());
+        CHECK_RESULT(validator_.OnEnumType(enum_->GetLocation(), label_count));
+        for (auto& label : enum_->Labels()) {
+          ComponentStringLoc label_name = label.ToStringLoc();
+          CHECK_RESULT(validator_.OnEnumLabel(label_name));
+        }
+        break;
+      }
+      case ComponentTypeDef::Option:
+        CHECK_RESULT(
+            validator_.OnOptionType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::Result: {
+        const ComponentTypeResult* result = type->AsTypeResult();
+        CHECK_RESULT(
+            validator_.OnResultType(result->ResultLoc(), result->ErrorLoc()));
+        break;
+      }
+      case ComponentTypeDef::Own:
+        CHECK_RESULT(validator_.OnOwnType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::Borrow:
+        CHECK_RESULT(
+            validator_.OnBorrowType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::Stream:
+        CHECK_RESULT(
+            validator_.OnStreamType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::Future:
+        CHECK_RESULT(
+            validator_.OnFutureType(type->AsValueType()->ValueTypeLoc()));
+        break;
+      case ComponentTypeDef::AsyncFunc:
+      case ComponentTypeDef::Func: {
+        const ComponentTypeFunc* func = type->AsTypeFunc();
+        uint32_t param_count = static_cast<uint32_t>(func->Params().size());
+        CHECK_RESULT(validator_.OnFuncType(func->type(), param_count));
+
+        for (auto& param : func->Params()) {
+          CHECK_RESULT(
+              validator_.OnFuncParam(param.name.ToStringLoc(), param.type));
+        }
+
+        CHECK_RESULT(validator_.OnFuncResult(func->ResultLoc()));
+        break;
+      }
+      case ComponentTypeDef::Instance:
+      case ComponentTypeDef::Component: {
+        const ComponentSharedData* type_data = type->AsInterfaceType();
+        if (type_data->IsInstanceType()) {
+          CHECK_RESULT(validator_.BeginInstanceType(type_data->Size()));
+        } else {
+          CHECK_RESULT(validator_.BeginComponentType(type_data->Size()));
+        }
+
+        if (type_data->Size() == 0) {
+          if (type_data->IsInstanceType()) {
+            CHECK_RESULT(validator_.EndInstanceType());
+          } else {
+            CHECK_RESULT(validator_.EndComponentType());
+          }
+          break;
+        }
+
+        shared_data = type_data;
+        type_stack.push_back(0);
+        break;
+      }
+      case ComponentTypeDef::Resource:
+        CHECK_RESULT(
+            validator_.OnResourceType(type->AsTypeIndex()->GetIndexLoc()));
+        break;
+      case ComponentTypeDef::ResourceAsync: {
+        const ComponentTypeResourceAsync* resource =
+            type->AsTypeResourceAsync();
+        CHECK_RESULT(validator_.OnResourceAsyncType(resource->DtorLoc(),
+                                                    resource->CallbackLoc()));
+        break;
+      }
+      default:
+        assert(0);
+        break;
+    }
+
+    while (true) {
+      if (type_stack.empty()) {
+        return Result::Ok;
+      }
+
+      size_t i = type_stack.back();
+
+      if (i < shared_data->Size()) {
+        switch (shared_data->Get(i)->section()) {
+          case ComponentSection::Type:
+            type = shared_data->Get(i);
+            break;
+          case ComponentSection::Alias:
+            CHECK_RESULT(CheckAlias(shared_data->Get(i)));
+            type_stack.back() = i + 1;
+            continue;
+          case ComponentSection::Import:
+          case ComponentSection::Export:
+            CHECK_RESULT(CheckExternal(shared_data->Get(i)->AsExternal()));
+            type_stack.back() = i + 1;
+            continue;
+          default:
+            assert(0);
+            break;
+        }
+        type_stack.back() = i + 1;
+        break;
+      }
+
+      if (shared_data->IsInstanceType()) {
+        CHECK_RESULT(validator_.EndInstanceType());
+      } else {
+        CHECK_RESULT(validator_.EndComponentType());
+      }
+      shared_data = shared_data->GetParent();
+      type_stack.pop_back();
+    }
+  }
+}
+
+Result ComponentValidator::CheckExternal(const ComponentExternal* external) {
+  ComponentStringLoc name = external->ExternalNameLoc().ToStringLoc();
+  std::string_view version_suffix_data;
+  ComponentExternalInfo external_info_data;
+  ComponentExportInfo export_info_data;
+  std::string_view* version_suffix = nullptr;
+  ComponentExternalInfo* external_info = nullptr;
+  if (external->VersionSuffix() != nullptr) {
+    version_suffix_data = std::string_view(*external->VersionSuffix());
+    version_suffix = &version_suffix_data;
+  }
+
+  if (external->external() != ComponentDef::External::Unused) {
+    external_info_data.sort = external->sort();
+    switch (external->external()) {
+      case ComponentDef::External::ValueEq:
+        external_info_data.external = ComponentExternalDesc::ValueEq;
+        break;
+      case ComponentDef::External::ValueType:
+        external_info_data.external = ComponentExternalDesc::ValueType;
+        break;
+      case ComponentDef::External::TypeEq:
+        external_info_data.external = ComponentExternalDesc::TypeEq;
+        break;
+      case ComponentDef::External::TypeSubResource:
+        external_info_data.external = ComponentExternalDesc::TypeSubRes;
+        break;
+      default:
+        external_info_data.external = ComponentExternalDesc::Unused;
+        break;
+    }
+    external_info_data.index = external->TypeIndexLoc();
+    external_info = &external_info_data;
+  }
+
+  if (external->section() == ComponentSection::Export) {
+    export_info_data.sort = external->sort();
+    export_info_data.index = external->ExportIndexLoc();
+
+    return validator_.OnExport(name, version_suffix, external_info,
+                               &export_info_data);
+  }
+
+  assert(external_info != nullptr);
+  return validator_.OnImport(name, version_suffix, external_info);
+}
+
 }  // end anonymous namespace
 
 Result ValidateScript(const Script* script,
@@ -1184,6 +1788,14 @@ Result ValidateModule(const Module* module,
   Validator validator(errors, module, options);
 
   return validator.CheckModule();
+}
+
+Result ValidateComponent(const Component* component,
+                         Errors* errors,
+                         const ValidateOptions& options) {
+  ComponentValidator validator(errors, component, options);
+
+  return validator.CheckComponent();
 }
 
 }  // namespace wabt

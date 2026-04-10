@@ -32,7 +32,7 @@ SharedValidator::SharedValidator(Errors* errors,
     : options_(options),
       errors_(errors),
       filename_(filename),
-      typechecker_(options.features, func_types_) {
+      typechecker_(options.features, type_fields_) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -49,44 +49,81 @@ void SharedValidator::OnTypecheckerError(const char* msg) {
   PrintError(expr_loc_, "%s", msg);
 }
 
+Result SharedValidator::OnRecursiveGroup(Index first_type_index,
+                                         Index type_count) {
+  if (type_count > 0) {
+    type_fields_.rec_groups.emplace_back(
+        RecGroup(first_type_index, type_count));
+    last_rec_type_end_ = first_type_index + type_count;
+  }
+  return Result::Ok;
+}
+
 Result SharedValidator::OnFuncType(const Location& loc,
                                    Index param_count,
                                    const Type* param_types,
                                    Index result_count,
                                    const Type* result_types,
-                                   Index type_index) {
+                                   Index type_index,
+                                   SupertypesInfo* supertypes) {
   Result result = Result::Ok;
   if (!options_.features.multi_value_enabled() && result_count > 1) {
     result |= PrintError(loc,
                          "multiple result values are not supported without "
                          "multi-value enabled.");
   }
-  if (options_.features.reference_types_enabled()) {
+
+  type_fields_.PushFunc(FuncType{ToTypeVector(param_count, param_types),
+                                 ToTypeVector(result_count, result_types),
+                                 type_index});
+
+  if (options_.features.function_references_enabled()) {
+    Index rec_end = GetRecGroupEnd();
+
     for (Index i = 0; i < param_count; i++) {
-      result |= CheckReferenceType(loc, param_types[i], "params");
+      result |= CheckReferenceType(loc, param_types[i], rec_end, "params");
     }
     for (Index i = 0; i < result_count; i++) {
-      result |= CheckReferenceType(loc, result_types[i], "results");
+      result |= CheckReferenceType(loc, result_types[i], rec_end, "results");
     }
+
+    type_validation_result_ |= result;
   }
-  func_types_.emplace(
-      num_types_++,
-      FuncType{ToTypeVector(param_count, param_types),
-               ToTypeVector(result_count, result_types), type_index});
+  result |= CheckSupertypes(loc, supertypes);
+
   return result;
 }
 
-Result SharedValidator::OnStructType(const Location&,
+Result SharedValidator::OnStructType(const Location& loc,
                                      Index field_count,
-                                     TypeMut* fields) {
-  struct_types_.emplace(num_types_++, StructType{TypeMutVector(
-                                          &fields[0], &fields[field_count])});
-  return Result::Ok;
+                                     TypeMut* fields,
+                                     SupertypesInfo* supertypes) {
+  type_fields_.PushStruct(
+      StructType{TypeMutVector(&fields[0], &fields[field_count])});
+
+  Result result = Result::Ok;
+  Index rec_end = GetRecGroupEnd();
+
+  for (Index i = 0; i < field_count; i++) {
+    result |= CheckReferenceType(loc, fields[i].type, rec_end, "params");
+  }
+
+  type_validation_result_ |= result;
+  result |= CheckSupertypes(loc, supertypes);
+  return result;
 }
 
-Result SharedValidator::OnArrayType(const Location&, TypeMut field) {
-  array_types_.emplace(num_types_++, ArrayType{field});
-  return Result::Ok;
+Result SharedValidator::OnArrayType(const Location& loc,
+                                    TypeMut field,
+                                    SupertypesInfo* supertypes) {
+  type_fields_.PushArray(ArrayType{field});
+
+  Result result =
+      CheckReferenceType(loc, field.type, GetRecGroupEnd(), "params");
+
+  type_validation_result_ |= result;
+  result |= CheckSupertypes(loc, supertypes);
+  return result;
 }
 
 Result SharedValidator::OnFunction(const Location& loc, Var sig_var) {
@@ -152,7 +189,8 @@ Result SharedValidator::OnTable(const Location& loc,
     result |= PrintError(loc, "tables must have funcref type");
   }
 
-  result |= CheckReferenceType(loc, elem_type, "tables");
+  result |=
+      CheckReferenceType(loc, elem_type, type_fields_.NumTypes(), "tables");
 
   tables_.push_back(TableType{elem_type, limits});
   return result;
@@ -198,15 +236,23 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
     result |= PrintError(loc, "mutable globals cannot be imported");
   }
   globals_.push_back(GlobalType{type, mutable_});
-  ++num_imported_globals_;
+  ++last_initialized_global_;
   return result;
 }
 
-Result SharedValidator::OnGlobal(const Location& loc,
-                                 Type type,
-                                 bool mutable_) {
-  CHECK_RESULT(CheckReferenceType(loc, type, "globals"));
+Result SharedValidator::BeginGlobal(const Location& loc,
+                                    Type type,
+                                    bool mutable_) {
+  CHECK_RESULT(
+      CheckReferenceType(loc, type, type_fields_.NumTypes(), "globals"));
   globals_.push_back(GlobalType{type, mutable_});
+  return Result::Ok;
+}
+
+Result SharedValidator::EndGlobal(const Location&) {
+  if (options_.features.gc_enabled()) {
+    last_initialized_global_++;
+  }
   return Result::Ok;
 }
 
@@ -224,19 +270,115 @@ Result SharedValidator::CheckType(const Location& loc,
 
 Result SharedValidator::CheckReferenceType(const Location& loc,
                                            Type type,
+                                           Index end_index,
                                            const char* desc) {
-  if (type.IsReferenceWithIndex()) {
-    Index index = type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
+  if (type.IsReferenceWithIndex() && type.GetReferenceIndex() >= end_index) {
+    return PrintError(loc,
+                      "reference %" PRIindex " is out of range (max: %" PRIindex
+                      ") in %s",
+                      type.GetReferenceIndex(), end_index, desc);
+  }
 
-    if (iter == func_types_.end()) {
-      return PrintError(loc,
-                        "reference %" PRIindex
-                        " is out of range (max: %" PRIindex ") in %s",
-                        index, num_types_, desc);
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckSupertypes(const Location& loc,
+                                        SupertypesInfo* supertypes) {
+  TypeEntry& entry = type_fields_.type_entries.back();
+  Index current_index = type_fields_.NumTypes() - 1;
+  Index end_index;
+
+  if (current_index < last_rec_type_end_) {
+    end_index = last_rec_type_end_;
+  } else {
+    type_fields_.rec_groups.emplace_back(RecGroup(current_index, 1));
+    end_index = current_index + 1;
+  }
+
+  // Check default.
+  assert(entry.canonical_index == current_index && entry.is_final_sub_type &&
+         entry.first_sub_type == kInvalidIndex);
+  entry.is_final_sub_type = supertypes->is_final_sub_type;
+
+  if (supertypes->sub_type_count > 1) {
+    type_validation_result_ = Result::Error;
+    return PrintError(loc, "sub type count %" PRIindex " is limited to 1",
+                      supertypes->sub_type_count);
+  }
+
+  if (supertypes->sub_type_count == 1) {
+    entry.first_sub_type = supertypes->sub_types[0];
+
+    if (supertypes->sub_types[0] >= current_index) {
+      type_validation_result_ = Result::Error;
+      return PrintError(loc, "invalid sub type %" PRIindex,
+                        supertypes->sub_types[0]);
+    }
+
+    if (type_fields_.type_entries[entry.first_sub_type].is_final_sub_type) {
+      type_validation_result_ = Result::Error;
+      return PrintError(loc, "sub type %" PRIindex " has final property",
+                        entry.first_sub_type);
     }
   }
 
+  if (Failed(type_validation_result_) || end_index != current_index + 1) {
+    return Result::Ok;
+  }
+
+  Index start_index = type_fields_.rec_groups.back().start_index;
+
+  uint32_t hash_code = 0;
+
+  // Type checking could be done without computing the canonical_index,
+  // but runtime and validation checks could be very slow without it.
+  for (Index i = start_index; i < end_index; i++) {
+    hash_code = typechecker_.UpdateHashCode(hash_code, i, start_index);
+  }
+
+  type_fields_.rec_groups.back().hash_code = hash_code;
+
+  size_t size = type_fields_.rec_groups.size() - 1;
+  Index type_count = end_index - start_index;
+
+  for (Index i = 0; i < size; i++) {
+    if (type_fields_.rec_groups[i].hash_code == hash_code &&
+        type_fields_.rec_groups[i].type_count == type_count) {
+      Index base_index = type_fields_.rec_groups[i].start_index;
+      bool is_equal = true;
+
+      for (Index j = 0; j < type_count; j++) {
+        if (!typechecker_.CheckTypeFields(start_index + j, start_index,
+                                          base_index + j, base_index, true)) {
+          is_equal = false;
+          break;
+        }
+      }
+
+      if (is_equal) {
+        for (Index j = start_index; j < end_index; j++) {
+          type_fields_.type_entries[j].canonical_index = base_index++;
+        }
+        // An equal recurisve type is present in the list, there is
+        // no need to compare other recursive types to this type.
+        type_fields_.rec_groups.pop_back();
+        break;
+      }
+    }
+  }
+
+  for (Index i = start_index; i < end_index; i++) {
+    Index first_sub_type = type_fields_.type_entries[i].first_sub_type;
+    if (first_sub_type != kInvalidIndex &&
+        !typechecker_.CheckTypeFields(i, kInvalidIndex, first_sub_type,
+                                      kInvalidIndex, false)) {
+      PrintError(Location(),
+                 "sub type %" PRIindex " does not match super type %" PRIindex,
+                 type_fields_.type_entries[i].first_sub_type, i);
+      type_validation_result_ = Result::Error;
+      return Result::Error;
+    }
+  }
   return Result::Ok;
 }
 
@@ -330,9 +472,8 @@ Result SharedValidator::OnElemSegmentElemType(const Location& loc,
 
   if (elem_type.IsReferenceWithIndex()) {
     Index index = elem_type.GetReferenceIndex();
-    auto iter = func_types_.find(index);
 
-    if (iter == func_types_.end()) {
+    if (index >= type_fields_.NumTypes()) {
       result |=
           PrintError(loc, "reference %" PRIindex " is out of range", index);
     }
@@ -412,21 +553,64 @@ Result SharedValidator::CheckLocalIndex(Var local_var, Type* out_type) {
 }
 
 Result SharedValidator::CheckFuncTypeIndex(Var sig_var, FuncType* out) {
-  Result result = CheckIndex(sig_var, num_types_, "function type");
+  Result result = CheckIndex(sig_var, type_fields_.NumTypes(), "function type");
   if (Failed(result)) {
-    *out = FuncType{};
+    out->type_index = kInvalidIndex;
     return Result::Error;
   }
 
-  auto iter = func_types_.find(sig_var.index());
-  if (iter == func_types_.end()) {
+  Index index = sig_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::FuncRef) {
     return PrintError(sig_var.loc, "type %d is not a function",
                       sig_var.index());
   }
 
-  if (out) {
-    *out = iter->second;
+  *out = type_fields_.func_types[type_fields_.type_entries[index].map_index];
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckStructTypeIndex(Var type_var,
+                                             Type* out_ref,
+                                             StructType* out) {
+  Result result = CheckIndex(type_var, type_fields_.NumTypes(), "struct type");
+  if (Failed(result)) {
+    return Result::Error;
   }
+
+  Index index = type_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::StructRef) {
+    return PrintError(type_var.loc, "type %d is not a struct type",
+                      type_var.index());
+  }
+
+  *out_ref =
+      Type(out_ref->IsNullableNonTypedRef() ? Type::RefNull : Type::Ref, index);
+  index = type_fields_.type_entries[index].map_index;
+  *out = type_fields_.struct_types[index];
+  return Result::Ok;
+}
+
+Result SharedValidator::CheckArrayTypeIndex(Var type_var,
+                                            Type* out_ref,
+                                            TypeMut* out) {
+  Result result = CheckIndex(type_var, type_fields_.NumTypes(), "array type");
+  if (Failed(result)) {
+    return Result::Error;
+  }
+
+  Index index = type_var.index();
+  assert(index < type_fields_.NumTypes());
+  if (type_fields_.type_entries[index].kind != Type::ArrayRef) {
+    return PrintError(type_var.loc, "type %d is not an array type",
+                      type_var.index());
+  }
+
+  *out_ref =
+      Type(out_ref->IsNullableNonTypedRef() ? Type::RefNull : Type::Ref, index);
+  index = type_fields_.type_entries[index].map_index;
+  *out = type_fields_.array_types[index].field;
   return Result::Ok;
 }
 
@@ -483,9 +667,8 @@ Result SharedValidator::CheckBlockSignature(const Location& loc,
   } else {
     if (sig_type.IsReferenceWithIndex()) {
       Index index = sig_type.GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes()) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
@@ -526,6 +709,17 @@ void SharedValidator::RestoreLocalRefs(Result result) {
 
 void SharedValidator::IgnoreLocalRefs() {
   std::fill(local_ref_is_set_.begin(), local_ref_is_set_.end(), true);
+}
+
+Index SharedValidator::GetRecGroupEnd() {
+  assert(options_.features.reference_types_enabled());
+  Index num_types = type_fields_.NumTypes();
+
+  if (options_.features.gc_enabled()) {
+    return (last_rec_type_end_ > num_types) ? last_rec_type_end_ : num_types;
+  }
+
+  return num_types - 1;
 }
 
 Result SharedValidator::BeginInitExpr(const Location& loc, Type type) {
@@ -571,7 +765,8 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
     return Result::Error;
   }
 
-  CHECK_RESULT(CheckReferenceType(loc, type, "locals"));
+  CHECK_RESULT(
+      CheckReferenceType(loc, type, type_fields_.NumTypes(), "locals"));
 
   Index local_count = GetLocalCount();
 
@@ -589,6 +784,18 @@ Result SharedValidator::OnLocalDecl(const Location& loc,
 
 Index SharedValidator::GetLocalCount() const {
   return locals_.empty() ? 0 : locals_.back().end;
+}
+
+Index SharedValidator::GetCanonicalTypeIndex(Index type_index) {
+  if (type_index >= type_fields_.NumTypes()) {
+    return kInvalidIndex;
+  }
+
+  if (Succeeded(type_validation_result_)) {
+    return type_fields_.type_entries[type_index].canonical_index;
+  }
+
+  return type_index;
 }
 
 static bool is_power_of_two(uint32_t x) {
@@ -655,6 +862,14 @@ bool SharedValidator::ValidInitOpcode(Opcode opcode) const {
       return true;
     }
   }
+  if (options_.features.gc_enabled()) {
+    if (opcode == Opcode::AnyConvertExtern || opcode == Opcode::ArrayNew ||
+        opcode == Opcode::ArrayNewDefault || opcode == Opcode::ArrayNewFixed ||
+        opcode == Opcode::ExternConvertAny || opcode == Opcode::RefI31 ||
+        opcode == Opcode::StructNew || opcode == Opcode::StructNewDefault) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -668,6 +883,139 @@ Result SharedValidator::CheckInstr(Opcode opcode, const Location& loc) {
     return Result::Error;
   }
   return Result::Ok;
+}
+
+Result SharedValidator::OnArrayCopy(const Location& loc,
+                                    Var dst_type,
+                                    Var src_type) {
+  Result result = CheckInstr(Opcode::ArrayCopy, loc);
+  Type dst_ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  Type src_ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut dst_array_type, src_array_type;
+  result |= CheckArrayTypeIndex(dst_type, &dst_ref_type, &dst_array_type);
+  result |= CheckArrayTypeIndex(src_type, &src_ref_type, &src_array_type);
+  result |= typechecker_.OnArrayCopy(dst_ref_type, dst_array_type, src_ref_type,
+                                     src_array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayFill(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayFill, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayFill(ref_type, array_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayGet(const Location& loc,
+                                   Opcode opcode,
+                                   Var type) {
+  Result result = CheckInstr(opcode, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayGet(opcode, ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayInitData(const Location& loc,
+                                        Var type,
+                                        Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayInitData, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckDataSegmentIndex(segment_var);
+  result |= typechecker_.OnArrayInitData(ref_type, array_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayInitElem(const Location& loc,
+                                        Var type,
+                                        Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayInitElem, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  ElemType elem_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckElemSegmentIndex(segment_var, &elem_type);
+  result |=
+      typechecker_.OnArrayInitElem(ref_type, array_type, elem_type.element);
+  return result;
+}
+
+Result SharedValidator::OnArrayNew(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayNew, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayNew(ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewData(const Location& loc,
+                                       Var type,
+                                       Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayNewData, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckDataSegmentIndex(segment_var);
+  result |= typechecker_.OnArrayNewData(ref_type, array_type.type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewDefault(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArrayNewDefault, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+
+  if (Succeeded(CheckArrayTypeIndex(type, &ref_type, &array_type))) {
+    if (array_type.type.IsNonNullableRef()) {
+      result = PrintError(loc, "array type has no default value: %" PRIindex,
+                          type.index());
+    }
+  } else {
+    result = Result::Error;
+  }
+
+  result |= typechecker_.OnArrayNewDefault(ref_type);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewElem(const Location& loc,
+                                       Var type,
+                                       Var segment_var) {
+  Result result = CheckInstr(Opcode::ArrayNewElem, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  ElemType elem_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= CheckElemSegmentIndex(segment_var, &elem_type);
+  result |=
+      typechecker_.OnArrayNewElem(ref_type, array_type.type, elem_type.element);
+  return result;
+}
+
+Result SharedValidator::OnArrayNewFixed(const Location& loc,
+                                        Var type,
+                                        Index count) {
+  Result result = CheckInstr(Opcode::ArrayNewFixed, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceNonNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArrayNewFixed(ref_type, array_type.type, count);
+  return result;
+}
+
+Result SharedValidator::OnArraySet(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::ArraySet, loc);
+  Type ref_type(Type::ArrayRef, Type::ReferenceOrNull);
+  TypeMut array_type;
+  result |= CheckArrayTypeIndex(type, &ref_type, &array_type);
+  result |= typechecker_.OnArraySet(ref_type, array_type);
+  return result;
 }
 
 Result SharedValidator::OnAtomicFence(const Location& loc,
@@ -807,6 +1155,17 @@ Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
   return result;
 }
 
+Result SharedValidator::OnBrOnCast(const Location& loc,
+                                   Opcode opcode,
+                                   Var depth,
+                                   Var type1_var,
+                                   Var type2_var) {
+  Result result = CheckInstr(Opcode::BrOnCast, loc);
+  result |= typechecker_.OnBrOnCast(opcode, depth.index(), type1_var.to_type(),
+                                    type2_var.to_type());
+  return result;
+}
+
 Result SharedValidator::OnBrOnNonNull(const Location& loc, Var depth) {
   Result result = CheckInstr(Opcode::BrOnNonNull, loc);
   result |= typechecker_.OnBrOnNonNull(depth.index());
@@ -855,7 +1214,7 @@ Result SharedValidator::OnCallIndirect(const Location& loc,
   TableType table_type;
   result |= CheckFuncTypeIndex(sig_var, &func_type);
   result |= CheckTableIndex(table_var, &table_type);
-  if (table_type.element != Type::FuncRef) {
+  if (Failed(typechecker_.CheckType(table_type.element, Type::FuncRef))) {
     result |= PrintError(
         loc,
         "type mismatch: call_indirect must reference table of funcref type");
@@ -952,13 +1311,19 @@ Result SharedValidator::OnEnd(const Location& loc) {
   return result;
 }
 
+Result SharedValidator::OnGCUnary(const Location& loc, Opcode opcode) {
+  Result result = CheckInstr(opcode, loc);
+  result |= typechecker_.OnGCUnary(opcode);
+  return result;
+}
+
 Result SharedValidator::OnGlobalGet(const Location& loc, Var global_var) {
   Result result = CheckInstr(Opcode::GlobalGet, loc);
   GlobalType global_type;
   result |= CheckGlobalIndex(global_var, &global_type);
   result |= typechecker_.OnGlobalGet(global_type.type);
   if (Succeeded(result) && in_init_expr_) {
-    if (global_var.index() >= num_imported_globals_) {
+    if (global_var.index() >= last_initialized_global_) {
       result |= PrintError(
           global_var.loc,
           "initializer expression can only reference an imported global");
@@ -1151,6 +1516,12 @@ Result SharedValidator::OnRefAsNonNull(const Location& loc) {
   return result;
 }
 
+Result SharedValidator::OnRefCast(const Location& loc, Var type_var) {
+  Result result = CheckInstr(Opcode::RefCast, loc);
+  result |= typechecker_.OnRefCast(type_var.to_type());
+  return result;
+}
+
 Result SharedValidator::OnRefFunc(const Location& loc, Var func_var) {
   Result result = CheckInstr(Opcode::RefFunc, loc);
   result |= CheckFuncIndex(func_var);
@@ -1179,21 +1550,21 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
 
   Type type = func_type_var.to_type();
 
-  switch (type) {
-    case Type::RefNull:
-      result |= CheckIndex(func_type_var, num_types_, "function type");
-      break;
-    case Type::FuncRef:
-    case Type::ExnRef:
-    case Type::ExternRef:
-      break;
-    default:
-      result |= PrintError(
-          loc, "Only ref, externref, exnref, funcref are allowed for ref.null");
-      break;
+  if (type == Type::RefNull) {
+    result |=
+        CheckIndex(func_type_var, type_fields_.NumTypes(), "function type");
+  } else if (!type.IsNonTypedRef()) {
+    result |= PrintError(loc, "Only nullable reference types are allowed");
   }
 
+  assert(!Type::EnumIsNonTypedGCRef(type) || options_.features.gc_enabled());
   result |= typechecker_.OnRefNullExpr(type);
+  return result;
+}
+
+Result SharedValidator::OnRefTest(const Location& loc, Var type_var) {
+  Result result = CheckInstr(Opcode::RefTest, loc);
+  result |= typechecker_.OnRefTest(type_var.to_type());
   return result;
 }
 
@@ -1256,9 +1627,9 @@ Result SharedValidator::OnSelect(const Location& loc,
   for (Index i = 0; i < result_count; i++) {
     if (result_types[i].IsReferenceWithIndex()) {
       Index index = result_types[i].GetReferenceIndex();
-      auto iter = func_types_.find(index);
 
-      if (iter == func_types_.end()) {
+      if (index >= type_fields_.NumTypes() ||
+          type_fields_.type_entries[index].kind != Type::FuncRef) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
@@ -1332,6 +1703,59 @@ Result SharedValidator::OnStore(const Location& loc,
   result |= CheckAlign(loc, alignment, opcode.GetMemorySize());
   result |= CheckOffset(loc, offset, mt.limits);
   result |= typechecker_.OnStore(opcode, mt.limits);
+  return result;
+}
+
+Result SharedValidator::OnStructGet(const Location& loc,
+                                    Opcode opcode,
+                                    Var type,
+                                    Var field) {
+  Result result = CheckInstr(opcode, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceOrNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |=
+      typechecker_.OnStructGet(opcode, ref_type, struct_type, field.index());
+  return result;
+}
+
+Result SharedValidator::OnStructNew(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::StructNew, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceNonNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |= typechecker_.OnStructNew(ref_type, struct_type);
+  return result;
+}
+
+Result SharedValidator::OnStructNewDefault(const Location& loc, Var type) {
+  Result result = CheckInstr(Opcode::StructNewDefault, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceNonNull);
+  StructType struct_type;
+
+  if (Succeeded(CheckStructTypeIndex(type, &ref_type, &struct_type))) {
+    for (auto it : struct_type.fields) {
+      if (it.type.IsNonNullableRef()) {
+        result =
+            PrintError(loc, "type has field without default value: %" PRIindex,
+                       type.index());
+        break;
+      }
+    }
+  } else {
+    result = Result::Error;
+  }
+
+  result |= typechecker_.OnStructNewDefault(ref_type);
+  return result;
+}
+
+Result SharedValidator::OnStructSet(const Location& loc, Var type, Var field) {
+  Result result = CheckInstr(Opcode::StructSet, loc);
+  Type ref_type(Type::StructRef, Type::ReferenceOrNull);
+  StructType struct_type;
+  result |= CheckStructTypeIndex(type, &ref_type, &struct_type);
+  result |= typechecker_.OnStructSet(ref_type, struct_type, field.index());
   return result;
 }
 
@@ -1471,6 +1895,463 @@ Result SharedValidator::OnUnreachable(const Location& loc) {
   result |= typechecker_.OnUnreachable();
   IgnoreLocalRefs();
   return result;
+}
+
+SharedComponentValidator::SharedComponentValidator(
+    Errors* errors,
+    std::string_view filename,
+    const ValidateOptions& options)
+    : options_(options),
+      errors_(errors),
+      filename_(filename),
+      string_table_(&string_list_) {
+  auto component = std::make_unique<Component>(nullptr);
+  current_ = component.get();
+  objects_.push_back(std::move(component));
+}
+
+Result WABT_PRINTF_FORMAT(3, 4)
+    SharedComponentValidator::PrintError(const Location& loc,
+                                         const char* format,
+                                         ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  errors_->emplace_back(ErrorLevel::Error, loc, filename_, buffer);
+  return Result::Error;
+}
+
+Result SharedComponentValidator::BeginComponent() {
+  Component* component = currentAsComponent();
+  auto new_component = std::make_unique<Component>(component);
+  current_ = new_component.get();
+  objects_.push_back(std::move(new_component));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndComponent() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCoreInstance(
+    const ComponentIndexLoc& module_index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCoreInstanceArg(
+    const ComponentStringLoc& name,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineCoreInstance() {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineCoreInstanceArg(
+    const ComponentStringLoc& name,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInstance(
+    const ComponentIndexLoc& module_index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInstanceArg(const ComponentStringLoc& name,
+                                               ComponentSort sort,
+                                               const ComponentIndexLoc& index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineInstance() {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnInlineInstanceArg(
+    const ComponentStringLoc& name,
+    bool has_version_suffix,
+    std::string_view version_suffix,
+    ComponentSort sort,
+    const ComponentIndexLoc& index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnAliasExport(
+    ComponentSort sort,
+    const ComponentIndexLoc& instance_index,
+    const ComponentStringLoc& name) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnAliasCoreExport(
+    ComponentSort sort,
+    const ComponentIndexLoc& core_instance_index,
+    const ComponentStringLoc& name) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnAliasOuter(const Location& loc,
+                                              ComponentSort sort,
+                                              uint32_t counter,
+                                              uint32_t index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnPrimitiveType(const ComponentType& type) {
+  assert(!type.IsIndex() && !type.IsNone());
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::ValueType, type.GetType());
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnRecordType(const Location& loc,
+                                              uint32_t field_count) {
+  Result result = Result::Ok;
+  if (field_count == 0) {
+    result |= PrintError(loc, "record type must have at least one field.");
+  }
+  auto type_value = std::make_unique<TypeItems>(ComponentTypeDef::Record);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnRecordField(
+    const ComponentStringLoc& field_name,
+    const ComponentTypeLoc& field_type) {
+  TypeRef type_ref;
+  Result result = CheckTypeIgnoreLast(field_type, &type_ref);
+  TypeItems::Item item{string_table_.Append(field_name.str), type_ref};
+  current_->types.back()->AsTypeItems()->items.push_back(item);
+  return result;
+}
+
+Result SharedComponentValidator::OnVariantType(const Location& loc,
+                                               uint32_t case_count) {
+  Result result = Result::Ok;
+  if (case_count == 0) {
+    result |= PrintError(loc, "variant type must have at least one case.");
+  }
+  auto type_value = std::make_unique<TypeItems>(ComponentTypeDef::Variant);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnVariantCase(
+    const ComponentStringLoc& case_name,
+    const ComponentTypeLoc& case_type) {
+  TypeRef type_ref;
+  Result result = CheckTypeIgnoreLast(case_type, &type_ref);
+  TypeItems::Item item{string_table_.Append(case_name.str), type_ref};
+  current_->types.back()->AsTypeItems()->items.push_back(item);
+  return result;
+}
+
+Result SharedComponentValidator::OnListType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, &type_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::List, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnListFixedType(const Location& loc,
+                                                 const ComponentTypeLoc& type,
+                                                 uint32_t size) {
+  Result result = Result::Ok;
+  if (size == 0) {
+    result |= PrintError(loc, "size of fixed list must be greater than 0.");
+  }
+  TypeRef type_ref;
+  result |= CheckType(type, &type_ref);
+  auto type_value = std::make_unique<TypeListFixed>(type_ref, size);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnTupleType(const Location& loc,
+                                             uint32_t type_count) {
+  Result result = Result::Ok;
+  if (type_count == 0) {
+    result |= PrintError(loc, "tuple type must have at least one item.");
+  }
+  auto type_value = std::make_unique<TypeTuple>();
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnTupleItem(const ComponentTypeLoc& item) {
+  TypeRef type_ref;
+  Result result = CheckTypeIgnoreLast(item, &type_ref);
+  current_->types.back()->AsTypeTuple()->items.push_back(type_ref);
+  return result;
+}
+
+Result SharedComponentValidator::OnFlagsType(const Location& loc,
+                                             uint32_t flag_count) {
+  Result result = Result::Ok;
+  if (flag_count == 0 || flag_count > 32) {
+    result |=
+        PrintError(loc, "number of labels must be within the 1..32 range.");
+  }
+  auto type_value = std::make_unique<TypeLabels>(ComponentTypeDef::Flags);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFlagsLabel(const ComponentStringLoc& label) {
+  const std::string* item = string_table_.Append(label.str);
+  current_->types.back()->AsTypeLabels()->items.push_back(item);
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnEnumType(const Location& loc,
+                                            uint32_t enum_count) {
+  Result result = Result::Ok;
+  if (enum_count == 0) {
+    result |= PrintError(loc, "enum type must have at least one label.");
+  }
+  auto type_value = std::make_unique<TypeLabels>(ComponentTypeDef::Enum);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnEnumLabel(const ComponentStringLoc& label) {
+  const std::string* item = string_table_.Append(label.str);
+  current_->types.back()->AsTypeLabels()->items.push_back(item);
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnOptionType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, &type_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Option, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnResultType(const ComponentTypeLoc& result,
+                                              const ComponentTypeLoc& error) {
+  TypeRef result_ref, error_ref;
+  Result final_result = CheckType(result, &result_ref);
+  final_result |= CheckType(error, &error_ref);
+  auto type_value = std::make_unique<ValueTypePair>(ComponentTypeDef::Result,
+                                                    result_ref, error_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return final_result;
+}
+
+Result SharedComponentValidator::OnOwnType(const ComponentIndexLoc& index) {
+  TypeRef index_ref;
+  Result result = CheckIndex(index, &index_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Own, index_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnBorrowType(const ComponentIndexLoc& index) {
+  TypeRef index_ref;
+  Result result = CheckIndex(index, &index_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Borrow, index_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnStreamType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, &type_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Stream, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFutureType(const ComponentTypeLoc& type) {
+  TypeRef type_ref;
+  Result result = CheckType(type, &type_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Future, type_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnFuncType(ComponentTypeDef type,
+                                            uint32_t param_count) {
+  auto type_value = std::make_unique<TypeFunc>(type);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnFuncParam(ComponentStringLoc name,
+                                             ComponentTypeLoc type) {
+  TypeRef type_ref;
+  Result result = CheckTypeIgnoreLast(type, &type_ref);
+  TypeFunc::Param param{string_table_.Append(name.str), type_ref};
+  current_->types.back()->AsTypeFunc()->params.push_back(param);
+  return result;
+}
+
+Result SharedComponentValidator::OnFuncResult(const ComponentTypeLoc& result) {
+  TypeRef result_ref;
+  Result final_result = CheckTypeIgnoreLast(result, &result_ref);
+  current_->types.back()->AsTypeFunc()->result = result_ref;
+  return final_result;
+}
+
+Result SharedComponentValidator::OnResourceType(const ComponentIndexLoc& dtor) {
+  TypeRef dtor_ref;
+  Result result = CheckIndex(dtor, &dtor_ref);
+  auto type_value =
+      std::make_unique<ValueType>(ComponentTypeDef::Resource, dtor_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::OnResourceAsyncType(
+    const ComponentIndexLoc& dtor,
+    const ComponentIndexLoc& callback) {
+  TypeRef dtor_ref, callback_ref;
+  Result result = CheckIndex(dtor, &dtor_ref);
+  result |= CheckIndex(callback, &callback_ref);
+  auto type_value = std::make_unique<ValueTypePair>(
+      ComponentTypeDef::ResourceAsync, dtor_ref, callback_ref);
+  current_->types.push_back(type_value.get());
+  objects_.push_back(std::move(type_value));
+  return result;
+}
+
+Result SharedComponentValidator::BeginInstanceType(uint32_t count) {
+  auto new_instance =
+      std::make_unique<SharedData>(ComponentTypeDef::Instance, current_, false);
+  SharedData* parent = current_;
+  current_ = new_instance.get();
+  parent->types.push_back(current_);
+  objects_.push_back(std::move(new_instance));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndInstanceType() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::BeginComponentType(uint32_t count) {
+  auto new_component =
+      std::make_unique<SharedData>(ComponentTypeDef::Component, current_, true);
+  SharedData* parent = current_;
+  current_ = new_component.get();
+  parent->types.push_back(current_);
+  objects_.push_back(std::move(new_component));
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::EndComponentType() {
+  assert(current_ != nullptr);
+  current_ = current_->parent;
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCanonLift(
+    const ComponentIndexLoc& core_func_index,
+    uint32_t option_count,
+    const ComponentCanonOption* options,
+    const ComponentIndexLoc& type_index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCanonLower(
+    const ComponentIndexLoc& func_index,
+    uint32_t option_count,
+    const ComponentCanonOption* options) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnCanonType(
+    ComponentCanon canon,
+    const ComponentIndexLoc& type_index) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnImport(
+    const ComponentStringLoc& external_name,
+    std::string_view* version_suffix,
+    ComponentExternalInfo* external_info) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::OnExport(
+    const ComponentStringLoc& external_name,
+    std::string_view* version_suffix,
+    ComponentExternalInfo* external_info,
+    ComponentExportInfo* export_info) {
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckIndex(const Location& loc,
+                                            Index index,
+                                            Index max,
+                                            TypeRef* out_type_ref) {
+  assert(max <= current_->types.size());
+  if (index >= max) {
+    return PrintError(loc, "type index too large, must be less than %" PRIindex,
+                      max);
+  }
+  *out_type_ref = TypeRef(current_->types[index]);
+  return Result::Ok;
+}
+
+Result SharedComponentValidator::CheckIndex(const ComponentIndexLoc& index,
+                                            TypeRef* out_type_ref) {
+  Index max = static_cast<Index>(current_->types.size());
+  return CheckIndex(index.loc, index.index, max, out_type_ref);
+}
+
+Result SharedComponentValidator::CheckType(const ComponentTypeLoc& type,
+                                           TypeRef* out_type_ref) {
+  if (!type.type.IsIndex()) {
+    *out_type_ref = TypeRef(type.type.GetType());
+    return Result::Ok;
+  }
+  Index max = static_cast<Index>(current_->types.size());
+  return CheckIndex(type.loc, type.type.GetIndex(), max, out_type_ref);
+}
+
+Result SharedComponentValidator::CheckTypeIgnoreLast(
+    const ComponentTypeLoc& type,
+    TypeRef* out_type_ref) {
+  assert(current_->types.size() > 0);
+  if (!type.type.IsIndex()) {
+    *out_type_ref = TypeRef(type.type.GetType());
+    return Result::Ok;
+  }
+
+  Index max = static_cast<Index>(current_->types.size() - 1);
+  return CheckIndex(type.loc, type.type.GetIndex(), max, out_type_ref);
 }
 
 }  // namespace wabt
