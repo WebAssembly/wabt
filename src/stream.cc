@@ -136,8 +136,7 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
   std::string filename_str(filename);
   FILE* file = fopen(filename_str.c_str(), "wb");
   if (!file) {
-    ERROR("unable to open %s for writing: WABT tools do not create directories\n"
-      "when they don't exist in path passed to -o\n", filename_str.c_str());
+    ERROR("unable to open %s for writing: Directory in path passed to -o doesn't exist\n", filename_str.c_str());
     return Result::Error;
   }
 
