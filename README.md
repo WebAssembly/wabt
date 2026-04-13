@@ -303,6 +303,10 @@ being generated.
 
 See [wasm2c.md](wasm2c/README.md)
 
+## Running WABT tools
+
+WABT tools do not create directories when they don't exist in path passed to `-o`.
+
 ## Running the test suite
 
 See [test/README.md](test/README.md).
