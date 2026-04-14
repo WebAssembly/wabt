@@ -17,7 +17,10 @@ struct TokenInfo {
   };
 };
 %%
-array, Type::Array, TokenType::Array
+any, Type::AnyRef, TokenType::Any
+anyref, Type::AnyRef
+array, Type::ArrayRef, TokenType::Array
+arrayref, Type::ArrayRef
 after, TokenType::After
 assert_exception, TokenType::AssertException
 assert_exhaustion, TokenType::AssertExhaustion
@@ -55,6 +58,8 @@ elem, TokenType::Elem
 else, TokenType::Else, Opcode::Else
 end, TokenType::End, Opcode::End
 tag, TokenType::Tag
+eq, Type::EqRef, TokenType::Eq
+eqref, Type::EqRef
 extern, Type::ExternRef, TokenType::Extern
 externref, Type::ExternRef
 exn, Type::ExnRef, TokenType::Exn
@@ -185,6 +190,7 @@ f64x2.convert_low_i32x4_u, TokenType::Unary, Opcode::F64X2ConvertLowI32X4U
 f64x2.promote_low_f32x4, TokenType::Unary, Opcode::F64X2PromoteLowF32X4
 f64x2, TokenType::F64X2
 field, TokenType::Field
+final, TokenType::Final
 func, Type::FuncRef, TokenType::Func
 funcref, Type::FuncRef
 function, TokenType::Function
@@ -192,6 +198,7 @@ get, TokenType::Get
 global.get, TokenType::GlobalGet, Opcode::GlobalGet
 global.set, TokenType::GlobalSet, Opcode::GlobalSet
 global, TokenType::Global
+i16, Type::I16
 i16x8.abs, TokenType::Unary, Opcode::I16X8Abs
 i16x8.add_sat_s, TokenType::Binary, Opcode::I16X8AddSatS
 i16x8.add_sat_u, TokenType::Binary, Opcode::I16X8AddSatU
@@ -244,6 +251,8 @@ i16x8.extend_high_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendHighI8X16S
 i16x8.extend_high_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendHighI8X16U
 i16x8.extend_low_i8x16_s, TokenType::Unary, Opcode::I16X8ExtendLowI8X16S
 i16x8.extend_low_i8x16_u, TokenType::Unary, Opcode::I16X8ExtendLowI8X16U
+i31, Type::I31Ref, TokenType::I31
+i31ref, Type::I31Ref
 i32.add, TokenType::Binary, Opcode::I32Add
 i32.and, TokenType::Binary, Opcode::I32And
 i32.atomic.load16_u, TokenType::AtomicLoad, Opcode::I32AtomicLoad16U
@@ -496,6 +505,7 @@ i64x2.extmul_low_i32x4_u, TokenType::Binary, Opcode::I64X2ExtmulLowI32X4U
 i64x2.extmul_high_i32x4_u, TokenType::Binary, Opcode::I64X2ExtmulHighI32X4U
 i64x2, TokenType::I64X2
 i64.xor, TokenType::Binary, Opcode::I64Xor
+i8, Type::I8
 i8x16.abs, TokenType::Unary, Opcode::I8X16Abs
 i8x16.add_sat_s, TokenType::Binary, Opcode::I8X16AddSatS
 i8x16.add_sat_u, TokenType::Binary, Opcode::I8X16AddSatU
@@ -557,12 +567,19 @@ module, TokenType::Module
 mut, TokenType::Mut
 nan:arithmetic, TokenType::NanArithmetic
 nan:canonical, TokenType::NanCanonical
+noextern, Type::NullExternRef, TokenType::NoExtern
+nofunc, Type::NullFuncRef, TokenType::NoFunc
+none, Type::NullRef, TokenType::None
 nop, TokenType::Nop, Opcode::Nop
 null, TokenType::Null
+nullfuncref, Type::NullFuncRef
+nullexternref, Type::NullExternRef
+nullref, Type::NullRef
 offset, TokenType::Offset
 output, TokenType::Output
 pagesize, TokenType::PageSize
 param, TokenType::Param
+rec, TokenType::Rec
 ref, TokenType::Ref
 quote, TokenType::Quote
 ref.as_non_null, TokenType::RefAsNonNull, Opcode::RefAsNonNull
@@ -580,7 +597,9 @@ return, TokenType::Return, Opcode::Return
 select, TokenType::Select, Opcode::Select
 shared, TokenType::Shared
 start, TokenType::Start
-struct, Type::Struct, TokenType::Struct
+struct, Type::StructRef, TokenType::Struct
+structref, Type::StructRef
+sub, TokenType::Sub
 table.copy, TokenType::TableCopy, Opcode::TableCopy
 table.fill, TokenType::TableFill, Opcode::TableFill
 table.get, TokenType::TableGet, Opcode::TableGet
