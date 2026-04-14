@@ -90,6 +90,14 @@ class WastParser {
     ReferenceVars vars;
   };
 
+  struct ResolveField {
+    ResolveField(StructType* target_struct)
+      : target_struct(target_struct) {}
+
+    StructType* target_struct;
+    ReferenceVars vars;
+  };
+
   void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
@@ -185,7 +193,7 @@ class WastParser {
   bool ParseElemExprListOpt(ExprListVector* out_list);
   Result ParseElemExprVarListOpt(ExprListVector* out_list);
   Result ParseRefDeclaration(Var* out_type);
-  Result ParseValueType(Var* out_type);
+  Result ParseValueType(Var* out_type, bool is_field = false);
   Result ParseValueTypeList(
       TypeVector* out_type_list,
       ReferenceVars* type_vars);
@@ -204,6 +212,8 @@ class WastParser {
   static Result ResolveTargetRefType(const Module&, Type*, const Var&, Errors*);
   static Result ResolveTargetTypeVector(const Module&, TypeVector*,
                                         ReferenceVars*, Errors*);
+  static Result ResolveTargetFieldVector(const Module&, StructType*,
+                                         ReferenceVars*, Errors* errors);
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
   Result ParseDataModuleField(Module*);
@@ -212,6 +222,7 @@ class WastParser {
   Result ParseExportModuleField(Module*);
   Result ParseFuncModuleField(Module*);
   Result ParseTypeModuleField(Module*);
+  Result ParseRecTypeModuleField(Module*);
   Result ParseGlobalModuleField(Module*);
   Result ParseImportModuleField(Module*);
   Result ParseMemoryModuleField(Module*);
@@ -262,10 +273,12 @@ class WastParser {
   Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);
   Result ParseField(Field*);
-  Result ParseFieldList(std::vector<Field>*);
+  Result ParseFieldList(StructType*);
 
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
+  template <typename T>
+  Result ParsePlainInstrVarVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
   Result ParseMemoryInstrVar(Location, std::unique_ptr<Expr>*);
   template <typename T>
@@ -335,6 +348,11 @@ class WastParser {
   // Local vectors and their corresponding references are stored in the
   // following vector. At least one reference must be present for each vector.
   std::vector<ResolveFunc> resolve_funcs_;
+
+  // Structure fields and their corresponding references are
+  // stored in the following vector. At least one reference
+  // must be present for each structure.
+  std::vector<ResolveField> resolve_fields_;
 
   // two-element queue of upcoming tokens
   class TokenQueue {
