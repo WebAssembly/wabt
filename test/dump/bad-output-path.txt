@@ -1,0 +1,7 @@
+;;; RUN: %(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm
+;;; RUN: %(wasm-strip)s -o non-existent/out.wasm %(temp_file)s.wasm
+;;; ERROR: 1
+(module)
+(;; STDERR ;;;
+wabt: unable to open non-existent/out.wasm for writing: No such file or directory
+;;; STDERR ;;)

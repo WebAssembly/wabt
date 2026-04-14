@@ -29,8 +29,7 @@
 #include "wabt/option-parser.h"
 #include "wabt/stream.h"
 
-#define ERROR(fmt, ...) \
-  fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
+#define ERROR(fmt, ...) fprintf(stderr, "wabt: " fmt, __VA_ARGS__)
 
 using namespace wabt;
 

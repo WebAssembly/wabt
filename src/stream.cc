@@ -23,9 +23,8 @@
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
-#define ERROR0(msg) fprintf(stderr, "%s:%d: " msg, __FILE__, __LINE__)
-#define ERROR(fmt, ...) \
-  fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
+#define UNIMPLMENTED(msg) fprintf(stderr, "%s:%d: " msg, __FILE__, __LINE__)
+#define ERROR(fmt, ...) fprintf(stderr, "wabt: " fmt, __VA_ARGS__)
 
 namespace wabt {
 
@@ -136,7 +135,8 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
   std::string filename_str(filename);
   FILE* file = fopen(filename_str.c_str(), "wb");
   if (!file) {
-    ERROR("unable to open %s for writing\n", filename_str.c_str());
+    ERROR("unable to open %s for writing: %s\n", filename_str.c_str(),
+          strerror(errno));
     return Result::Error;
   }
 
@@ -238,7 +238,8 @@ FileStream::FileStream(std::string_view filename, Stream* log_stream)
   if (file_) {
     should_close_ = true;
   } else {
-    ERROR("fopen name=\"%s\" failed, errno=%d\n", filename_str.c_str(), errno);
+    ERROR("unable to open %s for writing: %s\n", filename_str.c_str(),
+          strerror(errno));
   }
 }
 
@@ -304,7 +305,7 @@ Result FileStream::MoveDataImpl(size_t dst_offset,
     return Result::Ok;
   }
   // TODO(binji): implement if needed.
-  ERROR0("FileStream::MoveDataImpl not implemented!\n");
+  UNIMPLMENTED("FileStream::MoveDataImpl not implemented!\n");
   return Result::Error;
 }
 
@@ -313,7 +314,7 @@ Result FileStream::TruncateImpl(size_t size) {
     return Result::Error;
   }
   // TODO(binji): implement if needed.
-  ERROR0("FileStream::TruncateImpl not implemented!\n");
+  UNIMPLMENTED("FileStream::TruncateImpl not implemented!\n");
   return Result::Error;
 }
 
