@@ -13,14 +13,16 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
     - name: install tools
       run: |
         pip3 install flake8==7.3.0
-        sudo apt-get install clang-format
+        sudo apt-get install -y clang-format
     - run: flake8
     - run: ./scripts/clang-format-diff.sh
       env:
@@ -32,14 +34,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
     - name: install ninja (linux)
-      run: sudo apt-get install ninja-build
+      run: sudo apt-get install -y ninja-build
       if: matrix.os == 'ubuntu-latest'
     - name: install ninja (osx)
       run: brew install ninja
@@ -47,20 +49,14 @@ jobs:
     - name: install ninja (win)
       run: choco install ninja
       if: matrix.os == 'windows-latest'
-    - name: mkdir
-      run: mkdir -p out
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: matrix.os == 'windows-latest'
     - name: tool versions
       run: |
         cmake --version
         ninja --version
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
-      if: matrix.os != 'windows-latest'
-    - name: cmake (windows)
-      run: cmake .. -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
-      if: matrix.os == 'windows-latest'
+      run: cmake -S . -B out -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
     - name: build
       run: cmake --build out
     - name: check if generated files are up-to-date
@@ -75,7 +71,7 @@ jobs:
     name: emscripten
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
     - name: build
@@ -89,7 +85,7 @@ jobs:
     name: wasi
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: build-tools
@@ -113,13 +109,13 @@ jobs:
         sanitizer: [asan, ubsan, fuzz]
         type: [debug, release]
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
-    - run: sudo apt-get install ninja-build
+    - run: sudo apt-get install -y ninja-build
     - name: workaround for ASLR+ASAN compatibility # See https://github.com/actions/runner/issues/3207
       run: sudo sysctl -w vm.mmap_rnd_bits=28
     - run: make clang-${{ matrix.type }}-${{ matrix.sanitizer }}
@@ -133,13 +129,13 @@ jobs:
       CC: "clang" # used by the wasm2c tests
       WASM2C_CFLAGS: "-march=x86-64-v2 -fsanitize=address -DWASM_RT_USE_MMAP=0"
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
-    - run: sudo apt-get install ninja-build
+    - run: sudo apt-get install -y ninja-build
     - name: workaround for ASLR+ASAN compatibility # See https://github.com/actions/runner/issues/3207
       run: sudo sysctl -w vm.mmap_rnd_bits=28
     - run: make clang-debug-asan
@@ -149,14 +145,14 @@ jobs:
     name: min-cmake
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
     - name: Install Ninja
-      run: sudo apt-get install ninja-build
+      run: sudo apt-get install -y ninja-build
     - name: Detect minimum CMake version
       run: >
         awk 'match($0, /cmake_minimum_required\(VERSION *([0-9]+\.[0-9]+)\)/, a)
@@ -209,20 +205,20 @@ jobs:
       WASM2C_CC: "clang"
       WASM2C_CFLAGS: "-DWASM_RT_USE_MMAP=1 -DWASM_RT_SKIP_SIGNAL_RECOVERY=1 -DWASM_RT_NONCONFORMING_UNCHECKED_STACK_EXHAUSTION=1 -DWASM2C_TEST_EMBEDDER_SIGNAL_HANDLING -DWASM_RT_ALLOW_SEGUE=1 -DWASM_RT_SEGUE_FREE_SEGMENT=1 -mfsgsbase -DWASM_RT_SANITY_CHECKS=1 -Wno-pass-failed"
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
-    - run: sudo apt-get install ninja-build
+    - run: sudo apt-get install -y ninja-build
     - run: make clang-debug
     - name: tests (wasm2c tests excluding memory64)
       run: ./test/run-tests.py wasm2c --exclude-dir memory64
 
   build-cross:
     runs-on: ubuntu-latest
-    # Temporatily disabled until we can get it fixed:
+    # Temporarily disabled until we can get it fixed:
     # https://github.com/WebAssembly/wabt/issues/2655
     if: ${{ false }}
     strategy:
@@ -238,10 +234,10 @@ jobs:
     env:
       QEMU_LD_PREFIX: /usr/${{matrix.arch}}-linux-gnu/
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.x'
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v6
       with:
         submodules: true
     - name: Set up QEMU
@@ -250,13 +246,9 @@ jobs:
         platforms: ${{matrix.arch}}
         image: "tonistiigi/binfmt:master"
     - name: apt-get update
-      run: sudo apt-get update
-    - name: install ninja
-      run: sudo apt-get install ninja-build
-    - name: install the toolchain
-      run: sudo apt-get install g++-${{matrix.arch}}-linux-gnu
-    - name: install distcc
-      run: sudo apt-get install distcc
+      run: sudo apt-get update -y
+    - name: install dependencies
+      run: sudo apt-get install -y ninja-build g++-${{matrix.arch}}-linux-gnu distcc
     - name: mkdir distcc symlinks
       run: sudo mkdir -p /opt/bin/distcc_symlinks
     - name: distcc symlink
