@@ -1225,8 +1225,8 @@ Result SharedValidator::OnReturnCallIndirect(const Location& loc,
                          "type mismatch: return_call_indirect must reference "
                          "table of funcref type");
   }
-  result |=
-      typechecker_.OnReturnCallIndirect(func_type.params, func_type.results);
+  result |= typechecker_.OnReturnCallIndirect(
+      func_type.params, func_type.results, table_type.limits);
   IgnoreLocalRefs();
   return result;
 }

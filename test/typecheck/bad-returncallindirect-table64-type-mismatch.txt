@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-tail-call --enable-memory64
+;;; ERROR: 1
+(module
+  (type $t (func))
+  (func $f)
+  (table i64 1 1 funcref)
+  (elem (i64.const 0) $f)
+  (func
+    i32.const 0
+    return_call_indirect (type $t)))
+(;; STDERR ;;;
+out/test/typecheck/bad-returncallindirect-table64-type-mismatch.txt:11:5: error: type mismatch in return_call_indirect, expected [i64] but got [i32]
+    return_call_indirect (type $t)))
+    ^^^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

@@ -106,7 +106,8 @@ class TypeChecker {
   Result OnReturnCall(const TypeVector& param_types,
                       const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types,
-                              const TypeVector& result_types);
+                              const TypeVector& result_types,
+                              const Limits& table_limits);
   Result OnReturnCallRef(Type type,
                          const TypeVector& param_types,
                          const TypeVector& result_types);

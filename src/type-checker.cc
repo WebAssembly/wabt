@@ -722,8 +722,10 @@ Result TypeChecker::OnReturnCall(const TypeVector& param_types,
 }
 
 Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
-                                         const TypeVector& result_types) {
-  Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
+                                         const TypeVector& result_types,
+                                         const Limits& table_limits) {
+  Result result = PopAndCheck1Type(table_limits.is_64 ? Type::I64 : Type::I32,
+                                   "return_call_indirect");
 
   result |= PopAndCheckSignature(param_types, "return_call_indirect");
   result |= PopAndCheckReturnCall(result_types, "return_call_indirect");
