@@ -1337,7 +1337,7 @@ std::optional<std::string> WastParser::ParseSymAttrString(TokenType tag) {
   if (!MatchLpar(tag))
     return {};
   std::optional<std::string> ret(std::in_place);
-  if (ParseQuotedText(&*ret)) {
+  if (Succeeded(ParseQuotedText(&*ret))) {
     if (Failed(Expect(TokenType::Rpar)))
       ParseUnwindReloc(1);
     return ret;
@@ -1352,7 +1352,7 @@ std::optional<uint64_t> WastParser::ParseSymAttrNumber(TokenType tag) {
   if (!MatchLpar(tag))
     return {};
   std::optional<uint64_t> ret(std::in_place);
-  if (ParseNat(&*ret, true)) {
+  if (Succeeded(ParseNat(&*ret, true))) {
     if (Failed(Expect(TokenType::Rpar)))
       ParseUnwindReloc(1);
     return ret;
@@ -2567,11 +2567,11 @@ Result WastParser::ParseRelocAddend(uint32_t* addend,
     *name = Var{curr.text(), curr.loc};
     return Result::Ok;
   }
-  if (!Expect(TokenType::Int)) {
+  if (Failed(Expect(TokenType::Int))) {
     return Result::Error;
   }
   auto sv = curr.literal().text;
-  if (!ParseInt32(sv, addend, ParseIntType::SignedAndUnsigned))
+  if (Failed(ParseInt32(sv, addend, ParseIntType::SignedAndUnsigned)))
     ErrorExpected({"integer with sign"}, "+123");
   if (sv.find_first_of("+-") != 0)
     return ErrorExpected({"integer with sign"},
@@ -2721,7 +2721,7 @@ Result WastParser::ParseReloc(bool opt,
     bool addend_allowed = kind == RelocKind::Data || text_addend_allowed;
     ParseRelocAddend(addend_allowed ? &addend_num : nullptr,
                      text_addend_allowed ? &addend_name : nullptr);
-    if (!Expect(TokenType::Rpar)) {
+    if (Failed(Expect(TokenType::Rpar))) {
       res = Result::Error;
       ParseUnwindReloc(1);
     }
