@@ -605,12 +605,12 @@ class WasiInstance {
                    uint32_t num_elems,
                    T** result,
                    Trap::Ptr* trap) {
-    if (!memory->IsValidAccess(address, 0, num_elems * sizeof(T))) {
+    if (!memory->IsValidAccess(address, 0, u64{num_elems} * sizeof(T))) {
       *trap =
           Trap::New(*instance.store(),
                     StringPrintf("out of bounds memory access: "
                                  "[%u, %" PRIu64 ") >= max value %" PRIu64,
-                                 address, u64{address} + num_elems * sizeof(T),
+                                 address, u64{address} + u64{num_elems} * sizeof(T),
                                  memory->ByteSize()));
       return Result::Error;
     }
