@@ -31,6 +31,7 @@
 #include <cstring>
 #include <limits>
 #include <type_traits>
+#include <vector>
 
 #if defined(__APPLE__)
 #include <xlocale.h>
@@ -182,14 +183,14 @@ Result FloatParser<T>::ParseFloat(const char* s,
   // so remove them first.
   assert(s <= end);
   const size_t kBufferSize = end - s + 1;  // +1 for \0.
-  char* buffer = static_cast<char*>(alloca(kBufferSize));
-  auto buffer_end =
-      std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
-  assert(buffer_end < buffer + kBufferSize);
+  std::vector<char> buffer(kBufferSize);
+  char* buffer_end = std::copy_if(s, end, buffer.data(),
+                                  [](char c) -> bool { return c != '_'; });
+  assert(buffer_end < buffer.data() + kBufferSize);
   *buffer_end = 0;
 
   char* endptr;
-  Float value = Traits::Strto(buffer, &endptr);
+  Float value = Traits::Strto(buffer.data(), &endptr);
   if (endptr != buffer_end ||
       (value == Traits::kHugeVal || value == -Traits::kHugeVal)) {
     return Result::Error;
