@@ -985,7 +985,7 @@ Result BinaryReaderInterp::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
 }
 
 uint32_t GetAlignment(Address alignment_log2) {
-  return alignment_log2 < 32 ? 1 << alignment_log2 : ~0u;
+  return alignment_log2 < 32 ? 1u << alignment_log2 : ~0u;
 }
 
 Result BinaryReaderInterp::OnSimdLoadLaneExpr(Opcode opcode,
