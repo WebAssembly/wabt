@@ -69,6 +69,9 @@ uint32_t WASM_RT_TABLE_APINAME(wasm_rt_grow)(WASM_RT_TABLE_TYPE* table,
   if ((new_elems < old_elems) || (new_elems > table->max_size)) {
     return (uint32_t)-1;
   }
+  if (new_elems > SIZE_MAX / sizeof(WASM_RT_TABLE_ELEMENT_TYPE)) {
+    return (uint32_t)-1;
+  }
   void* new_data =
       realloc(table->data, new_elems * sizeof(WASM_RT_TABLE_ELEMENT_TYPE));
   if (!new_data) {
