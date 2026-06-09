@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+// strtof_l/strtod_l are only declared by glibc and musl when _GNU_SOURCE is set.
+#if !defined(_WIN32) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include "wabt/literal.h"
 
 #include <cassert>
@@ -23,11 +28,53 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <locale.h>
 #include <type_traits>
+
+#if defined(__APPLE__)
+#include <xlocale.h>
+#endif
 
 namespace wabt {
 
 namespace {
+
+// strtof/strtod read the radix character from the current C locale's LC_NUMERIC
+// category, but the wat grammar always writes the radix as '.'.  Under a locale
+// whose decimal point is not '.' (for example ',' in the German locale) strtod
+// stops at the '.', so a valid literal like "1.5" fails to parse.  The embedder
+// is free to set the locale, so parse against a fixed "C" locale instead.
+
+#if defined(_WIN32)
+using CLocale = _locale_t;
+CLocale MakeCLocale() {
+  return _create_locale(LC_ALL, "C");
+}
+float StrtofC(const char* s, char** endptr, CLocale loc) {
+  return _strtof_l(s, endptr, loc);
+}
+double StrtodC(const char* s, char** endptr, CLocale loc) {
+  return _strtod_l(s, endptr, loc);
+}
+#else
+using CLocale = locale_t;
+CLocale MakeCLocale() {
+  return newlocale(LC_ALL_MASK, "C", nullptr);
+}
+float StrtofC(const char* s, char** endptr, CLocale loc) {
+  return strtof_l(s, endptr, loc);
+}
+double StrtodC(const char* s, char** endptr, CLocale loc) {
+  return strtod_l(s, endptr, loc);
+}
+#endif
+
+// The "C" locale never changes, so one handle is shared by every parse.  It is
+// created on first use and intentionally lives for the rest of the process.
+CLocale CLocaleHandle() {
+  static CLocale loc = MakeCLocale();
+  return loc;
+}
 
 template <typename T>
 struct FloatTraitsBase {};
@@ -43,7 +90,9 @@ struct FloatTraitsBase<float> {
   static constexpr float kHugeVal = HUGE_VALF;
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
-  static float Strto(const char* s, char** endptr) { return strtof(s, endptr); }
+  static float Strto(const char* s, char** endptr) {
+    return StrtofC(s, endptr, CLocaleHandle());
+  }
 };
 
 template <>
@@ -55,7 +104,7 @@ struct FloatTraitsBase<double> {
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
-    return strtod(s, endptr);
+    return StrtodC(s, endptr, CLocaleHandle());
   }
 };
 
