@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-// strtof_l/strtod_l are only declared by glibc and musl when _GNU_SOURCE is set.
+// strtof_l/strtod_l are only declared by glibc and musl when _GNU_SOURCE is
+// set.
 #if !defined(_WIN32) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
 
 #include "wabt/literal.h"
 
+#include <locale.h>
 #include <cassert>
 #include <cerrno>
 #include <cinttypes>
@@ -28,7 +30,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
-#include <locale.h>
 #include <type_traits>
 
 #if defined(__APPLE__)
