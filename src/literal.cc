@@ -39,29 +39,15 @@ namespace wabt {
 
 namespace {
 
-// strtof/strtod read the radix character from the current C locale's LC_NUMERIC
-// category, but the wat grammar always writes the radix as '.'.  Under a locale
-// whose decimal point is not '.' (for example ',' in the German locale) strtod
-// stops at the '.', so a valid literal like "1.5" fails to parse.  The embedder
-// is free to set the locale, so parse against a fixed "C" locale instead.
-
+// Always use the C locale for parsing floats since the Wat grammar requires
+// `.` for the radix.
 #if defined(_WIN32)
 #define strtof_l _strtof_l
 #define strtod_l _strtod_l
-using CLocale = _locale_t;
-CLocale MakeCLocale() {
-  return _create_locale(LC_ALL, "C");
-}
+static _locale_t c_locale = _create_locale(LC_ALL, "C");
 #else
-using CLocale = locale_t;
-CLocale MakeCLocale() {
-  return newlocale(LC_ALL_MASK, "C", nullptr);
-}
+static locale_t c_locale = newlocale(LC_ALL_MASK, "C", nullptr);
 #endif
-
-// The "C" locale never changes, so one handle is shared by every parse and
-// intentionally lives for the rest of the process.
-static CLocale c_locale = MakeCLocale();
 
 template <typename T>
 struct FloatTraitsBase {};
