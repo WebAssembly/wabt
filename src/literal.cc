@@ -46,35 +46,22 @@ namespace {
 // is free to set the locale, so parse against a fixed "C" locale instead.
 
 #if defined(_WIN32)
+#define strtof_l _strtof_l
+#define strtod_l _strtod_l
 using CLocale = _locale_t;
 CLocale MakeCLocale() {
   return _create_locale(LC_ALL, "C");
-}
-float StrtofC(const char* s, char** endptr, CLocale loc) {
-  return _strtof_l(s, endptr, loc);
-}
-double StrtodC(const char* s, char** endptr, CLocale loc) {
-  return _strtod_l(s, endptr, loc);
 }
 #else
 using CLocale = locale_t;
 CLocale MakeCLocale() {
   return newlocale(LC_ALL_MASK, "C", nullptr);
 }
-float StrtofC(const char* s, char** endptr, CLocale loc) {
-  return strtof_l(s, endptr, loc);
-}
-double StrtodC(const char* s, char** endptr, CLocale loc) {
-  return strtod_l(s, endptr, loc);
-}
 #endif
 
-// The "C" locale never changes, so one handle is shared by every parse.  It is
-// created on first use and intentionally lives for the rest of the process.
-CLocale CLocaleHandle() {
-  static CLocale loc = MakeCLocale();
-  return loc;
-}
+// The "C" locale never changes, so one handle is shared by every parse and
+// intentionally lives for the rest of the process.
+static CLocale c_locale = MakeCLocale();
 
 template <typename T>
 struct FloatTraitsBase {};
@@ -91,7 +78,7 @@ struct FloatTraitsBase<float> {
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
   static float Strto(const char* s, char** endptr) {
-    return StrtofC(s, endptr, CLocaleHandle());
+    return strtof_l(s, endptr, c_locale);
   }
 };
 
@@ -104,7 +91,7 @@ struct FloatTraitsBase<double> {
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
-    return StrtodC(s, endptr, CLocaleHandle());
+    return strtod_l(s, endptr, c_locale);
   }
 };
 
