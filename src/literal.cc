@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
+// strtof_l/strtod_l are only declared by glibc and musl when _GNU_SOURCE is
+// set.
+#if !defined(_WIN32) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include "wabt/literal.h"
 
+#include <locale.h>
 #include <cassert>
 #include <cerrno>
 #include <cinttypes>
@@ -25,9 +32,23 @@
 #include <limits>
 #include <type_traits>
 
+#if defined(__APPLE__)
+#include <xlocale.h>
+#endif
+
 namespace wabt {
 
 namespace {
+
+// Always use the C locale for parsing floats since the Wat grammar requires
+// `.` for the radix.
+#if defined(_WIN32)
+#define strtof_l _strtof_l
+#define strtod_l _strtod_l
+static _locale_t c_locale = _create_locale(LC_ALL, "C");
+#else
+static locale_t c_locale = newlocale(LC_ALL_MASK, "C", nullptr);
+#endif
 
 template <typename T>
 struct FloatTraitsBase {};
@@ -43,7 +64,9 @@ struct FloatTraitsBase<float> {
   static constexpr float kHugeVal = HUGE_VALF;
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
-  static float Strto(const char* s, char** endptr) { return strtof(s, endptr); }
+  static float Strto(const char* s, char** endptr) {
+    return strtof_l(s, endptr, c_locale);
+  }
 };
 
 template <>
@@ -55,7 +78,7 @@ struct FloatTraitsBase<double> {
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
-    return strtod(s, endptr);
+    return strtod_l(s, endptr, c_locale);
   }
 };
 

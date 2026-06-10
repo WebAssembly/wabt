@@ -15,7 +15,9 @@
  */
 
 #include <cassert>
+#include <clocale>
 #include <cstdio>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -440,6 +442,38 @@ TEST(ParseUint128, Invalid) {
   AssertUint128Fails("-1");
   AssertUint128Fails("340282366920938463463374607431768211456");
   AssertUint128Fails("123a456");
+}
+
+TEST(ParseFloat, DecimalLocaleIndependent) {
+  // A decimal float literal uses '.' as the radix per the wat grammar.  strtof
+  // and strtod read the radix according to the current locale's LC_NUMERIC, so
+  // under a locale whose decimal point is ',' parsing "1.5" used to stop at the
+  // '.' and fail.  Parsing must not depend on the host locale.
+  std::string saved = setlocale(LC_NUMERIC, nullptr);
+
+  const char* comma_locales[] = {"de_DE.UTF-8", "de_DE.utf8", "de_DE",
+                                 "fr_FR.UTF-8", "nl_NL.UTF-8"};
+  bool have_comma_locale = false;
+  for (const char* loc : comma_locales) {
+    if (setlocale(LC_NUMERIC, loc) && *localeconv()->decimal_point == ',') {
+      have_comma_locale = true;
+      break;
+    }
+  }
+  if (!have_comma_locale) {
+    setlocale(LC_NUMERIC, saved.c_str());
+    GTEST_SKIP() << "no comma-decimal locale installed";
+  }
+
+  uint32_t f32_bits = 0;
+  EXPECT_EQ(Result::Ok, ParseFloat(LiteralType::Float, "1.5", &f32_bits));
+  EXPECT_EQ(0x3fc00000u, f32_bits);  // 1.5f
+
+  uint64_t f64_bits = 0;
+  EXPECT_EQ(Result::Ok, ParseDouble(LiteralType::Float, "1.5", &f64_bits));
+  EXPECT_EQ(0x3ff8000000000000ull, f64_bits);  // 1.5
+
+  setlocale(LC_NUMERIC, saved.c_str());
 }
 
 TEST(ParseFloat, NonCanonical) {
