@@ -97,6 +97,15 @@
     i32.add
     i32.load offset=4
     i32.store offset=4
+    ;; A shift amount that is not a valid power-of-two alignment must not be
+    ;; used as a shift exponent for the rewrite; amounts >= 64 are out of range.
+    local.get 0
+    local.get 1
+    i32.const 64
+    i32.shl
+    i32.add
+    i32.load offset=0
+    drop
     ;; Test naming of absolute addresses referring to data sections.
     i32.const 16
     i32.load8_u offset=1  ;; Refers to the 'W'
@@ -129,6 +138,7 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) { // func0
   a[b]:int = a[b]:int;
   a[b + 1]:int = a[b + 1]:int;
   (a + (b << 3))[1]:int = a[b + 1]:int;
+  (a + (b << 64))[0]:int;
   d_HelloWorld[7]:ubyte;
 }
 
