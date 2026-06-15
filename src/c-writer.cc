@@ -761,6 +761,10 @@ static bool internal_ishexdigit(uint8_t ch) {
   return internal_isdigit(ch) || (ch >= 'A' && ch <= 'F');  // capitals only
 }
 
+static char internal_toupper(uint8_t ch) {
+  return (ch >= 'a' && ch <= 'z') ? (ch - 'a' + 'A') : ch;
+}
+
 // static
 std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
   /*
@@ -1528,8 +1532,8 @@ void CWriter::WriteInitExprTerminal(const Expr* expr) {
 std::string CWriter::GenerateHeaderGuard() const {
   std::string result;
   for (char c : header_name_) {
-    if (isalnum(c) || c == '_') {
-      result += toupper(c);
+    if (internal_isalnum(c) || c == '_') {
+      result += internal_toupper(c);
     } else {
       result += '_';
     }
