@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cinttypes>
+#include <limits>
 
 #include "wabt/interp/interp-math.h"
 
@@ -593,12 +594,12 @@ Result Table::Match(Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
-bool Table::IsValidRange(u32 offset, u32 size) const {
+bool Table::IsValidRange(u64 offset, u64 size) const {
   size_t elem_size = elements_.size();
   return size <= elem_size && offset <= elem_size - size;
 }
 
-Result Table::Get(u32 offset, Ref* out) const {
+Result Table::Get(u64 offset, Ref* out) const {
   if (IsValidRange(offset, 1)) {
     *out = elements_[offset];
     return Result::Ok;
@@ -606,12 +607,12 @@ Result Table::Get(u32 offset, Ref* out) const {
   return Result::Error;
 }
 
-Ref Table::UnsafeGet(u32 offset) const {
+Ref Table::UnsafeGet(u64 offset) const {
   assert(IsValidRange(offset, 1));
   return elements_[offset];
 }
 
-Result Table::Set(Store& store, u32 offset, Ref ref) {
+Result Table::Set(Store& store, u64 offset, Ref ref) {
   assert(store.HasValueType(ref, type_.element));
   if (IsValidRange(offset, 1)) {
     elements_[offset] = ref;
@@ -620,11 +621,18 @@ Result Table::Set(Store& store, u32 offset, Ref ref) {
   return Result::Error;
 }
 
-Result Table::Grow(Store& store, u32 count, Ref ref) {
+Result Table::Grow(Store& store, u64 count, Ref ref) {
   size_t old_size = elements_.size();
   u32 new_size;
   assert(store.HasValueType(ref, type_.element));
-  if (CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
+  // Table sizes are bounded to 2^32-1 elements, so a delta that does not fit in
+  // a u32 can never succeed; checking here keeps the u64 count from being
+  // truncated by the u32 CanGrow below.
+  if (count > std::numeric_limits<u32>::max()) {
+    return Result::Error;
+  }
+  if (CanGrow<u32>(type_.limits, old_size, static_cast<u32>(count),
+                   &new_size)) {
     // Grow the limits of the table too, so that if it is used as an
     // import to another module its new size is honored.
     type_.limits.initial += count;
@@ -635,7 +643,7 @@ Result Table::Grow(Store& store, u32 count, Ref ref) {
   return Result::Error;
 }
 
-Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
+Result Table::Fill(Store& store, u64 offset, Ref ref, u64 size) {
   assert(store.HasValueType(ref, type_.element));
   if (IsValidRange(offset, size)) {
     std::fill(elements_.begin() + offset, elements_.begin() + offset + size,
@@ -646,7 +654,7 @@ Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
 }
 
 Result Table::Init(Store& store,
-                   u32 dst_offset,
+                   u64 dst_offset,
                    const ElemSegment& src,
                    u32 src_offset,
                    u32 size) {
@@ -663,10 +671,10 @@ Result Table::Init(Store& store,
 // static
 Result Table::Copy(Store& store,
                    Table& dst,
-                   u32 dst_offset,
+                   u64 dst_offset,
                    const Table& src,
-                   u32 src_offset,
-                   u32 size) {
+                   u64 src_offset,
+                   u64 size) {
   if (dst.IsValidRange(dst_offset, size) &&
       src.IsValidRange(src_offset, size) &&
       TypesMatch(dst.type_.element, src.type_.element)) {

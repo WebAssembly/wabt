@@ -1,0 +1,28 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-memory64
+(module
+  (table $t i64 10 funcref)
+
+  ;; Indices in [2^32, 2^32 + size) must trap, not wrap into a valid slot.
+  (func (export "get_wrap") (result funcref)
+    (table.get $t (i64.const 0x1_0000_0003)))
+  (func (export "set_wrap")
+    (table.set $t (i64.const 0x1_0000_0003) (ref.null func)))
+  (func (export "fill_wrap")
+    (table.fill $t (i64.const 0x1_0000_0000) (ref.null func) (i64.const 1)))
+
+  ;; A delta that does not fit in 32 bits must fail to grow.
+  (func (export "grow_overflow") (result i64)
+    (table.grow $t (ref.null func) (i64.const 0x1_0000_0000)))
+
+  ;; In-range access still works.
+  (func (export "get_ok") (result funcref)
+    (table.get $t (i64.const 3)))
+)
+(;; STDOUT ;;;
+get_wrap() => error: out of bounds table access: table.get at 4294967299 >= max value 10
+set_wrap() => error: out of bounds table access: table.set at 4294967299 >= max value 10
+fill_wrap() => error: out of bounds table access: table.fill out of bounds
+grow_overflow() => i64:18446744073709551615
+get_ok() => funcref:0
+;;; STDOUT ;;)
