@@ -2311,6 +2311,30 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
   Token tk = Consume();
   std::string_view name = tk.text();
+  if (name.find("metadata.code.") != 0) {
+    // Not a code metadata annotation. This can be reached when Peek admits a
+    // (@custom ...) annotation (only meaningful at module scope) into an
+    // instruction list. Discard it like any other unrecognised annotation
+    // rather than stripping a prefix that isn't there.
+    int indent = 1;
+    while (indent > 0) {
+      switch (Peek()) {
+        case TokenType::Lpar:
+        case TokenType::LparAnn:
+          indent++;
+          break;
+        case TokenType::Rpar:
+          indent--;
+          break;
+        case TokenType::Eof:
+          return ErrorExpected({"a close paren"});
+        default:
+          break;
+      }
+      Consume();
+    }
+    return Result::Ok;
+  }
   name.remove_prefix(sizeof("metadata.code.") - 1);
   std::string data_text;
   CHECK_RESULT(ParseQuotedText(&data_text, false));
