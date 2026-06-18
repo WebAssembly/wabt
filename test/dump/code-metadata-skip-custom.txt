@@ -1,0 +1,30 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS1: --headers
+;; A (@custom ...) annotation is only meaningful at module scope. When one
+;; appears in an instruction list it reaches ParseCodeMetadataAnnotation; it
+;; should be skipped like any other unrecognised annotation, while a real
+;; metadata.code annotation in the same body is still emitted.
+(module
+  (func $f (result i32)
+    (@custom "x")
+    (@metadata.code.test "aa") i32.const 1
+    return))
+(;; STDOUT ;;;
+
+code-metadata-skip-custom.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+   Custom start=0x00000015 end=0x0000002f (size=0x0000001a) "metadata.code.test"
+     Code start=0x00000031 end=0x00000038 (size=0x00000007) count: 1
+
+Code Disassembly:
+
+000033 func[0]:
+ 000034: 41 01                      | i32.const 1
+ 000036: 0f                         | return
+ 000037: 0b                         | end
+;;; STDOUT ;;)
