@@ -7,10 +7,10 @@
 .Sh SYNOPSIS
 .Nm wat2wasm
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Read a file in the wasm text format, check it for errors, and convert it to the wasm binary format.
+read a file in the wasm text format, check it for errors, and  convert it to the wasm binary format.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -20,8 +20,6 @@ Print this help message
 Print version information
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
-.It Fl Fl debug-parser
-Turn on debugging the parser of wat files
 .It Fl d , Fl Fl dump-module
 Print a hexdump of the module to stdout
 .It Fl Fl enable-exceptions
@@ -58,6 +56,14 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl o , Fl Fl output=FILE
@@ -68,19 +74,16 @@ Create a relocatable wasm binary (suitable for linking with e.g. lld)
 Write all LEB128 sizes as 5-bytes instead of their minimal size
 .It Fl Fl debug-names
 Write debug names to the generated binary file
-.It Fl Fl no-check
-Don't check for invalid modules
 .El
 .Sh EXAMPLES
-Parse test.wat and write to .wasm binary file with the same name
+parse test.wat and write to .wasm binary file with the same name
 .Pp
 .Dl $ wat2wasm test.wat
-.Pp
-Parse test.wat and write to binary file test.wasm
+parse test.wat and write to binary file test.wasm
 .Pp
 .Dl $ wat2wasm test.wat -o test.wasm
-.Pp
-Parse spec-test.wast, and write verbose output to stdout (including the meaning of every byte)
+parse spec-test.wast, and write verbose output to stdout (including
+the meaning of every byte)
 .Pp
 .Dl $ wat2wasm spec-test.wast -v
 .Sh SEE ALSO
@@ -94,7 +97,7 @@ Parse spec-test.wast, and write verbose output to stdout (including the meaning 
 .Xr wasm2wat 1 ,
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

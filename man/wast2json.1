@@ -7,10 +7,10 @@
 .Sh SYNOPSIS
 .Nm wast2json
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Read a file in the wasm spec test format, check it for errors, and convert it to a JSON file and associated wasm binary files.
+read a file in the wasm spec test format, check it for errors, and  convert it to a JSON file and associated wasm binary files.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -20,8 +20,6 @@ Print this help message
 Print version information
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
-.It Fl Fl debug-parser
-Turn on debugging the parser of wast files
 .It Fl Fl enable-exceptions
 Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
@@ -56,6 +54,14 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl o , Fl Fl output=FILE
@@ -66,12 +72,10 @@ Create a relocatable wasm binary (suitable for linking with e.g. lld)
 Write all LEB128 sizes as 5-bytes instead of their minimal size
 .It Fl Fl debug-names
 Write debug names to the generated binary file
-.It Fl Fl no-check
-Don't check for invalid modules
 .El
 .Sh EXAMPLES
-Parse spec-test.wast, and write files to spec-test.json.
-Modules are written to spec-test.0.wasm, spec-test.1.wasm, etc.
+parse spec-test.wast, and write files to spec-test.json. Modules are
+written to spec-test.0.wasm, spec-test.1.wasm, etc.
 .Pp
 .Dl $ wast2json spec-test.wast -o spec-test.json
 .Sh SEE ALSO
@@ -85,7 +89,7 @@ Modules are written to spec-test.0.wasm, spec-test.1.wasm, etc.
 .Xr wasm2wat 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

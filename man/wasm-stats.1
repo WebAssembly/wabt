@@ -7,15 +7,15 @@
 .Sh SYNOPSIS
 .Nm wasm-stats
 .Op options
-.Ar
+.Ar filename+
 .Sh DESCRIPTION
 .Nm
-Read a file in the wasm binary format, and show stats.
+Read a file in the wasm binary format, and output stats.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl v , Fl Fl verbose
@@ -54,17 +54,23 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl o , Fl Fl output=FILENAME
-Output file for the opcode counts, by default use stdout
+Output file for the stats, by default use stdout
 .It Fl c , Fl Fl cutoff=N
 Cutoff for reporting counts less than N
-.It Fl s , Fl Fl separator=SEPARATOR
-Separator text between element and count when reporting counts
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write opcode dist file test.dist
+parse binary file test.wasm and write opcode dist file test.dist
 .Pp
 .Dl $ wasm-stats test.wasm -o test.dist
 .Sh SEE ALSO
@@ -78,7 +84,7 @@ Parse binary file test.wasm and write opcode dist file test.dist
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

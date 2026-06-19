@@ -35,18 +35,18 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">wasm-stats</code></td>
-    <td>[options] <var class="Ar">file ...</var></td>
+    <td>[options] <var class="Ar">filename+</var></td>
   </tr>
 </table>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
 <p class="Pp"><code class="Nm">wasm-stats</code> Read a file in the wasm binary
-    format, and show stats.</p>
+    format, and output stats.</p>
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
   <dt id="help"><a class="permalink" href="#help"><code class="Fl">--help</code></a></dt>
-  <dd>Print a help message</dd>
+  <dd>Print this help message</dd>
   <dt id="version"><a class="permalink" href="#version"><code class="Fl">--version</code></a></dt>
   <dd>Print version information</dd>
   <dt id="v"><a class="permalink" href="#v"><code class="Fl">-v</code></a>,
@@ -86,22 +86,27 @@
   <dd>Enable Multi-memory</dd>
   <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
   <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-relaxed-simd"><a class="permalink" href="#enable-relaxed-simd"><code class="Fl">--enable-relaxed-simd</code></a></dt>
+  <dd>Enable Relaxed SIMD</dd>
+  <dt id="enable-custom-page-sizes"><a class="permalink" href="#enable-custom-page-sizes"><code class="Fl">--enable-custom-page-sizes</code></a></dt>
+  <dd>Enable Custom page sizes</dd>
+  <dt id="enable-compact-imports"><a class="permalink" href="#enable-compact-imports"><code class="Fl">--enable-compact-imports</code></a></dt>
+  <dd>Enable Compact import section</dd>
+  <dt id="enable-wide-arithmetic"><a class="permalink" href="#enable-wide-arithmetic"><code class="Fl">--enable-wide-arithmetic</code></a></dt>
+  <dd>Enable Wide arithmetic</dd>
   <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
   <dd>Enable all features</dd>
   <dt id="o"><a class="permalink" href="#o"><code class="Fl">-o</code></a>,
     <code class="Fl">--output=FILENAME</code></dt>
-  <dd>Output file for the opcode counts, by default use stdout</dd>
+  <dd>Output file for the stats, by default use stdout</dd>
   <dt id="c"><a class="permalink" href="#c"><code class="Fl">-c</code></a>,
     <code class="Fl">--cutoff=N</code></dt>
   <dd>Cutoff for reporting counts less than N</dd>
-  <dt id="s"><a class="permalink" href="#s"><code class="Fl">-s</code></a>,
-    <code class="Fl">--separator=SEPARATOR</code></dt>
-  <dd>Separator text between element and count when reporting counts</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<p class="Pp">Parse binary file test.wasm and write opcode dist file
+<p class="Pp">parse binary file test.wasm and write opcode dist file
   test.dist</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-stats test.wasm -o
@@ -131,7 +136,7 @@
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">September 23, 2025</td>
+    <td class="foot-date">June 19, 2026</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

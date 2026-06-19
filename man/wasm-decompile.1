@@ -3,19 +3,19 @@
 .Os
 .Sh NAME
 .Nm wasm-decompile
-.Nd translate from the binary format to readable C-like syntax
+.Nd 
 .Sh SYNOPSIS
 .Nm wasm-decompile
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Read a file in the WebAssembly binary format, and convert it to a decompiled text file.
+Read a file in the WebAssembly binary format, and convert it to  a decompiled text file.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl o , Fl Fl output=FILENAME
@@ -54,13 +54,19 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
-.It Fl Fl ignore-custom-section-errors
-Ignore errors in custom sections
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write text file test.dcmp
+parse binary file test.wasm and write text file test.dcmp
 .Pp
 .Dl $ wasm-decompile test.wasm -o test.dcmp
 .Sh SEE ALSO
@@ -74,7 +80,7 @@ Parse binary file test.wasm and write text file test.dcmp
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

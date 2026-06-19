@@ -7,10 +7,10 @@
 .Sh SYNOPSIS
 .Nm wat-desugar
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Parses .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and prints "canonical" flat format.
+read a file in the wasm s-expression format and format it.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -20,8 +20,6 @@ Print this help message
 Print version information
 .It Fl o , Fl Fl output=FILE
 Output file for the formatted file
-.It Fl Fl debug-parser
-Turn on debugging the parser of wat files
 .It Fl f , Fl Fl fold-exprs
 Write folded expressions where possible
 .It Fl Fl inline-exports
@@ -62,21 +60,25 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
-.It Fl Fl generate-names
-Give auto-generated names to non-named functions, types, etc.
 .El
 .Sh EXAMPLES
-Write output to stdout
+write output to stdout
 .Pp
 .Dl $ wat-desugar test.wat
-.Pp
-Write output to test2.wat
+write output to test2.wat
 .Pp
 .Dl $ wat-desugar test.wat -o test2.wat
-.Pp
-Generate names for indexed variables
+generate names for indexed variables
 .Pp
 .Dl $ wat-desugar --generate-names test.wat
 .Sh SEE ALSO
@@ -90,7 +92,7 @@ Generate names for indexed variables
 .Xr wasm2wat 1 ,
 .Xr wast2json 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br
