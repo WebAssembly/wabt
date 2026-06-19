@@ -1,6 +1,5 @@
 ;;; TOOL: run-gen-wasm
 ;;; ARGS2: --generate-names
-;; NOTE: same test as in test/decompile/names.txt
 magic
 version
 section(TYPE) {

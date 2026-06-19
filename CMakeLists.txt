@@ -302,7 +302,6 @@ set(WABT_LIBRARY_CC
   src/common.cc
   src/config.cc
   src/config.h.in
-  src/decompiler.cc
   src/error-formatter.cc
   src/expr-visitor.cc
   src/feature.cc
@@ -352,10 +351,6 @@ set(WABT_LIBRARY_H
   include/wabt/binding-hash.h
   include/wabt/color.h
   include/wabt/common.h
-  include/wabt/decompiler-ast.h
-  include/wabt/decompiler-ls.h
-  include/wabt/decompiler-naming.h
-  include/wabt/decompiler.h
   include/wabt/error-formatter.h
   include/wabt/expr-visitor.h
   include/wabt/feature.h
@@ -631,13 +626,6 @@ if (BUILD_TOOLS)
   wabt_executable(
     NAME wasm-strip
     SOURCES src/tools/wasm-strip.cc
-    INSTALL
-  )
-
-  # wasm-decompile
-  wabt_executable(
-    NAME wasm-decompile
-    SOURCES src/tools/wasm-decompile.cc
     INSTALL
   )
 
