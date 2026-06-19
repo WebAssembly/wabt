@@ -220,6 +220,17 @@ struct Decompiler {
     return name[0] == '$' ? name.substr(1) : name;
   }
 
+  // A branch that targets the function's implicit outermost label is left as
+  // an index by the name-resolution passes (there is no block label to use),
+  // so it must not be routed through Var::name(). Such a branch leaves the
+  // function, i.e. it is a return.
+  std::string BranchTarget(const Var& var, LabelType lt) {
+    if (!var.is_name())
+      return "return";
+    return cat(lt == LabelType::Loop ? "continue " : "goto ",
+               VarName(var.name()));
+  }
+
   template <ExprType T>
   Value Get(const VarExpr<T>& ve) {
     return Value{{std::string(VarName(ve.var.name()))}, Precedence::Atomic};
@@ -564,15 +575,12 @@ struct Decompiler {
       }
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
-        return Value{{(n.u.lt == LabelType::Loop ? "continue " : "goto ") +
-                      VarName(be->var.name())},
-                     Precedence::None};
+        return Value{{BranchTarget(be->var, n.u.lt)}, Precedence::None};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
-        auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
         return WrapChild(args[0], "if (",
-                         cat(") ", jmp, " ", VarName(bie->var.name())),
+                         cat(") ", BranchTarget(bie->var, n.u.lt)),
                          Precedence::None);
       }
       case ExprType::Return: {
@@ -599,11 +607,13 @@ struct Decompiler {
         auto bte = cast<BrTableExpr>(n.e);
         std::string ts = "br_table[";
         for (auto& v : bte->targets) {
-          ts += VarName(v.name());
+          ts += v.is_name() ? VarName(v.name()) : std::string_view("return");
           ts += ", ";
         }
         ts += "..";
-        ts += VarName(bte->default_target.name());
+        ts += bte->default_target.is_name()
+                  ? VarName(bte->default_target.name())
+                  : std::string_view("return");
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
       }
