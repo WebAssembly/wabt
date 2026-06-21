@@ -1,0 +1,14 @@
+;;; TOOL: run-gen-wasm-nocheck
+magic
+version
+section(ELEM) {
+  count[1]
+  flags[5]
+  funcref
+  count[1]
+  end
+}
+(;; STDOUT ;;;
+(module
+  (elem (;0;) funcref))
+;;; STDOUT ;;)

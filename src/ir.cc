@@ -734,7 +734,8 @@ uint8_t ElemSegment::GetFlags(const Module* module,
         elem_type == Type::FuncRef &&
         std::all_of(elem_exprs.begin(), elem_exprs.end(),
                     [](const ExprList& elem_expr) {
-                      return elem_expr.front().type() == ExprType::RefFunc;
+                      return elem_expr.size() == 1 &&
+                             elem_expr.front().type() == ExprType::RefFunc;
                     });
 
     if (!all_ref_func) {
