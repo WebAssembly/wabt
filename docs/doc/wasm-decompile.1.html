@@ -28,15 +28,14 @@
 <section class="Sh">
 <h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
 <p class="Pp"><code class="Nm">wasm-decompile</code> &#x2014;
-    <span class="Nd">translate from the binary format to readable C-like
-    syntax</span></p>
+    <span class="Nd"></span></p>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 <table class="Nm">
   <tr>
     <td><code class="Nm">wasm-decompile</code></td>
-    <td>[options] <var class="Ar">file</var></td>
+    <td>[options] <var class="Ar">filename</var></td>
   </tr>
 </table>
 </section>
@@ -47,7 +46,7 @@
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
   <dt id="help"><a class="permalink" href="#help"><code class="Fl">--help</code></a></dt>
-  <dd>Print a help message</dd>
+  <dd>Print this help message</dd>
   <dt id="version"><a class="permalink" href="#version"><code class="Fl">--version</code></a></dt>
   <dd>Print version information</dd>
   <dt id="o"><a class="permalink" href="#o"><code class="Fl">-o</code></a>,
@@ -87,15 +86,21 @@
   <dd>Enable Multi-memory</dd>
   <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
   <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-relaxed-simd"><a class="permalink" href="#enable-relaxed-simd"><code class="Fl">--enable-relaxed-simd</code></a></dt>
+  <dd>Enable Relaxed SIMD</dd>
+  <dt id="enable-custom-page-sizes"><a class="permalink" href="#enable-custom-page-sizes"><code class="Fl">--enable-custom-page-sizes</code></a></dt>
+  <dd>Enable Custom page sizes</dd>
+  <dt id="enable-compact-imports"><a class="permalink" href="#enable-compact-imports"><code class="Fl">--enable-compact-imports</code></a></dt>
+  <dd>Enable Compact import section</dd>
+  <dt id="enable-wide-arithmetic"><a class="permalink" href="#enable-wide-arithmetic"><code class="Fl">--enable-wide-arithmetic</code></a></dt>
+  <dd>Enable Wide arithmetic</dd>
   <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
   <dd>Enable all features</dd>
-  <dt id="ignore-custom-section-errors"><a class="permalink" href="#ignore-custom-section-errors"><code class="Fl">--ignore-custom-section-errors</code></a></dt>
-  <dd>Ignore errors in custom sections</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<p class="Pp">Parse binary file test.wasm and write text file test.dcmp</p>
+<p class="Pp">parse binary file test.wasm and write text file test.dcmp</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-decompile test.wasm -o
   test.dcmp</code></div>
@@ -124,7 +129,7 @@
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">September 23, 2025</td>
+    <td class="foot-date">June 19, 2026</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

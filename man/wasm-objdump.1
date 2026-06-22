@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm wasm-objdump
 .Op options
-.Ar
+.Ar filename+
 .Sh DESCRIPTION
 .Nm
 Print information about the contents of wasm binaries.
@@ -15,7 +15,7 @@ Print information about the contents of wasm binaries.
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl h , Fl Fl headers
@@ -32,10 +32,10 @@ Print extra debug information
 Show section details
 .It Fl r , Fl Fl reloc
 Show relocations inline with disassembly
-.It Fl Fl section-offsets
-Print section offsets instead of file offsets in code disassembly
 .El
 .Sh EXAMPLES
+
+.Pp
 .Dl $ wasm-objdump test.wasm
 .Sh SEE ALSO
 .Xr wasm-decompile 1 ,
@@ -48,7 +48,7 @@ Print section offsets instead of file offsets in code disassembly
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

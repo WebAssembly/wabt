@@ -35,7 +35,7 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">wasm-validate</code></td>
-    <td>[options] <var class="Ar">file</var></td>
+    <td>[options] <var class="Ar">filename</var></td>
   </tr>
 </table>
 </section>
@@ -86,17 +86,23 @@
   <dd>Enable Multi-memory</dd>
   <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
   <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-relaxed-simd"><a class="permalink" href="#enable-relaxed-simd"><code class="Fl">--enable-relaxed-simd</code></a></dt>
+  <dd>Enable Relaxed SIMD</dd>
+  <dt id="enable-custom-page-sizes"><a class="permalink" href="#enable-custom-page-sizes"><code class="Fl">--enable-custom-page-sizes</code></a></dt>
+  <dd>Enable Custom page sizes</dd>
+  <dt id="enable-compact-imports"><a class="permalink" href="#enable-compact-imports"><code class="Fl">--enable-compact-imports</code></a></dt>
+  <dd>Enable Compact import section</dd>
+  <dt id="enable-wide-arithmetic"><a class="permalink" href="#enable-wide-arithmetic"><code class="Fl">--enable-wide-arithmetic</code></a></dt>
+  <dd>Enable Wide arithmetic</dd>
   <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
   <dd>Enable all features</dd>
   <dt id="no-debug-names"><a class="permalink" href="#no-debug-names"><code class="Fl">--no-debug-names</code></a></dt>
   <dd>Ignore debug names in the binary file</dd>
-  <dt id="ignore-custom-section-errors"><a class="permalink" href="#ignore-custom-section-errors"><code class="Fl">--ignore-custom-section-errors</code></a></dt>
-  <dd>Ignore errors in custom sections</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<p class="Pp">Validate binary file test.wasm</p>
+<p class="Pp">validate binary file test.wasm</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-validate
   test.wasm</code></div>
@@ -125,7 +131,7 @@
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">September 23, 2025</td>
+    <td class="foot-date">June 19, 2026</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

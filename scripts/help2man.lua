@@ -7,6 +7,20 @@ local tools = {
 	"wast2json",	"wat-desugar",	"wat2wasm",	"spectest-interp"
 }
 
+local descriptions = {
+	["spectest-interp"] = [[read a Spectest JSON file, and run its tests in the interpreter]],
+	["wasm-interp"] = [[decode and run a WebAssembly binary file]],
+	["wasm-objdump"] = [[print information about a wasm binary]],
+	["wasm-stats"] = [[show stats for a module]],
+	["wasm-strip"] = [[remove sections of a WebAssembly binary file]],
+	["wasm-validate"] = [[validate a file in the WebAssembly binary format]],
+	["wasm2c"] = [[convert a WebAssembly binary file to a C source and header]],
+	["wasm2wat"] = [[translate from the binary format to the text format]],
+	["wast2json"] = [[convert a file in the wasm spec test format to a JSON file and associated wasm binary files]],
+	["wat-desugar"] = [[parse .wat text form and print "canonical" flat format]],
+	["wat2wasm"] = [[translate from WebAssembly text format to the WebAssembly binary format]],
+}
+
 local name, mainarg, argvs
 local usage
 local short = ""
@@ -100,7 +114,7 @@ end
 
 
 -- remove this tool from the SEE ALSO section
-for index, tool in pairs(tools) do
+for index, tool in ipairs(tools) do
 	if tool == name then
 		table.remove(tools, index)
 		break
@@ -111,10 +125,12 @@ end
 
 do -- print the man page
 	print(".Dd $Mdocdate$")
+	print(".Dt WABT 1")
 	print(".Os")
 	print(".Sh NAME")
 	print((".Nm %s"):format(name))
-	print((".Nd %s"):format(short))
+	local desc = (short and short:match("%S")) and short or descriptions[name] or ""
+	print((".Nd %s"):format(desc))
 	print(".Sh SYNOPSIS")
 	print((".Nm %s"):format(name))
 	print(".Op options")
@@ -144,8 +160,8 @@ do -- print the man page
 		print((".Dl $ %s"):format(example.input))
 	end
 	print(".Sh SEE ALSO")
-	for idx, tool in pairs(tools) do
-		print((".Xr %s 1 %s"):format(tool, idx == #tool and "" or ","))
+	for idx, tool in ipairs(tools) do
+		print((".Xr %s 1 %s"):format(tool, idx == #tools and "" or ","))
 	end
 	print(".Sh BUGS")
 	print("If you find a bug, please report it at")

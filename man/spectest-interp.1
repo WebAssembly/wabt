@@ -7,15 +7,15 @@
 .Sh SYNOPSIS
 .Nm spectest-interp
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Reads a Spectest JSON file, and runs its tests in the interpreter.
+read a Spectest JSON file, and run its tests in the interpreter.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl v , Fl Fl verbose
@@ -54,20 +54,25 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl V , Fl Fl value-stack-size=SIZE
 Size in elements of the value stack
 .It Fl C , Fl Fl call-stack-size=SIZE
 Size in elements of the call stack
-.It Fl t , Fl Fl trace
-Trace execution
 .El
 .Sh EXAMPLES
-Parse test.json and run the spec tests
+parse test.json and run the spec tests
 .Pp
 .Dl $ spectest-interp test.json
-.Pp
 .Sh SEE ALSO
 .Xr wasm-decompile 1 ,
 .Xr wasm-interp 1 ,
@@ -79,7 +84,7 @@ Parse test.json and run the spec tests
 .Xr wasm2wat 1 ,
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
-.Xr wat2wasm 1
+.Xr wat2wasm 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

@@ -7,15 +7,16 @@
 .Sh SYNOPSIS
 .Nm wasm-interp
 .Op options
-.Ar file
+.Ar filename
+.Ar [arg]...
 .Sh DESCRIPTION
 .Nm
-Read a file in the wasm binary format, and run it in a stack-based interpreter.
+read a file in the wasm binary format, and run in it a stack-based  interpreter.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl v , Fl Fl verbose
@@ -54,6 +55,14 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl V , Fl Fl value-stack-size=SIZE
@@ -62,9 +71,12 @@ Size in elements of the value stack
 Size in elements of the call stack
 .It Fl t , Fl Fl trace
 Trace execution
+.It Fl r , Fl Fl run-export=FUNCTION
+Run exported function by name
+.It Fl a , Fl Fl argument=ARGUMENT
+Add argument to an exported function execution
 .It Fl Fl wasi
-Assume input module is WASI compliant (Export
-WASI API the the module and invoke _start function)
+Assume input module is WASI compliant (Export  WASI API the the module and invoke _start function)
 .It Fl e , Fl Fl env=ENV
 Pass the given environment string in the WASI runtime
 .It Fl d , Fl Fl dir=DIR
@@ -73,25 +85,24 @@ Pass the given directory the the WASI runtime
 Run all the exported functions, in order. Useful for testing
 .It Fl Fl host-print
 Include an importable function named "host.print" for printing to stdout
-.It Fl Fl dummy-import-func
-Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm, and type-check it
+parse binary file test.wasm, and type-check it
 .Pp
 .Dl $ wasm-interp test.wasm
-.Pp
-Parse test.wasm and run all its exported functions
+parse test.wasm and run all its exported functions
 .Pp
 .Dl $ wasm-interp test.wasm --run-all-exports
-.Pp
-Parse test.wasm, run the exported functions and trace the output
+parse test.wasm, run the exported functions and trace the output
 .Pp
 .Dl $ wasm-interp test.wasm --run-all-exports --trace
-.Pp
-Parse test.wasm and run all its exported functions, setting the value stack size to 100 elements
+parse test.wasm and run all its exported functions, setting the
+value stack size to 100 elements
 .Pp
 .Dl $ wasm-interp test.wasm -V 100 --run-all-exports
+parse test.wasm, run specific exported function by name with argument
+.Pp
+.Dl $ wasm-interp test.wasm -r "func_sum" -a "i32:8" -a "i32:5"
 .Sh SEE ALSO
 .Xr wasm-decompile 1 ,
 .Xr wasm-objdump 1 ,
@@ -103,7 +114,7 @@ Parse test.wasm and run all its exported functions, setting the value stack size
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

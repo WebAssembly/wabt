@@ -7,23 +7,25 @@
 .Sh SYNOPSIS
 .Nm wasm2c
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-takes a WebAssembly module and produces an equivalent C source and header.
+Read a file in the WebAssembly binary format, and convert it to  a C source file and header.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
 .It Fl o , Fl Fl output=FILENAME
 Output file for the generated C source file, by default use stdout
+.It Fl Fl num-outputs=NUM
+Number of output files to write
 .It Fl n , Fl Fl module-name=MODNAME
-Unique name for the module being generated. This name is prefixed to each of the generaed C symbols. By default, the module name from the names section is used. If that is not present the name of the input file is used as the default.
+Unique name for the module being generated. This name is prefixed toeach of the generated C symbols. By default, the module name from thenames section is used. If that is not present the name of the inputfile is used as the default.
 .It Fl Fl enable-exceptions
 Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
@@ -58,17 +60,22 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
-.It Fl Fl no-debug-names
-Ignore debug names in the binary file
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write test.c and test.h
+parse binary file test.wasm and write test.c and test.h
 .Pp
 .Dl $ wasm2c test.wasm -o test.c
-.Pp
-Parse test.wasm, write test.c and test.h, but ignore the debug names, if any
+parse test.wasm, write test.c and test.h, but ignore the debug names, if any
 .Pp
 .Dl $ wasm2c test.wasm --no-debug-names -o test.c
 .Sh SEE ALSO
@@ -82,7 +89,7 @@ Parse test.wasm, write test.c and test.h, but ignore the debug names, if any
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

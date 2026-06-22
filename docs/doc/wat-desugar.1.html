@@ -36,15 +36,14 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">wat-desugar</code></td>
-    <td>[options] <var class="Ar">file</var></td>
+    <td>[options] <var class="Ar">filename</var></td>
   </tr>
 </table>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<p class="Pp"><code class="Nm">wat-desugar</code> Parses .wat text form as
-    supported by the spec interpreter (s-expressions, flat syntax, or mixed) and
-    prints &quot;canonical&quot; flat format.</p>
+<p class="Pp"><code class="Nm">wat-desugar</code> read a file in the wasm
+    s-expression format and format it.</p>
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
   <dt id="help"><a class="permalink" href="#help"><code class="Fl">--help</code></a></dt>
@@ -54,8 +53,6 @@
   <dt id="o"><a class="permalink" href="#o"><code class="Fl">-o</code></a>,
     <code class="Fl">--output=FILE</code></dt>
   <dd>Output file for the formatted file</dd>
-  <dt id="debug-parser"><a class="permalink" href="#debug-parser"><code class="Fl">--debug-parser</code></a></dt>
-  <dd>Turn on debugging the parser of wat files</dd>
   <dt id="f"><a class="permalink" href="#f"><code class="Fl">-f</code></a>,
     <code class="Fl">--fold-exprs</code></dt>
   <dd>Write folded expressions where possible</dd>
@@ -97,22 +94,28 @@
   <dd>Enable Multi-memory</dd>
   <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
   <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-relaxed-simd"><a class="permalink" href="#enable-relaxed-simd"><code class="Fl">--enable-relaxed-simd</code></a></dt>
+  <dd>Enable Relaxed SIMD</dd>
+  <dt id="enable-custom-page-sizes"><a class="permalink" href="#enable-custom-page-sizes"><code class="Fl">--enable-custom-page-sizes</code></a></dt>
+  <dd>Enable Custom page sizes</dd>
+  <dt id="enable-compact-imports"><a class="permalink" href="#enable-compact-imports"><code class="Fl">--enable-compact-imports</code></a></dt>
+  <dd>Enable Compact import section</dd>
+  <dt id="enable-wide-arithmetic"><a class="permalink" href="#enable-wide-arithmetic"><code class="Fl">--enable-wide-arithmetic</code></a></dt>
+  <dd>Enable Wide arithmetic</dd>
   <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
   <dd>Enable all features</dd>
-  <dt id="generate-names"><a class="permalink" href="#generate-names"><code class="Fl">--generate-names</code></a></dt>
-  <dd>Give auto-generated names to non-named functions, types, etc.</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<p class="Pp">Write output to stdout</p>
+<p class="Pp">write output to stdout</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat</code></div>
-<p class="Pp">Write output to test2.wat</p>
+write output to test2.wat
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wat-desugar test.wat -o
   test2.wat</code></div>
-<p class="Pp">Generate names for indexed variables</p>
+generate names for indexed variables
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wat-desugar --generate-names
   test.wat</code></div>
@@ -141,7 +144,7 @@
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">September 23, 2025</td>
+    <td class="foot-date">June 19, 2026</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

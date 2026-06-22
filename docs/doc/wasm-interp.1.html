@@ -35,18 +35,19 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">wasm-interp</code></td>
-    <td>[options] <var class="Ar">file</var></td>
+    <td>[options] <var class="Ar">filename</var>
+      <var class="Ar">[arg]...</var></td>
   </tr>
 </table>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-<p class="Pp"><code class="Nm">wasm-interp</code> Read a file in the wasm binary
-    format, and run it in a stack-based interpreter.</p>
+<p class="Pp"><code class="Nm">wasm-interp</code> read a file in the wasm binary
+    format, and run in it a stack-based interpreter.</p>
 <p class="Pp">The options are as follows:</p>
 <dl class="Bl-tag">
   <dt id="help"><a class="permalink" href="#help"><code class="Fl">--help</code></a></dt>
-  <dd>Print a help message</dd>
+  <dd>Print this help message</dd>
   <dt id="version"><a class="permalink" href="#version"><code class="Fl">--version</code></a></dt>
   <dd>Print version information</dd>
   <dt id="v"><a class="permalink" href="#v"><code class="Fl">-v</code></a>,
@@ -86,6 +87,14 @@
   <dd>Enable Multi-memory</dd>
   <dt id="enable-extended-const"><a class="permalink" href="#enable-extended-const"><code class="Fl">--enable-extended-const</code></a></dt>
   <dd>Enable Extended constant expressions</dd>
+  <dt id="enable-relaxed-simd"><a class="permalink" href="#enable-relaxed-simd"><code class="Fl">--enable-relaxed-simd</code></a></dt>
+  <dd>Enable Relaxed SIMD</dd>
+  <dt id="enable-custom-page-sizes"><a class="permalink" href="#enable-custom-page-sizes"><code class="Fl">--enable-custom-page-sizes</code></a></dt>
+  <dd>Enable Custom page sizes</dd>
+  <dt id="enable-compact-imports"><a class="permalink" href="#enable-compact-imports"><code class="Fl">--enable-compact-imports</code></a></dt>
+  <dd>Enable Compact import section</dd>
+  <dt id="enable-wide-arithmetic"><a class="permalink" href="#enable-wide-arithmetic"><code class="Fl">--enable-wide-arithmetic</code></a></dt>
+  <dd>Enable Wide arithmetic</dd>
   <dt id="enable-all"><a class="permalink" href="#enable-all"><code class="Fl">--enable-all</code></a></dt>
   <dd>Enable all features</dd>
   <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a>,
@@ -97,6 +106,12 @@
   <dt id="t"><a class="permalink" href="#t"><code class="Fl">-t</code></a>,
     <code class="Fl">--trace</code></dt>
   <dd>Trace execution</dd>
+  <dt id="r"><a class="permalink" href="#r"><code class="Fl">-r</code></a>,
+    <code class="Fl">--run-export=FUNCTION</code></dt>
+  <dd>Run exported function by name</dd>
+  <dt id="a"><a class="permalink" href="#a"><code class="Fl">-a</code></a>,
+    <code class="Fl">--argument=ARGUMENT</code></dt>
+  <dd>Add argument to an exported function execution</dd>
   <dt id="wasi"><a class="permalink" href="#wasi"><code class="Fl">--wasi</code></a></dt>
   <dd>Assume input module is WASI compliant (Export WASI API the the module and
       invoke _start function)</dd>
@@ -111,30 +126,30 @@
   <dt id="host-print"><a class="permalink" href="#host-print"><code class="Fl">--host-print</code></a></dt>
   <dd>Include an importable function named &quot;host.print&quot; for printing
       to stdout</dd>
-  <dt id="dummy-import-func"><a class="permalink" href="#dummy-import-func"><code class="Fl">--dummy-import-func</code></a></dt>
-  <dd>Provide a dummy implementation of all imported functions. The function
-      will log the call and return an appropriate zero value.</dd>
 </dl>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<p class="Pp">Parse binary file test.wasm, and type-check it</p>
+<p class="Pp">parse binary file test.wasm, and type-check it</p>
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm</code></div>
-<p class="Pp">Parse test.wasm and run all its exported functions</p>
+parse test.wasm and run all its exported functions
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm
   --run-all-exports</code></div>
-<p class="Pp">Parse test.wasm, run the exported functions and trace the
-  output</p>
+parse test.wasm, run the exported functions and trace the output
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm
   --run-all-exports --trace</code></div>
-<p class="Pp">Parse test.wasm and run all its exported functions, setting the
-    value stack size to 100 elements</p>
+parse test.wasm and run all its exported functions, setting the value stack size
+  to 100 elements
 <p class="Pp"></p>
 <div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm -V 100
   --run-all-exports</code></div>
+parse test.wasm, run specific exported function by name with argument
+<p class="Pp"></p>
+<div class="Bd Bd-indent"><code class="Li">$ wasm-interp test.wasm -r func_sum
+  -a i32:8 -a i32:5</code></div>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
@@ -160,7 +175,7 @@
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">September 23, 2025</td>
+    <td class="foot-date">June 19, 2026</td>
     <td class="foot-os">Debian</td>
   </tr>
 </table>

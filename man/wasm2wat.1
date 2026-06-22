@@ -7,15 +7,15 @@
 .Sh SYNOPSIS
 .Nm wasm2wat
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
-Read a file in the WebAssembly binary format, and convert it to the WebAssembly text format.
+Read a file in the WebAssembly binary format, and convert it to  the WebAssembly text format.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl version
 Print version information
 .It Fl v , Fl Fl verbose
@@ -58,6 +58,14 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl Fl inline-exports
@@ -70,15 +78,12 @@ Ignore debug names in the binary file
 Ignore errors in custom sections
 .It Fl Fl generate-names
 Give auto-generated names to non-named functions, types, etc.
-.It Fl Fl no-check
-Don't check for invalid modules
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write text file test.wast
+parse binary file test.wasm and write text file test.wast
 .Pp
 .Dl $ wasm2wat test.wasm -o test.wat
-.Pp
-Parse test.wasm, write test.wat, but ignore the debug names, if any
+parse test.wasm, write test.wat, but ignore the debug names, if any
 .Pp
 .Dl $ wasm2wat test.wasm --no-debug-names -o test.wat
 .Sh SEE ALSO
@@ -92,7 +97,7 @@ Parse test.wasm, write test.wat, but ignore the debug names, if any
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br

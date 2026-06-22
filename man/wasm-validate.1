@@ -7,7 +7,7 @@
 .Sh SYNOPSIS
 .Nm wasm-validate
 .Op options
-.Ar file
+.Ar filename
 .Sh DESCRIPTION
 .Nm
 Read a file in the WebAssembly binary format, and validate it.
@@ -54,15 +54,21 @@ Enable 64-bit memory
 Enable Multi-memory
 .It Fl Fl enable-extended-const
 Enable Extended constant expressions
+.It Fl Fl enable-relaxed-simd
+Enable Relaxed SIMD
+.It Fl Fl enable-custom-page-sizes
+Enable Custom page sizes
+.It Fl Fl enable-compact-imports
+Enable Compact import section
+.It Fl Fl enable-wide-arithmetic
+Enable Wide arithmetic
 .It Fl Fl enable-all
 Enable all features
 .It Fl Fl no-debug-names
 Ignore debug names in the binary file
-.It Fl Fl ignore-custom-section-errors
-Ignore errors in custom sections
 .El
 .Sh EXAMPLES
-Validate binary file test.wasm
+validate binary file test.wasm
 .Pp
 .Dl $ wasm-validate test.wasm
 .Sh SEE ALSO
@@ -76,7 +82,7 @@ Validate binary file test.wasm
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
 .Xr wat2wasm 1 ,
-.Xr spectest-interp 1
+.Xr spectest-interp 1 
 .Sh BUGS
 If you find a bug, please report it at
 .br
