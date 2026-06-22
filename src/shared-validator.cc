@@ -134,7 +134,8 @@ Result SharedValidator::OnTable(const Location& loc,
   if (tables_.size() > 0 && !options_.features.reference_types_enabled()) {
     result |= PrintError(loc, "only one table allowed");
   }
-  result |= CheckLimits(loc, limits, UINT32_MAX, "elems");
+  uint64_t absolute_max = limits.is_64 ? UINT64_MAX : UINT32_MAX;
+  result |= CheckLimits(loc, limits, absolute_max, "elems");
 
   if (limits.is_shared) {
     result |= PrintError(loc, "tables may not be shared");

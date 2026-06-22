@@ -112,6 +112,9 @@ class BinaryReader {
   [[nodiscard]] Result ReadV128(v128* out_value, const char* desc);
   [[nodiscard]] Result ReadU32Leb128(uint32_t* out_value, const char* desc);
   [[nodiscard]] Result ReadU64Leb128(uint64_t* out_value, const char* desc);
+  [[nodiscard]] Result ReadU32OrU64Leb128(uint64_t* out_value,
+                                          bool is_64,
+                                          const char* desc);
   [[nodiscard]] Result ReadS32Leb128(uint32_t* out_value, const char* desc);
   [[nodiscard]] Result ReadS64Leb128(uint64_t* out_value, const char* desc);
   [[nodiscard]] Result ReadType(Type* out_value, const char* desc);
@@ -348,6 +351,20 @@ Result BinaryReader::ReadU64Leb128(uint64_t* out_value, const char* desc) {
   ERROR_UNLESS(bytes_read > 0, "unable to read u64 leb128: %s", desc);
   state_.offset += bytes_read;
   return Result::Ok;
+}
+
+Result BinaryReader::ReadU32OrU64Leb128(uint64_t* out_value,
+                                        bool is_64,
+                                        const char* desc) {
+  if (is_64) {
+    return ReadU64Leb128(out_value, desc);
+  }
+  uint32_t value = 0;
+  Result result = ReadU32Leb128(&value, desc);
+  if (result == Result::Ok) {
+    *out_value = value;
+  }
+  return result;
 }
 
 Result BinaryReader::ReadS32Leb128(uint32_t* out_value, const char* desc) {
@@ -633,8 +650,8 @@ Result BinaryReader::ReadInitExpr(Index index) {
 
 Result BinaryReader::ReadTable(Limits* out_elem_limits) {
   uint8_t flags;
-  uint32_t initial;
-  uint32_t max = 0;
+  uint64_t initial;
+  uint64_t max = 0;
   CHECK_RESULT(ReadU8(&flags, "table flags"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
@@ -644,9 +661,10 @@ Result BinaryReader::ReadTable(Limits* out_elem_limits) {
   ERROR_IF(is_64 && !options_.features.memory64_enabled(),
            "memory64 not allowed");
   ERROR_UNLESS(unknown_flags == 0, "malformed table limits flag: %d", flags);
-  CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
+
+  CHECK_RESULT(ReadU32OrU64Leb128(&initial, is_64, "table initial elem count"));
   if (has_max) {
-    CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
+    CHECK_RESULT(ReadU32OrU64Leb128(&max, is_64, "table max elem count"));
   }
 
   out_elem_limits->has_max = has_max;
