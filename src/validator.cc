@@ -946,8 +946,9 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        result_ |= validator_.BeginInitExpr(elem_expr.front().loc,
-                                            f->elem_segment.elem_type);
+        const Location& loc =
+            elem_expr.empty() ? field.loc : elem_expr.front().loc;
+        result_ |= validator_.BeginInitExpr(loc, f->elem_segment.elem_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(const_cast<ExprList&>(elem_expr));
         result_ |= validator_.EndInitExpr();

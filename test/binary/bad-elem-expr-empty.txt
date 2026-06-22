@@ -1,0 +1,14 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(ELEM) {
+  count[1]
+  flags[5]              ;; passive, element expressions
+  reftype[funcref]
+  elemcount[1]
+  end                   ;; element expression with no instructions
+}
+(;; STDERR ;;;
+out/test/binary/bad-elem-expr-empty/bad-elem-expr-empty.wasm:000000c: error: type mismatch in initializer expression, expected [funcref] but got []
+out/test/binary/bad-elem-expr-empty/bad-elem-expr-empty.wasm:000000c: error: type mismatch in initializer expression, expected [funcref] but got []
+;;; STDERR ;;)
