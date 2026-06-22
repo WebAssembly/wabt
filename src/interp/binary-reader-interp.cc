@@ -1246,6 +1246,9 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   CHECK_RESULT(
       validator_.OnReturnCall(GetLocation(), Var(func_index, GetLocation())));
 
+  if (func_index >= func_types_.size()) {
+    return Result::Error;
+  }
   FuncType& func_type = func_types_[func_index];
 
   Index drop_count, keep_count, catch_drop_count;
