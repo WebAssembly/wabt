@@ -22,6 +22,7 @@
 
 namespace wabt {
 
+class Component;
 struct Module;
 struct ReadBinaryOptions;
 
@@ -31,6 +32,13 @@ Result ReadBinaryIr(const char* filename,
                     const ReadBinaryOptions& options,
                     Errors*,
                     Module* out_module);
+
+Result ReadBinaryComponentIr(const char* filename,
+                             const void* data,
+                             size_t size,
+                             const ReadBinaryOptions& options,
+                             Errors*,
+                             Component* out_component);
 
 }  // namespace wabt
 
