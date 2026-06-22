@@ -20,6 +20,11 @@
 #include <cctype>
 #include <cerrno>
 
+#if COMPILER_IS_MSVC
+#include <cstdint>
+#include <limits>
+#endif
+
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
 
@@ -27,6 +32,39 @@
 #define ERROR(fmt, ...) fprintf(stderr, "wabt: " fmt, __VA_ARGS__)
 
 namespace wabt {
+
+#if COMPILER_IS_MSVC
+static Result WriteDataChunked(FILE* file,
+                               const void* data,
+                               size_t size,
+                               const char* name) {
+  static constexpr size_t kWriteChunkSize = 64 * 1024 * 1024;
+  const uint8_t* src = static_cast<const uint8_t*>(data);
+  size_t offset = 0;
+
+  while (offset < size) {
+    size_t remaining = size - offset;
+    size_t chunk_size =
+        remaining < kWriteChunkSize ? remaining : kWriteChunkSize;
+    size_t bytes_written = fwrite(src + offset, 1, chunk_size, file);
+    if (bytes_written != chunk_size) {
+      ERROR("failed to write %" PRIzd " bytes to %s\n", size, name);
+      return Result::Error;
+    }
+    offset += bytes_written;
+  }
+
+  return Result::Ok;
+}
+
+static int SeekFile(FILE* file, size_t offset) {
+  if (offset > static_cast<size_t>(std::numeric_limits<int64_t>::max())) {
+    errno = EINVAL;
+    return -1;
+  }
+  return _fseeki64(file, static_cast<int64_t>(offset), SEEK_SET);
+}
+#endif
 
 Stream::Stream(Stream* log_stream)
     : offset_(0), result_(Result::Ok), log_stream_(log_stream) {}
@@ -145,6 +183,13 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
     return Result::Ok;
   }
 
+#if COMPILER_IS_MSVC
+  if (Failed(WriteDataChunked(file, data.data(), data.size(),
+                              filename_str.c_str()))) {
+    fclose(file);
+    return Result::Error;
+  }
+#else
   ssize_t bytes = fwrite(data.data(), 1, data.size(), file);
   if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", data.size(),
@@ -152,6 +197,7 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
     fclose(file);
     return Result::Error;
   }
+#endif
 
   fclose(file);
   return Result::Ok;
@@ -161,11 +207,17 @@ Result OutputBuffer::WriteToStdout() const {
   if (data.empty()) {
     return Result::Ok;
   }
+#if COMPILER_IS_MSVC
+  if (Failed(WriteDataChunked(stdout, data.data(), data.size(), "stdout"))) {
+    return Result::Error;
+  }
+#else
   ssize_t bytes = fwrite(data.data(), 1, data.size(), stdout);
   if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
     ERROR("failed to write %" PRIzd " bytes to stdout\n", data.size());
     return Result::Error;
   }
+#endif
   return Result::Ok;
 }
 
@@ -281,16 +333,29 @@ Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {
     return Result::Ok;
   }
   if (at != offset_) {
+#if COMPILER_IS_MSVC
+    if (SeekFile(file_, at) != 0) {
+      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", at, errno);
+      return Result::Error;
+    }
+#else
     if (fseek(file_, at, SEEK_SET) != 0) {
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
       return Result::Error;
     }
+#endif
     offset_ = at;
   }
+#if COMPILER_IS_MSVC
+  if (Failed(WriteDataChunked(file_, data, size, "FileStream"))) {
+    return Result::Error;
+  }
+#else
   if (fwrite(data, size, 1, file_) != 1) {
     ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", size, errno);
     return Result::Error;
   }
+#endif
   offset_ += size;
   return Result::Ok;
 }
