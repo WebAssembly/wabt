@@ -8,7 +8,6 @@ WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
  - [**wasm2wat**](https://webassembly.github.io/wabt/doc/wasm2wat.1.html): the inverse of wat2wasm, translate from the binary format back to the text format (also known as a .wat)
  - [**wasm-objdump**](https://webassembly.github.io/wabt/doc/wasm-objdump.1.html): print information about a wasm binary. Similiar to objdump.
  - [**wasm-interp**](https://webassembly.github.io/wabt/doc/wasm-interp.1.html): decode and run a WebAssembly binary file using a stack-based interpreter
- - [**wasm-decompile**](https://webassembly.github.io/wabt/doc/wasm-decompile.1.html): decompile a wasm binary into readable C-like syntax.
  - [**wat-desugar**](https://webassembly.github.io/wabt/doc/wat-desugar.1.html): parse .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
  - [**wasm2c**](https://webassembly.github.io/wabt/doc/wasm2c.1.html): convert a WebAssembly binary file to a C source and header
  - [**wasm-strip**](https://webassembly.github.io/wabt/doc/wasm-strip.1.html): remove sections of a WebAssembly binary file
@@ -280,24 +279,6 @@ $ bin/wasm-interp --help
 ## Running wast2json
 
 See [wast2json.md](docs/wast2json.md).
-
-## Running wasm-decompile
-
-For example:
-
-```sh
-# parse binary file test.wasm and write text file test.dcmp
-$ bin/wasm-decompile test.wasm -o test.dcmp
-```
-
-You can use `--help` to get additional help:
-
-```console
-$ bin/wasm-decompile --help
-```
-
-See [decompiler.md](docs/decompiler.md) for more information on the language
-being generated.
 
 ## Running wasm2c
 

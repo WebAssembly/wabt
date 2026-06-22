@@ -143,8 +143,6 @@ The currently supported list of tools (see
 - `run-gen-wasm-interp`: parse a "gen-wasm" text file, generate a wasm file,
   the run `wasm-interp` on it, which runes all exported functions in an
   interpreter.
-- `run-gen-wasm-decompile`: parse a "gen-wasm" text file (which can describe
-  invalid binary files), then parse via `wasm-decompile` and display the result.
 - `run-stats`: parse a wasm text file, convert it to binary, then display
   stats.
 - `run-gen-spec-js`: parse wasm spec test text file, convert it to a JSON file
@@ -153,7 +151,6 @@ The currently supported list of tools (see
 - `run-spec-wasm2c`: similar to `run-gen-spec-js`, but the output instead will
   be C source files, that are then compiled with the default C compiler (`cc`).
   Finally, the native executable is run.
-- `run-wasm-decompile`: parse wat with `wat2wasm` then `wasm-decompile`.
 
 
 ## Test subdirectories
