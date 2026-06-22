@@ -102,7 +102,6 @@ def main(args):
         'extended-const': '--enable-extended-const',
         'tail-call': '--enable-tail-call',
         'relaxed-simd': '--enable-relaxed-simd',
-        'exception-handling': '--enable-exceptions',
         'custom-page-sizes': '--enable-custom-page-sizes',
         'function-references': '--enable-function-references',
     }
