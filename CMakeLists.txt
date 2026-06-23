@@ -401,7 +401,7 @@ else()
   include_directories("${WABT_SOURCE_DIR}/third_party/picosha2")
 endif()
 
-target_compile_features(wabt PUBLIC cxx_std_17)
+target_compile_features(wabt PUBLIC cxx_std_20)
 target_include_directories(
   wabt
   PUBLIC
