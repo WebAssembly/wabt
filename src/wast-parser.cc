@@ -595,7 +595,7 @@ TokenType WastParser::Peek(size_t n) {
         continue;
       }
       if ((options_->features.code_metadata_enabled() &&
-           cur.text().find("metadata.code.") == 0) ||
+           cur.text().starts_with("metadata.code.")) ||
           cur.text() == "custom") {
         tokens_.push_back(cur);
         continue;
@@ -2311,7 +2311,7 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
   Token tk = Consume();
   std::string_view name = tk.text();
-  if (name.find("metadata.code.") != 0) {
+  if (!name.starts_with("metadata.code.")) {
     // Not a code metadata annotation. This can be reached when Peek admits a
     // (@custom ...) annotation (only meaningful at module scope) into an
     // instruction list. Discard it like any other unrecognised annotation

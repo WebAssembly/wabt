@@ -19,7 +19,7 @@ project(WABT LANGUAGES C CXX VERSION 1.0.41)
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -684,6 +684,13 @@ if (BUILD_TESTS)
 
     if (COMPILER_IS_GNU)
       target_compile_options(gtest PRIVATE "-Wno-maybe-uninitialized")
+    endif ()
+    if (EMSCRIPTEN OR APPLE)
+      # Only need for libc++-based platforms. Remove this once a new version
+      # of gtest is released:
+      # See https://github.com/google/googletest/issues/5004
+      target_compile_options(gtest PUBLIC "-Wno-conversion")
+      target_compile_options(gtest_main PRIVATE "-Wno-conversion")
     endif ()
   endif ()
 

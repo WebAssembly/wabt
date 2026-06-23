@@ -239,7 +239,7 @@ class SymbolTable {
   std::set<std::string_view> seen_names_;
 
   Result EnsureUnique(const std::string_view& name) {
-    if (seen_names_.count(name)) {
+    if (seen_names_.contains(name)) {
       fprintf(stderr,
               "error: duplicate symbol when writing relocatable "
               "binary: %s\n",
@@ -330,7 +330,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->funcs.size(); ++i) {
       const Func* func = module->funcs[i];
       bool imported = i < module->num_func_imports;
-      bool exported = exported_funcs.count(i);
+      bool exported = exported_funcs.contains(i);
       CHECK_RESULT(AddSymbol(&functions_, func->name, imported, exported,
                              Symbol::Function{Index(i)}));
     }
@@ -338,7 +338,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->tables.size(); ++i) {
       const Table* table = module->tables[i];
       bool imported = i < module->num_table_imports;
-      bool exported = exported_tables.count(i);
+      bool exported = exported_tables.contains(i);
       CHECK_RESULT(AddSymbol(&tables_, table->name, imported, exported,
                              Symbol::Table{Index(i)}));
     }
@@ -346,7 +346,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->globals.size(); ++i) {
       const Global* global = module->globals[i];
       bool imported = i < module->num_global_imports;
-      bool exported = exported_globals.count(i);
+      bool exported = exported_globals.contains(i);
       CHECK_RESULT(AddSymbol(&globals_, global->name, imported, exported,
                              Symbol::Global{Index(i)}));
     }
@@ -1810,10 +1810,10 @@ Result BinaryWriter::WriteModule() {
     // we don't want to double-write.
     if ((custom.name == WABT_BINARY_SECTION_NAME &&
          options_.write_debug_names) ||
-        (custom.name.rfind(WABT_BINARY_SECTION_RELOC) == 0 &&
+        (custom.name.starts_with(WABT_BINARY_SECTION_RELOC) &&
          options_.relocatable) ||
         (custom.name == WABT_BINARY_SECTION_LINKING && options_.relocatable) ||
-        (custom.name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0 &&
+        (custom.name.starts_with(WABT_BINARY_SECTION_CODE_METADATA) &&
          options_.features.code_metadata_enabled())) {
       continue;
     }

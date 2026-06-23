@@ -257,7 +257,7 @@ Result SharedValidator::OnExport(const Location& loc,
                                  std::string_view name) {
   Result result = Result::Ok;
   auto name_str = std::string(name);
-  if (export_names_.find(name_str) != export_names_.end()) {
+  if (export_names_.contains(name_str)) {
     result |= PrintError(loc, "duplicate export \"" PRIstringview "\"",
                          WABT_PRINTF_STRING_VIEW_ARG(name));
   }
@@ -357,7 +357,7 @@ Result SharedValidator::OnDataSegment(const Location& loc,
 }
 
 Result SharedValidator::CheckDeclaredFunc(Var func_var) {
-  if (declared_funcs_.count(func_var.index()) == 0) {
+  if (!declared_funcs_.contains(func_var.index())) {
     return PrintError(func_var.loc,
                       "function %" PRIindex
                       " is not declared in any elem sections",

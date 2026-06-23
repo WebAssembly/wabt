@@ -99,11 +99,11 @@ class BinaryReaderStrip : public BinaryReaderNop {
   Result BeginCustomSection(Index section_index,
                             Offset size,
                             std::string_view section_name) override {
-    if (sections_to_remove_.count(section_name) > 0) {
+    if (sections_to_remove_.contains(section_name)) {
       return Result::Ok;
     }
 
-    if (sections_to_keep_.count(section_name) > 0 ||
+    if (sections_to_keep_.contains(section_name) ||
         !sections_to_remove_.empty()) {
       stream_.WriteU8Enum(BinarySection::Custom, "section code");
       WriteU32Leb128(&stream_, size, "section size");

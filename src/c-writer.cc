@@ -892,12 +892,12 @@ void CWriter::ClaimName(SymbolSet& set,
 std::string CWriter::FindUniqueName(SymbolSet& set,
                                     std::string_view proposed_name) const {
   std::string unique{proposed_name};
-  if (set.find(unique) != set.end()) {
+  if (set.contains(unique)) {
     std::string base = unique + "_";
     size_t count = 0;
     do {
       unique = base + std::to_string(count++);
-    } while (set.find(unique) != set.end());
+    } while (set.contains(unique));
   }
   return unique;
 }
@@ -984,7 +984,7 @@ std::string CWriter::DefineGlobalScopeName(ModuleFieldType type,
 std::string CWriter::GetGlobalName(ModuleFieldType type,
                                    const std::string& name) const {
   std::string mangled = name + MangleField(type);
-  assert(global_sym_map_.count(mangled) == 1);
+  assert(global_sym_map_.contains(mangled));
   return global_sym_map_.at(mangled);
 }
 
@@ -999,7 +999,7 @@ std::string CWriter::DefineLocalScopeName(std::string_view name,
 std::string CWriter::GetLocalName(const std::string& name,
                                   bool is_label) const {
   std::string mangled = name + (is_label ? kLabelSuffix : kParamSuffix);
-  assert(local_sym_map_.count(mangled) == 1);
+  assert(local_sym_map_.contains(mangled));
   return local_sym_map_.at(mangled);
 }
 
@@ -1406,7 +1406,7 @@ static std::string GetMemoryAPIString(const Memory& memory, std::string api) {
   //
   // We don't need to do this for runtime routines; those can check the
   // wasm_rt_memory_t structure.
-  if (api.substr(0, 8) != "wasm_rt_" &&
+  if (!api.starts_with("wasm_rt_") &&
       memory.page_size == WABT_DEFAULT_PAGE_SIZE &&
       memory.page_limits.is_64 == false) {
     suffix += "_default32";
@@ -2391,7 +2391,7 @@ void CWriter::WriteFuncRefWrappers() {
   for (Index index : module_->used_func_refs) {
     assert(index < module_->funcs.size());
     const Func* func = module_->funcs[index];
-    if (unique_func_wrappers.count(func->name) == 0) {
+    if (!unique_func_wrappers.contains(func->name)) {
       WriteFuncRefWrapper(func);
       unique_func_wrappers.insert(func->name);
     }
@@ -2989,7 +2989,7 @@ void CWriter::PushFuncSection(std::string_view include_condition) {
 }
 
 bool CWriter::IsImport(const std::string& name) const {
-  return import_module_sym_map_.count(name);
+  return import_module_sym_map_.contains(name);
 }
 
 template <typename sources>
@@ -3105,7 +3105,7 @@ void CWriter::FinishFunction(size_t stack_var_section) {
   for (size_t i = 0; i < func_sections_.size(); ++i) {
     auto& [condition, stream] = func_sections_.at(i);
     std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
-    if (condition.empty() || func_includes_.count(condition)) {
+    if (condition.empty() || func_includes_.contains(condition)) {
       stream_->WriteData(buf->data.data(), buf->data.size());
     }
 
