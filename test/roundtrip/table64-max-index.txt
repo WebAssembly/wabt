@@ -1,0 +1,11 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-memory64
+(module
+  (table i64 0 0xffff_ffff_ffff_ffff funcref)
+  (table i64 0xffff_ffff_ffff_ffff 0xffff_ffff_ffff_ffff funcref)
+)
+(;; STDOUT ;;;
+(module
+  (table (;0;) i64 0 18446744073709551615 funcref)
+  (table (;1;) i64 18446744073709551615 18446744073709551615 funcref))
+;;; STDOUT ;;)
