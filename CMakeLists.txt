@@ -753,7 +753,7 @@ if (BUILD_TESTS)
     if (COMPILER_IS_MSVC)
       set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-wd4311")
     else ()
-      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-gnu-folding-constant -Wno-pointer-to-int-cast")
     endif ()
 
     target_link_libraries(${EXENAME} wasm Threads::Threads)
