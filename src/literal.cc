@@ -137,21 +137,14 @@ class FloatWriter {
   static void WriteHex(char* out, size_t size, Uint bits);
 };
 
-// Return 1 if the non-NULL-terminated string starting with |start| and ending
-// with |end| starts with the NULL-terminated string |prefix|.
+// Return true if the non-NULL-terminated string starting with |start| and
+// ending with |end| starts with the NULL-terminated string |prefix|.
 template <typename T>
 // static
 bool FloatParser<T>::StringStartsWith(const char* start,
                                       const char* end,
                                       const char* prefix) {
-  while (start < end && *prefix) {
-    if (*start != *prefix) {
-      return false;
-    }
-    start++;
-    prefix++;
-  }
-  return *prefix == 0;
+  return std::string_view(start, end - start).starts_with(prefix);
 }
 
 // static

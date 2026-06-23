@@ -156,7 +156,7 @@ void NameGenerator::GenerateAndBindName(BindingHash* bindings,
   unsigned disambiguator = 0;
   while (true) {
     GenerateName(prefix, index, disambiguator, str);
-    if (bindings->find(*str) == bindings->end()) {
+    if (!bindings->contains(*str)) {
       bindings->emplace(*str, Binding(index));
       break;
     }
@@ -182,7 +182,7 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
     unsigned disambiguator = 0;
     while (true) {
       GenerateName(name, kInvalidIndex, disambiguator, str);
-      if (bindings->find(*str) == bindings->end()) {
+      if (!bindings->contains(*str)) {
         bindings->emplace(*str, Binding(index));
         break;
       }

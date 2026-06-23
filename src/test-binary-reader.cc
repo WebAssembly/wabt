@@ -69,7 +69,7 @@ TEST(BinaryReader, DisabledOpcodes) {
     // This relies on the binary reader checking whether the opcode is allowed
     // before reading any further data needed by the instruction.
     const std::string& message = reader.first_error.message;
-    EXPECT_EQ(0u, message.find("unexpected opcode"))
+    EXPECT_TRUE(message.starts_with("unexpected opcode"))
         << "Got error message: " << message;
   }
 }

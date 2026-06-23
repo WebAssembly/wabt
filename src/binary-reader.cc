@@ -2619,7 +2619,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
     CHECK_RESULT(ReadDylink0Section(section_size));
   } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
     CHECK_RESULT(ReadDylinkSection(section_size));
-  } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
+  } else if (section_name.starts_with(WABT_BINARY_SECTION_RELOC)) {
     // Reloc sections always begin with "reloc."
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_TARGET_FEATURES) {
@@ -2627,7 +2627,7 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
   } else if (options_.features.code_metadata_enabled() &&
-             section_name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0) {
+             section_name.starts_with(WABT_BINARY_SECTION_CODE_METADATA)) {
     std::string_view metadata_name = section_name;
     metadata_name.remove_prefix(sizeof(WABT_BINARY_SECTION_CODE_METADATA) - 1);
     CHECK_RESULT(ReadCodeMetadataSection(metadata_name, section_size));
