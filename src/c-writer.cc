@@ -18,6 +18,8 @@
 
 #include <cctype>
 #include <cinttypes>
+#include <clocale>
+#include <cstring>
 #include <iterator>
 #include <limits>
 #include <map>
@@ -765,6 +767,28 @@ static char internal_toupper(uint8_t ch) {
   return (ch >= 'a' && ch <= 'z') ? (ch - 'a' + 'A') : ch;
 }
 
+// printf-family conversions render the radix character according to the
+// current LC_NUMERIC locale, but the generated C source must always use '.'.
+// Rewrite the locale's radix back to '.' so the emitted float constants don't
+// depend on a locale the caller might have changed (e.g. de_DE, where it is
+// ',').
+static void NormalizeFloatRadix(char* buffer) {
+  const char* point = localeconv()->decimal_point;
+  if (point == nullptr || point[0] == '\0' ||
+      (point[0] == '.' && point[1] == '\0')) {
+    return;
+  }
+  char* found = strstr(buffer, point);
+  if (found == nullptr) {
+    return;
+  }
+  *found = '.';
+  size_t point_len = strlen(point);
+  if (point_len > 1) {
+    memmove(found + 1, found + point_len, strlen(found + point_len) + 1);
+  }
+}
+
 // static
 std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
   /*
@@ -1318,7 +1342,10 @@ void CWriter::Write(const Const& const_) {
         // Negative zero. Special-cased so it isn't written as -0 below.
         Writef("-0.f");
       } else {
-        Writef("%.9g", Bitcast<float>(f32_bits));
+        char buf[128];
+        snprintf(buf, sizeof(buf), "%.9g", Bitcast<float>(f32_bits));
+        NormalizeFloatRadix(buf);
+        Writef("%s", buf);
       }
       break;
     }
@@ -1344,6 +1371,7 @@ void CWriter::Write(const Const& const_) {
       } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%.17g", Bitcast<double>(f64_bits));
+        NormalizeFloatRadix(buf);
         // Append .0 if sprint didn't include a decimal point or use the
         // exponent ('e') form.  This is a workaround for an MSVC parsing
         // issue: https://github.com/WebAssembly/wabt/issues/2422
