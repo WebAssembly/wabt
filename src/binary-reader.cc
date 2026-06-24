@@ -104,10 +104,10 @@ class BinaryReader {
   [[nodiscard]] Result ReadT(T* out_value,
                              const char* type_name,
                              const char* desc);
-  template <typename T, size_t (*ReadFn)(const uint8_t*, const uint8_t*, T*)>
-  [[nodiscard]] Result ReadLeb128(T* out_value,
-                                  const char* desc,
-                                  const char* type_name);
+  template <typename T,
+            char prefix,
+            size_t (*ReadFn)(const uint8_t*, const uint8_t*, T*)>
+  [[nodiscard]] Result ReadLeb128(T* out_value, const char* desc);
   [[nodiscard]] Result ReadU8(uint8_t* out_value, const char* desc);
   [[nodiscard]] Result ReadU16(uint16_t* out_value, const char* desc);
   [[nodiscard]] Result ReadU32(uint32_t* out_value, const char* desc);
@@ -339,24 +339,25 @@ Result BinaryReader::ReadV128(v128* out_value, const char* desc) {
   return ReadT(out_value, "v128", desc);
 }
 
-template <typename T, size_t (*ReadFn)(const uint8_t*, const uint8_t*, T*)>
-Result BinaryReader::ReadLeb128(T* out_value,
-                                const char* desc,
-                                const char* type_name) {
+template <typename T,
+          char prefix,
+          size_t (*ReadFn)(const uint8_t*, const uint8_t*, T*)>
+Result BinaryReader::ReadLeb128(T* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
   size_t bytes_read = ReadFn(p, end, out_value);
-  ERROR_UNLESS(bytes_read > 0, "unable to read %s leb128: %s", type_name, desc);
+  ERROR_UNLESS(bytes_read > 0, "unable to read %c%zu leb128: %s", prefix,
+               sizeof(T) * 8, desc);
   state_.offset += bytes_read;
   return Result::Ok;
 }
 
 Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
-  return ReadLeb128<uint32_t, wabt::ReadU32Leb128>(out_value, desc, "u32");
+  return ReadLeb128<uint32_t, 'u', wabt::ReadU32Leb128>(out_value, desc);
 }
 
 Result BinaryReader::ReadU64Leb128(uint64_t* out_value, const char* desc) {
-  return ReadLeb128<uint64_t, wabt::ReadU64Leb128>(out_value, desc, "u64");
+  return ReadLeb128<uint64_t, 'u', wabt::ReadU64Leb128>(out_value, desc);
 }
 
 Result BinaryReader::ReadU32OrU64Leb128(uint64_t* out_value,
@@ -374,11 +375,11 @@ Result BinaryReader::ReadU32OrU64Leb128(uint64_t* out_value,
 }
 
 Result BinaryReader::ReadS32Leb128(uint32_t* out_value, const char* desc) {
-  return ReadLeb128<uint32_t, wabt::ReadS32Leb128>(out_value, desc, "i32");
+  return ReadLeb128<uint32_t, 'i', wabt::ReadS32Leb128>(out_value, desc);
 }
 
 Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
-  return ReadLeb128<uint64_t, wabt::ReadS64Leb128>(out_value, desc, "i64");
+  return ReadLeb128<uint64_t, 'i', wabt::ReadS64Leb128>(out_value, desc);
 }
 
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
