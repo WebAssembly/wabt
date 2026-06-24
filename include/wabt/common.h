@@ -162,28 +162,8 @@ struct v128 {
 namespace wabt {
 
 template <typename Dst, typename Src>
-Dst WABT_VECTORCALL Bitcast(Src&& value) {
-  using U = std::remove_reference_t<Src>;
-  static_assert(sizeof(U) == sizeof(Dst), "Bitcast sizes must match.");
+Dst WABT_VECTORCALL Bitcast(const Src& value) {
   return std::bit_cast<Dst>(value);
-}
-
-template <typename T>
-inline int Clz(T x) {
-  static_assert(std::is_integral_v<T>, "must be integral");
-  return std::countl_zero(static_cast<std::make_unsigned_t<T>>(x));
-}
-
-template <typename T>
-inline int Ctz(T x) {
-  static_assert(std::is_integral_v<T>, "must be integral");
-  return std::countr_zero(static_cast<std::make_unsigned_t<T>>(x));
-}
-
-template <typename T>
-inline int Popcount(T x) {
-  static_assert(std::is_integral_v<T>, "must be integral");
-  return std::popcount(static_cast<std::make_unsigned_t<T>>(x));
 }
 
 template <typename T>
