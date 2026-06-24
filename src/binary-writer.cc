@@ -1921,8 +1921,7 @@ void BinaryWriter::WriteCodeMetadataSections() {
       for (auto& a : f.entries) {
         WriteU32Leb128(stream_, a.offset, "code offset");
         WriteU32Leb128(stream_, a.data.size(), "data length");
-        stream_->WriteData(a.data.data(), a.data.size(), "data",
-                           PrintChars::Yes);
+        stream_->WriteData(a.data, "data", PrintChars::Yes);
       }
     }
     EndSection();
@@ -1931,7 +1930,7 @@ void BinaryWriter::WriteCodeMetadataSections() {
   auto buf = tmp_stream.ReleaseOutputBuffer();
   stream_->MoveData(code_start_ + buf->data.size(), code_start_,
                     stream_->offset() - code_start_);
-  stream_->WriteDataAt(code_start_, buf->data.data(), buf->data.size());
+  stream_->WriteDataAt(code_start_, buf->data);
   stream_->AddOffset(buf->data.size());
   code_start_ += buf->data.size();
   section_count_ += 1;

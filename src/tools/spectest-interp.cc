@@ -291,8 +291,8 @@ bool CheckIR(const std::string& filename, bool validate) {
 
   Errors errors;
   wabt::Module module;
-  if (Failed(ReadBinaryIr(filename.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module))) {
+  if (Failed(ReadBinaryIr(filename.c_str(), file_data, options, &errors,
+                          &module))) {
     return false;
   }
 
@@ -1484,8 +1484,7 @@ interp::Module::Ptr CommandRunner::ReadModule(std::string_view module_filename,
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
-                              file_data.size(), options, errors,
+  if (Failed(ReadBinaryInterp(module_filename, file_data, options, errors,
                               &module_desc))) {
     return {};
   }
@@ -1551,8 +1550,7 @@ wabt::Result CommandRunner::ReadMalformedBinaryModule(
   };
 
   BinaryReaderErrorLogging reader_delegate{errors};
-  return ReadBinary(file_data.data(), file_data.size(), &reader_delegate,
-                    options);
+  return ReadBinary(file_data, &reader_delegate, options);
 }
 
 wabt::Result CommandRunner::ReadMalformedModule(

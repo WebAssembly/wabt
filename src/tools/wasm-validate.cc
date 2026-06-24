@@ -78,8 +78,8 @@ int ProgramMain(int argc, char** argv) {
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
                               s_fail_on_custom_section_error);
-    result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module);
+    result =
+        ReadBinaryIr(s_infile.c_str(), file_data, options, &errors, &module);
     if (Succeeded(result)) {
       ValidateOptions options(s_features);
       result = ValidateModule(&module, &errors, options);

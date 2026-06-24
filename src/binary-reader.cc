@@ -76,10 +76,9 @@ class BinaryReader {
     bool stop_on_first_error;
   };
 
-  BinaryReader(const void* data,
-               size_t size,
-               BinaryReaderDelegate* delegate,
-               const ReadBinaryOptions& options);
+  explicit BinaryReader(ByteSpan data,
+                        BinaryReaderDelegate* delegate,
+                        const ReadBinaryOptions& options);
 
   Result ReadModule(const ReadModuleOptions& options);
 
@@ -127,10 +126,8 @@ class BinaryReader {
                                         const char* desc,
                                         const char* type);
   [[nodiscard]] Result ReadStr(std::string_view* out_str, const char* desc);
-  [[nodiscard]] Result ReadBytes(const void** out_data,
-                                 Address* out_data_size,
-                                 const char* desc);
-  [[nodiscard]] Result ReadBytesWithSize(const void** out_data,
+  [[nodiscard]] Result ReadBytes(ByteSpan* out_data, const char* desc);
+  [[nodiscard]] Result ReadBytesWithSize(ByteSpan* out_data,
                                          Offset size,
                                          const char* desc);
   [[nodiscard]] Result ReadIndex(Index* index, const char* desc);
@@ -230,12 +227,11 @@ class BinaryReader {
       ValueRestoreGuard<size_t, &BinaryReader::read_end_>;
 };
 
-BinaryReader::BinaryReader(const void* data,
-                           size_t size,
+BinaryReader::BinaryReader(ByteSpan data,
                            BinaryReaderDelegate* delegate,
                            const ReadBinaryOptions& options)
-    : read_end_(size),
-      state_(static_cast<const uint8_t*>(data), size),
+    : read_end_(data.size()),
+      state_(data),
       logging_delegate_(options.log_stream, delegate),
       delegate_(options.log_stream ? &logging_delegate_ : delegate),
       options_(options),
@@ -305,11 +301,11 @@ Result BinaryReader::ReadT(T* out_value,
   }
 #if WABT_BIG_ENDIAN
   uint8_t tmp[sizeof(T)];
-  memcpy(tmp, state_.data + state_.offset, sizeof(tmp));
+  memcpy(tmp, state_.data.data() + state_.offset, sizeof(tmp));
   SwapBytesSized(tmp, sizeof(tmp));
   memcpy(out_value, tmp, sizeof(T));
 #else
-  memcpy(out_value, state_.data + state_.offset, sizeof(T));
+  memcpy(out_value, state_.data.data() + state_.offset, sizeof(T));
 #endif
   state_.offset += sizeof(T);
   return Result::Ok;
@@ -343,8 +339,8 @@ template <typename T, size_t (*ReadFn)(const uint8_t*, const uint8_t*, T*)>
 Result BinaryReader::ReadLeb128(T* out_value,
                                 const char* desc,
                                 const char* type_name) {
-  const uint8_t* p = state_.data + state_.offset;
-  const uint8_t* end = state_.data + read_end_;
+  const uint8_t* p = state_.data.data() + state_.offset;
+  const uint8_t* end = state_.data.data() + read_end_;
   size_t bytes_read = ReadFn(p, end, out_value);
   ERROR_UNLESS(bytes_read > 0, "unable to read %s leb128: %s", type_name, desc);
   state_.offset += bytes_read;
@@ -434,7 +430,8 @@ Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
                "unable to read string: %s", desc);
 
   *out_str = std::string_view(
-      reinterpret_cast<const char*>(state_.data) + state_.offset, str_len);
+      reinterpret_cast<const char*>(state_.data.data()) + state_.offset,
+      str_len);
   state_.offset += str_len;
 
   ERROR_UNLESS(IsValidUtf8(out_str->data(), out_str->length()),
@@ -442,23 +439,19 @@ Result BinaryReader::ReadStr(std::string_view* out_str, const char* desc) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadBytes(const void** out_data,
-                               Address* out_data_size,
-                               const char* desc) {
+Result BinaryReader::ReadBytes(ByteSpan* out_data, const char* desc) {
   uint32_t data_size = 0;
   CHECK_RESULT(ReadU32Leb128(&data_size, "data size"));
-  CHECK_RESULT(ReadBytesWithSize(out_data, data_size, desc));
-  *out_data_size = data_size;
-  return Result::Ok;
+  return ReadBytesWithSize(out_data, data_size, desc);
 }
 
-Result BinaryReader::ReadBytesWithSize(const void** out_data,
+Result BinaryReader::ReadBytesWithSize(ByteSpan* out_data,
                                        Offset size,
                                        const char* desc) {
   ERROR_UNLESS(size <= read_end_ - state_.offset, "unable to read data: %s",
                desc);
 
-  *out_data = static_cast<const uint8_t*>(state_.data) + state_.offset;
+  *out_data = state_.data.subspan(state_.offset, size);
   state_.offset += size;
   return Result::Ok;
 }
@@ -2375,11 +2368,11 @@ Result BinaryReader::ReadTargetFeaturesSections(Offset section_size) {
 Result BinaryReader::ReadGenericCustomSection(std::string_view name,
                                               Offset section_size) {
   CALLBACK(BeginGenericCustomSection, section_size);
-  const void* data;
+  ByteSpan data;
   Offset custom_data_size = read_end_ - state_.offset;
   CHECK_RESULT(
       ReadBytesWithSize(&data, custom_data_size, "custom section data"));
-  CALLBACK(OnGenericCustomSection, name, data, custom_data_size);
+  CALLBACK(OnGenericCustomSection, name, data);
   CALLBACK0(EndGenericCustomSection);
   return Result::Ok;
 }
@@ -2586,10 +2579,9 @@ Result BinaryReader::ReadCodeMetadataSection(std::string_view name,
           "code offset out of order: %" PRIzx, code_offset);
       last_code_offset = code_offset;
 
-      Address data_size;
-      const void* data;
-      CHECK_RESULT(ReadBytes(&data, &data_size, "instance data"));
-      CALLBACK(OnCodeMetadata, code_offset, data, data_size);
+      ByteSpan data;
+      CHECK_RESULT(ReadBytes(&data, "instance data"));
+      CALLBACK(OnCodeMetadata, code_offset, data);
     }
   }
 
@@ -3098,10 +3090,9 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
       CALLBACK(EndDataSegmentInitExpr, i);
     }
 
-    Address data_size;
-    const void* data;
-    CHECK_RESULT(ReadBytes(&data, &data_size, "data segment data"));
-    CALLBACK(OnDataSegmentData, i, data, data_size);
+    ByteSpan data;
+    CHECK_RESULT(ReadBytes(&data, "data segment data"));
+    CALLBACK(OnDataSegmentData, i, data);
     CALLBACK(EndDataSegment, i);
   }
   CALLBACK0(EndDataSection);
@@ -3123,12 +3114,12 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
   Index section_index = 0;
   bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
 
-  for (; state_.offset < state_.size; ++section_index) {
+  for (; state_.offset < state_.data.size(); ++section_index) {
     uint8_t section_code;
     Offset section_size;
     CHECK_RESULT(ReadU8(&section_code, "section code"));
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
-    ERROR_UNLESS(section_size <= state_.size - state_.offset,
+    ERROR_UNLESS(section_size <= state_.data.size() - state_.offset,
                  "invalid section size: extends past end");
     ReadEndRestoreGuard guard(this);
     read_end_ = state_.offset + section_size;
@@ -3156,7 +3147,7 @@ Result BinaryReader::ReadSections(const ReadSectionsOptions& options) {
       seen_section_code[section_code] = true;
     }
 
-    ERROR_UNLESS(read_end_ <= state_.size,
+    ERROR_UNLESS(read_end_ <= state_.data.size(),
                  "invalid section size: extends past end");
 
     ERROR_UNLESS(
@@ -3310,11 +3301,10 @@ Result BinaryReader::ReadModule(const ReadModuleOptions& options) {
 
 }  // end anonymous namespace
 
-Result ReadBinary(const void* data,
-                  size_t size,
+Result ReadBinary(ByteSpan data,
                   BinaryReaderDelegate* delegate,
                   const ReadBinaryOptions& options) {
-  BinaryReader reader(data, size, delegate, options);
+  BinaryReader reader(data, delegate, options);
   return reader.ReadModule(
       BinaryReader::ReadModuleOptions{options.stop_on_first_error});
 }
