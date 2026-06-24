@@ -18,6 +18,7 @@
 #define WABT_COMMON_H_
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -161,11 +162,8 @@ struct v128 {
 namespace wabt {
 
 template <typename Dst, typename Src>
-Dst WABT_VECTORCALL Bitcast(Src&& value) {
-  static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
-  Dst result;
-  memcpy(&result, &value, sizeof(result));
-  return result;
+Dst WABT_VECTORCALL Bitcast(const Src& value) {
+  return std::bit_cast<Dst>(value);
 }
 
 template <typename T>

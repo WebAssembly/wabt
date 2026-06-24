@@ -23,6 +23,7 @@
 #include "wabt/literal.h"
 
 #include <locale.h>
+#include <bit>
 #include <cassert>
 #include <cerrno>
 #include <cinttypes>
@@ -298,7 +299,8 @@ Result FloatParser<T>::ParseHex(const char* s,
     } else if (*s == '.') {
       seen_dot = true;
     } else if (Succeeded(ParseHexdigit(*s, &digit))) {
-      if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
+      if (Traits::kBits - std::countl_zero(significand) <=
+          Traits::kSigPlusOneBits) {
         significand = (significand << 4) + digit;
         if (seen_dot) {
           significand_exponent -= 4;
@@ -358,7 +360,7 @@ Result FloatParser<T>::ParseHex(const char* s,
     exponent = -exponent;
   }
 
-  int significand_bits = Traits::kBits - Clz(significand);
+  int significand_bits = Traits::kBits - std::countl_zero(significand);
   // -1 for the implicit 1 bit of the significand.
   exponent += significand_exponent + significand_bits - 1;
 
@@ -523,7 +525,7 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
     if (sig) {
       if (exp == Traits::kMinExp) {
         // Subnormal; shift the significand up, and shift out the implicit 1.
-        Uint leading_zeroes = Clz(sig);
+        Uint leading_zeroes = std::countl_zero(sig);
         if (leading_zeroes < Traits::kSignShift) {
           sig <<= leading_zeroes + 1;
         } else {
