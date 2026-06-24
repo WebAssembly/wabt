@@ -639,8 +639,10 @@ own wasm_module_t* wasm_module_new(wasm_store_t* store,
                                    const wasm_byte_vec_t* binary) {
   Errors errors;
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp("<internal>", binary->data, binary->size,
-                              GetOptions(), &errors, &module_desc))) {
+  if (Failed(ReadBinaryInterp(
+          "<internal>",
+          {reinterpret_cast<const uint8_t*>(binary->data), binary->size},
+          GetOptions(), &errors, &module_desc))) {
     FormatErrorsToFile(errors, Location::Type::Binary);
     return nullptr;
   }

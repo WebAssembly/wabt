@@ -38,8 +38,7 @@ namespace {
 
 class BinaryReaderObjdumpBase : public BinaryReaderNop {
  public:
-  BinaryReaderObjdumpBase(const uint8_t* data,
-                          size_t size,
+  BinaryReaderObjdumpBase(ByteSpan data,
                           ObjdumpOptions* options,
                           ObjdumpState* state);
 
@@ -71,8 +70,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
 
   ObjdumpOptions* options_;
   ObjdumpState* objdump_state_;
-  const uint8_t* data_;
-  size_t size_;
+  ByteSpan data_;
   bool print_details_ = false;
   bool in_function_body = false;
   BinarySection reloc_section_ = BinarySection::Invalid;
@@ -86,14 +84,12 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   std::unique_ptr<FileStream> err_stream_;
 };
 
-BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
-                                                 size_t size,
+BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(ByteSpan data,
                                                  ObjdumpOptions* options,
                                                  ObjdumpState* objdump_state)
     : options_(options),
       objdump_state_(objdump_state),
       data_(data),
-      size_(size),
       err_stream_(FileStream::CreateStderr()) {
   ZeroMemory(section_starts_);
 }
@@ -1071,8 +1067,7 @@ struct InitExpr {
 
 class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
  public:
-  BinaryReaderObjdump(const uint8_t* data,
-                      size_t size,
+  BinaryReaderObjdump(ByteSpan data,
                       ObjdumpOptions* options,
                       ObjdumpState* state);
 
@@ -1209,9 +1204,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result BeginDataSegment(Index index,
                           Index memory_index,
                           uint8_t flags) override;
-  Result OnDataSegmentData(Index index,
-                           const void* data,
-                           Address size) override;
+  Result OnDataSegmentData(Index index, ByteSpan data) override;
 
   Result OnModuleName(std::string_view name) override;
   Result OnFunctionName(Index function_index,
@@ -1295,9 +1288,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnRefNullExpr(Type type) override;
   Result OnGlobalGetExpr(Index global_index) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset code_offset,
-                        const void* data,
-                        Address size) override;
+  Result OnCodeMetadata(Offset code_offset, ByteSpan data) override;
 
  private:
   Result EndInitExpr();
@@ -1333,11 +1324,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 };
 
-BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
-                                         size_t size,
+BinaryReaderObjdump::BinaryReaderObjdump(ByteSpan data,
                                          ObjdumpOptions* options,
                                          ObjdumpState* objdump_state)
-    : BinaryReaderObjdumpBase(data, size, options, objdump_state),
+    : BinaryReaderObjdumpBase(data, options, objdump_state),
       out_stream_(FileStream::CreateStdout()) {}
 
 Result BinaryReaderObjdump::BeginCustomSection(Index section_index,
@@ -1393,8 +1383,8 @@ Result BinaryReaderObjdump::BeginSection(Index section_index,
     case ObjdumpMode::RawData:
       if (section_match) {
         printf("\nContents of section %s:\n", section_name);
-        out_stream_->WriteMemoryDump(data_ + state->offset, size, state->offset,
-                                     PrintChars::Yes);
+        out_stream_->WriteMemoryDump(data_.subspan(state->offset, size),
+                                     state->offset, PrintChars::Yes);
       }
       break;
     case ObjdumpMode::Prepass:
@@ -2064,9 +2054,7 @@ Result BinaryReaderObjdump::BeginDataSegment(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnDataSegmentData(Index index,
-                                              const void* src_data,
-                                              Address size) {
+Result BinaryReaderObjdump::OnDataSegmentData(Index index, ByteSpan data) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
@@ -2081,15 +2069,14 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   } else {
     PrintDetails(" memory=%" PRIindex, data_mem_index_);
   }
-  PrintDetails(" size=%" PRIaddress, size);
+  PrintDetails(" size=%zu", data.size());
   if (data_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
     PrintInitExpr(current_init_expr_, /*as_unsigned=*/true);
   }
 
-  out_stream_->WriteMemoryDump(src_data, size, data_offset_, PrintChars::Yes,
-                               "  - ");
+  out_stream_->WriteMemoryDump(data, data_offset_, PrintChars::Yes, "  - ");
 
   // Print relocations from this segment.
   if (!options_->relocs) {
@@ -2097,7 +2084,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   }
 
   Offset data_start = GetSectionStart(BinarySection::Data);
-  Offset segment_start = state->offset - size;
+  Offset segment_start = state->offset - data.size();
   Offset segment_offset = segment_start - data_start;
   while (next_data_reloc_ < objdump_state_->data_relocations.size()) {
     const Reloc& reloc = objdump_state_->data_relocations[next_data_reloc_];
@@ -2468,15 +2455,13 @@ Result BinaryReaderObjdump::OnCodeMetadataCount(Index function_index,
   printf(":\n");
   return Result::Ok;
 }
-Result BinaryReaderObjdump::OnCodeMetadata(Offset code_offset,
-                                           const void* data,
-                                           Address size) {
+Result BinaryReaderObjdump::OnCodeMetadata(Offset code_offset, ByteSpan data) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
   printf("    - meta[%" PRIzx "]:\n", code_offset);
 
-  out_stream_->WriteMemoryDump(data, size, 0, PrintChars::Yes, "     - ");
+  out_stream_->WriteMemoryDump(data, 0, PrintChars::Yes, "     - ");
   return Result::Ok;
 }
 
@@ -2508,8 +2493,7 @@ void ObjdumpLocalNames::Set(Index function_index,
       std::string(name);
 }
 
-Result ReadBinaryObjdump(const uint8_t* data,
-                         size_t size,
+Result ReadBinaryObjdump(ByteSpan data,
                          ObjdumpOptions* options,
                          ObjdumpState* state) {
   Features features;
@@ -2523,19 +2507,27 @@ Result ReadBinaryObjdump(const uint8_t* data,
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
       read_options.skip_function_bodies = true;
-      BinaryReaderObjdumpPrepass reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, read_options);
+      BinaryReaderObjdumpPrepass reader(data, options, state);
+      return ReadBinary(data, &reader, read_options);
     }
     case ObjdumpMode::Disassemble: {
-      BinaryReaderObjdumpDisassemble reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, read_options);
+      BinaryReaderObjdumpDisassemble reader(data, options, state);
+      return ReadBinary(data, &reader, read_options);
     }
     default: {
       read_options.skip_function_bodies = true;
-      BinaryReaderObjdump reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, read_options);
+      BinaryReaderObjdump reader(data, options, state);
+      return ReadBinary(data, &reader, read_options);
     }
   }
+}
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
+Result ReadBinaryObjdump(const uint8_t* data,
+                         size_t size,
+                         ObjdumpOptions* options,
+                         ObjdumpState* state) {
+  return ReadBinaryObjdump(ByteSpan(data, size), options, state);
 }
 
 }  // namespace wabt
