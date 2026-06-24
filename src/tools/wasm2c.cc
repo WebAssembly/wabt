@@ -132,8 +132,8 @@ Result Wasm2cMain(Errors& errors) {
   ReadBinaryOptions options(s_write_c_options.features, s_log_stream.get(),
                             s_read_debug_names, kStopOnFirstError,
                             kFailOnCustomSectionError);
-  CHECK_RESULT(ReadBinaryIr(s_infile.c_str(), file_data.data(),
-                            file_data.size(), options, &errors, &module));
+  CHECK_RESULT(
+      ReadBinaryIr(s_infile.c_str(), file_data, options, &errors, &module));
   CHECK_RESULT(ValidateModule(&module, &errors, s_write_c_options.features));
   CHECK_RESULT(GenerateNames(&module));
   /* TODO(binji): This shouldn't fail; if a name can't be applied

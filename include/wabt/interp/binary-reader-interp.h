@@ -28,8 +28,7 @@ struct ReadBinaryOptions;
 namespace interp {
 
 Result ReadBinaryInterp(std::string_view filename,
-                        const void* data,
-                        size_t size,
+                        ByteSpan data,
                         const ReadBinaryOptions& options,
                         Errors*,
                         ModuleDesc* out_module);

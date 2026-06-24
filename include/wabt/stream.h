@@ -19,6 +19,7 @@
 
 #include <cassert>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "wabt/common.h"
@@ -55,23 +56,31 @@ class Stream {
   void ClearOffset() { offset_ = 0; }
   void AddOffset(ssize_t delta);
 
-  void WriteData(const void* src,
-                 size_t size,
+  void WriteData(ByteSpan src,
                  const char* desc = nullptr,
                  PrintChars = PrintChars::No);
 
+  // Convenience overload for raw pointers.
+  void WriteData(const void* src,
+                 size_t size,
+                 const char* desc = nullptr,
+                 PrintChars print_chars = PrintChars::No) {
+    WriteData({static_cast<const uint8_t*>(src), size}, desc, print_chars);
+  }
+
   template <typename T>
-  void WriteData(const std::vector<T> src,
+  void WriteData(std::span<const T> src,
                  const char* desc,
                  PrintChars print_chars = PrintChars::No) {
     if (!src.empty()) {
-      WriteData(src.data(), src.size() * sizeof(T), desc, print_chars);
+      WriteData(ByteSpan(reinterpret_cast<const uint8_t*>(src.data()),
+                         src.size_bytes()),
+                desc, print_chars);
     }
   }
 
   void WriteDataAt(size_t offset,
-                   const void* src,
-                   size_t size,
+                   ByteSpan data,
                    const char* desc = nullptr,
                    PrintChars = PrintChars::No);
 
@@ -112,8 +121,7 @@ class Stream {
   }
 
   // Dump memory as text, similar to the xxd format.
-  void WriteMemoryDump(const void* start,
-                       size_t size,
+  void WriteMemoryDump(ByteSpan data,
                        size_t offset = 0,
                        PrintChars print_chars = PrintChars::No,
                        const char* prefix = nullptr,
@@ -130,9 +138,7 @@ class Stream {
   virtual void Flush() {}
 
  protected:
-  virtual Result WriteDataImpl(size_t offset,
-                               const void* data,
-                               size_t size) = 0;
+  virtual Result WriteDataImpl(size_t offset, ByteSpan data) = 0;
   virtual Result MoveDataImpl(size_t dst_offset,
                               size_t src_offset,
                               size_t size) = 0;
@@ -185,7 +191,7 @@ class MemoryStream : public Stream {
   }
 
  protected:
-  Result WriteDataImpl(size_t offset, const void* data, size_t size) override;
+  Result WriteDataImpl(size_t offset, ByteSpan data) override;
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;
@@ -212,7 +218,7 @@ class FileStream : public Stream {
   void Flush() override;
 
  protected:
-  Result WriteDataImpl(size_t offset, const void* data, size_t size) override;
+  Result WriteDataImpl(size_t offset, ByteSpan data) override;
   Result MoveDataImpl(size_t dst_offset,
                       size_t src_offset,
                       size_t size) override;

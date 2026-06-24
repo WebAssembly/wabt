@@ -3106,7 +3106,7 @@ void CWriter::FinishFunction(size_t stack_var_section) {
     auto& [condition, stream] = func_sections_.at(i);
     std::unique_ptr<OutputBuffer> buf = stream.ReleaseOutputBuffer();
     if (condition.empty() || func_includes_.contains(condition)) {
-      stream_->WriteData(buf->data.data(), buf->data.size());
+      stream_->WriteData(buf->data);
     }
 
     if (i == stack_var_section) {
