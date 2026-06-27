@@ -1,0 +1,32 @@
+;;; TOOL: run-wasm-decompile
+(module
+  (memory 1)
+
+  ;; store_lane consumes the address and the vector and returns nothing, so the
+  ;; leading f32 must survive as a separate return value rather than being
+  ;; folded into the store.
+  (func (param i32 v128 f32) (result f32 i32)
+    local.get 2
+    local.get 0
+    local.get 1
+    v128.store8_lane 0
+    local.get 0)
+
+  (func (param i32 v128)
+    local.get 0
+    local.get 1
+    v128.store16_lane offset=4 1)
+)
+(;; STDOUT ;;;
+memory M_a(initial: 1, max: 0);
+
+function f_a(a:int, b:simd, c:float):(float, int) { // func0
+  let t0 = c;
+  SimdStoreLane(a, b);
+  return t0, a;
+}
+
+function f_b(a:int, b:simd) { // func1
+  SimdStoreLane(a, b)
+}
+;;; STDOUT ;;)
