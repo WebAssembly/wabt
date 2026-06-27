@@ -107,6 +107,7 @@ def main(args):
     parser.add_argument('--enable-exceptions', action='store_true')
     parser.add_argument('--enable-saturating-float-to-int', action='store_true')
     parser.add_argument('--enable-function-references', action='store_true')
+    parser.add_argument('--enable-gc', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
     parser.add_argument('--enable-sign-extension', action='store_true')
     parser.add_argument('--enable-multi-value', action='store_true')
@@ -136,6 +137,7 @@ def main(args):
             options.enable_saturating_float_to_int,
         '--enable-sign-extension': options.enable_sign_extension,
         '--enable-function-references': options.enable_function_references,
+        '--enable-gc': options.enable_gc,
         '--enable-threads': options.enable_threads,
         '--enable-tail-call': options.enable_tail_call,
         '--disable-reference-types': options.disable_reference_types,
@@ -160,6 +162,7 @@ def main(args):
         '--enable-sign-extension': options.enable_sign_extension,
         '--enable-tail-call': options.enable_tail_call,
         '--enable-function-references': options.enable_function_references,
+        '--enable-gc': options.enable_gc,
         '--disable-reference-types': options.disable_reference_types,
         '--enable-threads': options.enable_threads,
         '--enable-memory64': options.enable_memory64,
