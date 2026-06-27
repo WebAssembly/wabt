@@ -33,8 +33,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (data_provider.ConsumeBool()) { features.enable_##variable(); }
 #include "wabt/feature.def"
 #undef WABT_FEATURE
-  // Add only feature related options, but no logging, stop_on_first_error, etc.
-  wabt::ReadBinaryOptions options(features, nullptr, false, false, false);
+  // Add only feature related options, but no logging etc. The interp reader is
+  // only meant to read valid modules, so stop on the first error instead of
+  // continuing in collect-all-errors mode (the validator keeps counting
+  // declarations the reader has already rejected, leaving its vectors and the
+  // validator's counts out of step).
+  wabt::ReadBinaryOptions options(features, nullptr, false, true, false);
   std::vector<uint8_t> text = data_provider.ConsumeRemainingBytes<uint8_t>();
   ReadBinaryInterp("<fuzzer>", text.data(), text.size(), options, &errors,
                    &module);
