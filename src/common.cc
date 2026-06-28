@@ -23,6 +23,10 @@
 #include <cstdio>
 #include <cstring>
 
+#if COMPILER_IS_MSVC
+#include <limits>
+#endif
+
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -31,8 +35,13 @@
 #include <io.h>
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
-#define stat _stat
+#define stat _stat64
+#define fseek _fseeki64
+#define ftell _ftelli64
 #define S_IFREG _S_IFREG
+#define WABT_FILE_OFFSET __int64
+#else
+#define WABT_FILE_OFFSET long
 #endif
 
 namespace wabt {
@@ -129,7 +138,7 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return res;
   }
 
-  long size = ftell(infile);
+  WABT_FILE_OFFSET size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
     fclose(infile);
@@ -142,12 +151,36 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return Result::Error;
   }
 
+#if COMPILER_IS_MSVC
+  if (static_cast<uint64_t>(size) >
+      static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+    fprintf(stderr, "%s: file too large to read into memory\n", filename_cstr);
+    fclose(infile);
+    return Result::Error;
+  }
+
+  static constexpr size_t kReadChunkSize = 64 * 1024 * 1024;
+  size_t data_size = static_cast<size_t>(size);
+  out_data->resize(data_size);
+  size_t offset = 0;
+  while (offset < data_size) {
+    size_t remaining = data_size - offset;
+    size_t chunk_size = remaining < kReadChunkSize ? remaining : kReadChunkSize;
+    if (fread(out_data->data() + offset, chunk_size, 1, infile) != 1) {
+      fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
+      fclose(infile);
+      return Result::Error;
+    }
+    offset += chunk_size;
+  }
+#else
   out_data->resize(size);
   if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
     fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
     fclose(infile);
     return Result::Error;
   }
+#endif
 
   fclose(infile);
   return Result::Ok;

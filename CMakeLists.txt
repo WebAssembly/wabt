@@ -506,6 +506,10 @@ function(wabt_executable)
   add_dependencies(everything ${EXE_NAME})
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
 
+  if (MSVC)
+    target_link_options(${EXE_NAME} PRIVATE "/STACK:8388608")
+  endif ()
+
   if (EMSCRIPTEN)
     set(EXTRA_LINK_FLAGS
       "${EXTRA_LINK_FLAGS} -sNODERAWFS -Oz -sALLOW_MEMORY_GROWTH"
