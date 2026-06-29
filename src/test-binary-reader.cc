@@ -142,3 +142,14 @@ TEST(BinaryReader, OversizedSubsectionSize) {
   // Custom section errors are not fatal by default, but ensure no crash.
   (void)result;
 }
+
+TEST(Opcode, DecodeInvalidOpcode) {
+  Opcode opcode = Opcode::FromCode(0xfd, 0x13f);
+  EXPECT_TRUE(opcode.IsInvalid());
+  std::vector<uint8_t> bytes = opcode.GetBytes();
+  ASSERT_EQ(3u, bytes.size());
+  EXPECT_EQ(0xfdu, bytes[0]);
+  // 0x13f encoded as unsigned LEB128 is 0xbf 0x02.
+  EXPECT_EQ(0xbfu, bytes[1]);
+  EXPECT_EQ(0x02u, bytes[2]);
+}
