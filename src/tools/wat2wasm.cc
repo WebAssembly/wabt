@@ -104,7 +104,7 @@ static void WriteBufferToFile(std::string_view filename,
       stream->Writef(";; dump\n");
     }
     if (!buffer.data.empty()) {
-      stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
+      stream->WriteMemoryDump(buffer.data);
     }
   }
 

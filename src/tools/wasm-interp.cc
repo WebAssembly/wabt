@@ -321,8 +321,7 @@ static Result ReadModule(const char* module_filename,
   const bool kFailOnCustomSectionError = true;
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
-  CHECK_RESULT(ReadBinaryInterp(module_filename, file_data.data(),
-                                file_data.size(), options, errors,
+  CHECK_RESULT(ReadBinaryInterp(module_filename, file_data, options, errors,
                                 &module_desc));
 
   if (s_verbose) {

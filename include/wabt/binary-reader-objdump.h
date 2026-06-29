@@ -89,6 +89,11 @@ struct ObjdumpState {
   std::map<Index, Index> function_types;
 };
 
+Result ReadBinaryObjdump(ByteSpan data,
+                         ObjdumpOptions* options,
+                         ObjdumpState* state);
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
 Result ReadBinaryObjdump(const uint8_t* data,
                          size_t size,
                          ObjdumpOptions* options,
