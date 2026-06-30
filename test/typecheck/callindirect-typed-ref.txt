@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-all
+(module
+  (type $sig (func (param i32) (result i32)))
+  (table 2 (ref null $sig))
+  (func (param i32) (result i32)
+    local.get 0
+    i32.const 0
+    call_indirect (type $sig)
+  )
+  (func (param i32) (result i32)
+    local.get 0
+    i32.const 0
+    return_call_indirect (type $sig)
+  )
+)

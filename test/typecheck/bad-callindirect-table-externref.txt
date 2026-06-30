@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-all
+;;; ERROR: 1
+(module
+  (type $t (func (param i32) (result i32)))
+  (table 2 externref)
+  (elem (i32.const 0) externref (ref.null extern) (ref.null extern))
+  (func (param i32) (result i32)
+    local.get 0
+    i32.const 0
+    call_indirect (type $t)
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-callindirect-table-externref.txt:11:5: error: type mismatch: call_indirect must reference table of funcref type
+    call_indirect (type $t)
+    ^^^^^^^^^^^^^
+;;; STDERR ;;)
