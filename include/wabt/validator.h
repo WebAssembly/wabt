@@ -25,11 +25,13 @@ namespace wabt {
 
 struct Module;
 struct Script;
+class Component;
 
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
 Result ValidateScript(const Script*, Errors*, const ValidateOptions&);
 Result ValidateModule(const Module*, Errors*, const ValidateOptions&);
+Result ValidateComponent(const Component*, Errors*, const ValidateOptions&);
 
 }  // namespace wabt
 
