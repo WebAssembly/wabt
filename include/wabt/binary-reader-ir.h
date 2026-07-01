@@ -26,7 +26,14 @@ struct Module;
 struct ReadBinaryOptions;
 
 Result ReadBinaryIr(const char* filename,
-                    const void* data,
+                    ByteSpan data,
+                    const ReadBinaryOptions& options,
+                    Errors*,
+                    Module* out_module);
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
+Result ReadBinaryIr(const char* filename,
+                    const uint8_t* data,
                     size_t size,
                     const ReadBinaryOptions& options,
                     Errors*,

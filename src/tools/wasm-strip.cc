@@ -88,7 +88,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
     }
     stream_.WriteU8Enum(section_type, "section code");
     WriteU32Leb128(&stream_, size, "section size");
-    stream_.WriteData(state->data + state->offset, size, "section data");
+    stream_.WriteData(state->data.subspan(state->offset, size), "section data");
     return Result::Ok;
   }
 
@@ -107,7 +107,8 @@ class BinaryReaderStrip : public BinaryReaderNop {
         !sections_to_remove_.empty()) {
       stream_.WriteU8Enum(BinarySection::Custom, "section code");
       WriteU32Leb128(&stream_, size, "section size");
-      stream_.WriteData(state->data + section_start_, size, "section data");
+      stream_.WriteData(state->data.subspan(section_start_, size),
+                        "section data");
     }
     return Result::Ok;
   }
@@ -142,7 +143,7 @@ int ProgramMain(int argc, char** argv) {
                             kStopOnFirstError, kFailOnCustomSectionError);
 
   BinaryReaderStrip reader(v_sections_to_keep, v_sections_to_remove, &errors);
-  result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
+  result = ReadBinary(file_data, &reader, options);
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Failed(result)) {
     return Result::Error;

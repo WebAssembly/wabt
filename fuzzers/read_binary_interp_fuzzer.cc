@@ -40,7 +40,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // validator's counts out of step).
   wabt::ReadBinaryOptions options(features, nullptr, false, true, false);
   std::vector<uint8_t> text = data_provider.ConsumeRemainingBytes<uint8_t>();
-  ReadBinaryInterp("<fuzzer>", text.data(), text.size(), options, &errors,
-                   &module);
+  ReadBinaryInterp("<fuzzer>", text, options, &errors, &module);
   return 0;
 }

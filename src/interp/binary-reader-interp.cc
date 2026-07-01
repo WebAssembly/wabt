@@ -296,9 +296,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Result BeginDataSegment(Index index,
                           Index memory_index,
                           uint8_t flags) override;
-  Result OnDataSegmentData(Index index,
-                           const void* data,
-                           Address size) override;
+  Result OnDataSegmentData(Index index, ByteSpan data) override;
 
  private:
   Location GetLocation() const;
@@ -855,14 +853,9 @@ Result BinaryReaderInterp::BeginDataSegment(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderInterp::OnDataSegmentData(Index index,
-                                             const void* src_data,
-                                             Address size) {
+Result BinaryReaderInterp::OnDataSegmentData(Index index, ByteSpan data) {
   DataDesc& dst_data = module_.datas.back();
-  if (size > 0) {
-    dst_data.data.resize(size);
-    memcpy(dst_data.data.data(), src_data, size);
-  }
+  dst_data.data.assign(data.begin(), data.end());
   return Result::Ok;
 }
 
@@ -1815,13 +1808,23 @@ Result BinaryReaderInterp::OnDelegateExpr(Index depth) {
 }  // namespace
 
 Result ReadBinaryInterp(std::string_view filename,
-                        const void* data,
-                        size_t size,
+                        ByteSpan data,
                         const ReadBinaryOptions& options,
                         Errors* errors,
                         ModuleDesc* out_module) {
   BinaryReaderInterp reader(out_module, filename, errors, options.features);
-  return ReadBinary(data, size, &reader, options);
+  return ReadBinary(data, &reader, options);
+}
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
+Result ReadBinaryInterp(std::string_view filename,
+                        const uint8_t* data,
+                        size_t size,
+                        const ReadBinaryOptions& options,
+                        Errors* errors,
+                        ModuleDesc* out_module) {
+  return ReadBinaryInterp(filename, ByteSpan(data, size), options, errors,
+                          out_module);
 }
 
 }  // namespace interp

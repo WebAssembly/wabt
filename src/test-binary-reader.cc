@@ -60,10 +60,8 @@ TEST(BinaryReader, DisabledOpcodes) {
         b[0], b[1], b[2],  // The instruction, padded with zeroes
         0x0b,              // end
     };
-    const size_t size = sizeof(data);
-
     BinaryReaderError reader;
-    Result result = ReadBinary(data, size, &reader, options);
+    Result result = ReadBinary(data, &reader, options);
     EXPECT_EQ(Result::Error, result);
 
     // This relies on the binary reader checking whether the opcode is allowed
@@ -93,7 +91,7 @@ TEST(BinaryReader, InvalidFunctionBodySize) {
 
   BinaryReaderError reader;
   ReadBinaryOptions options;
-  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  Result result = ReadBinary(data, &reader, options);
   EXPECT_EQ(Result::Error, result);
   EXPECT_NE(std::string::npos,
             reader.first_error.message.find("invalid function body size"))
@@ -115,7 +113,7 @@ TEST(BinaryReader, OversizedSectionSize) {
 
   BinaryReaderError reader;
   ReadBinaryOptions options;
-  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  Result result = ReadBinary(data, &reader, options);
   EXPECT_EQ(Result::Error, result);
   EXPECT_NE(std::string::npos,
             reader.first_error.message.find("invalid section size"))
@@ -140,7 +138,18 @@ TEST(BinaryReader, OversizedSubsectionSize) {
 
   BinaryReaderError reader;
   ReadBinaryOptions options;
-  Result result = ReadBinary(data, sizeof(data), &reader, options);
+  Result result = ReadBinary(data, &reader, options);
   // Custom section errors are not fatal by default, but ensure no crash.
   (void)result;
+}
+
+TEST(Opcode, DecodeInvalidOpcode) {
+  Opcode opcode = Opcode::FromCode(0xfd, 0x13f);
+  EXPECT_TRUE(opcode.IsInvalid());
+  std::vector<uint8_t> bytes = opcode.GetBytes();
+  ASSERT_EQ(3u, bytes.size());
+  EXPECT_EQ(0xfdu, bytes[0]);
+  // 0x13f encoded as unsigned LEB128 is 0xbf 0x02.
+  EXPECT_EQ(0xbfu, bytes[1]);
+  EXPECT_EQ(0x02u, bytes[2]);
 }

@@ -1,0 +1,16 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    invalid_op[0xfd 0xbf 0x02]
+  }
+}
+(;; STDERR ;;;
+000001b: error: unexpected opcode: 0xfd 0xbf 0x2
+000001b: error: unexpected opcode: 0xfd 0xbf 0x2
+;;; STDERR ;;)
