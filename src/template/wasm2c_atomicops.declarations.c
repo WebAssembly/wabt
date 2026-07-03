@@ -108,26 +108,26 @@ DEFINE_ATOMIC_STORE(i64_atomic_store8, u8, u64)
 DEFINE_ATOMIC_STORE(i64_atomic_store16, u16, u64)
 DEFINE_ATOMIC_STORE(i64_atomic_store32, u32, u64)
 
-#define DEFINE_ATOMIC_RMW(name, opname, op, t1, t2)                      \
-  static inline t2 name##_unchecked(wasm_rt_memory_t* mem, u64 addr,     \
-                                    t2 value) {                          \
-    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                    \
-    t1 wrapped = (t1)value;                                              \
-    t1 ret;                                                              \
-    wasm_rt_memcpy(&ret, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1));   \
-    ret = ret op wrapped;                                                \
-    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &ret, sizeof(t1));   \
-    return (t2)ret;                                                      \
-  }                                                                      \
-  DEF_MEM_CHECKS1(name, _, t1, return, t2, t2)                           \
-  static inline t2 name##_shared_unchecked(wasm_rt_shared_memory_t* mem, \
-                                           u64 addr, t2 value) {         \
-    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                    \
-    t1 wrapped = (t1)value;                                              \
-    t1 ret = atomic_##opname(                                            \
-        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped); \
-    return (t2)ret;                                                      \
-  }                                                                      \
+#define DEFINE_ATOMIC_RMW(name, opname, op, t1, t2)                       \
+  static inline t2 name##_unchecked(wasm_rt_memory_t* mem, u64 addr,      \
+                                    t2 value) {                           \
+    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                     \
+    t1 wrapped = (t1)value;                                               \
+    t1 ret;                                                               \
+    wasm_rt_memcpy(&ret, MEM_ADDR(mem, addr, sizeof(t1)), sizeof(t1));    \
+    t1 newval = ret op wrapped;                                           \
+    wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t1)), &newval, sizeof(t1)); \
+    return (t2)ret;                                                       \
+  }                                                                       \
+  DEF_MEM_CHECKS1(name, _, t1, return, t2, t2)                            \
+  static inline t2 name##_shared_unchecked(wasm_rt_shared_memory_t* mem,  \
+                                           u64 addr, t2 value) {          \
+    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                     \
+    t1 wrapped = (t1)value;                                               \
+    t1 ret = atomic_##opname(                                             \
+        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped);  \
+    return (t2)ret;                                                       \
+  }                                                                       \
   DEF_MEM_CHECKS1(name##_shared, _shared_, t1, return, t2, t2)
 
 DEFINE_ATOMIC_RMW(i32_atomic_rmw8_add_u, fetch_add, +, u8, u32)
@@ -211,7 +211,7 @@ DEFINE_ATOMIC_XCHG(i64_atomic_rmw_xchg, exchange, u64, u64)
       wasm_rt_memcpy(MEM_ADDR(mem, addr, sizeof(t2)), &replacement_wrapped,  \
                      sizeof(t2));                                            \
     }                                                                        \
-    return (t1)expected_wrapped;                                             \
+    return (t1)ret;                                                          \
   }                                                                          \
   DEF_MEM_CHECKS2(name, _, t2, return, t1, t1, t1)                           \
   static inline t1 name##_shared_unchecked(                                  \
