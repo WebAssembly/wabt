@@ -141,15 +141,19 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
                                                   uint64_t delta) {
   uint64_t old_pages = memory->pages;
   uint64_t new_pages = memory->pages + delta;
-  if (new_pages == 0) {
-    return 0;
+  if (delta == 0) {
+    return old_pages;
   }
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint64_t)-1;
   }
-  uint64_t old_size = old_pages * memory->page_size;
-  uint64_t new_size = new_pages * memory->page_size;
-  uint64_t delta_size = delta * memory->page_size;
+
+  uint64_t old_size, new_size, delta_size;
+  if (u64_mult_overflow(old_pages, memory->page_size, &old_size) ||
+      u64_mult_overflow(new_pages, memory->page_size, &new_size) ||
+      u64_mult_overflow(delta, memory->page_size, &delta_size)) {
+    return (uint64_t)-1;
+  }
 
   int err = MEMORY_API_NAME(expand_data_allocation)(memory, old_size, new_size,
                                                     delta_size);
