@@ -68,7 +68,10 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
                                               uint64_t max_pages,
                                               bool is64,
                                               uint32_t page_size) {
-  uint64_t byte_length = initial_pages * page_size;
+  uint64_t byte_length;
+  if (u64_mult_overflow(initial_pages, page_size, &byte_length)) {
+    abort();
+  }
   memory->size = byte_length;
   memory->pages = initial_pages;
   memory->max_pages = max_pages;
@@ -102,6 +105,9 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
 #endif
 
   memory->data = (MEMORY_CELL_TYPE)calloc(byte_length, 1);
+  if (byte_length != 0 && !memory->data) {
+    abort();
+  }
   memory->data_end = memory->data + byte_length;
 }
 
