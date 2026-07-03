@@ -5335,10 +5335,18 @@ void CWriter::Write(const LoadExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(0), ")");
+  } else {
+    if (memory->page_limits.is_64) {
+      // two u64's being added. Use checked addition
+      Write("checked_add_u64(", StackVar(0), ", ", expr.offset, "u)");
+    } else {
+      // two u32's being added and promoted to u64
+      Write("(", StackVar(0), ") + ", expr.offset, "u");
+    }
+  }
   Write(");", Newline());
   DropTypes(1);
   PushType(result_type);

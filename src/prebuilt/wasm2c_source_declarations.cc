@@ -165,38 +165,46 @@ R"w2c_template(  (CHECK_CALL_INDIRECT(table, ft, x),       \
 R"w2c_template(   DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 )w2c_template"
 R"w2c_template(
-static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
+static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
+)w2c_template"
+R"w2c_template(  uint64_t ret;
 )w2c_template"
 R"w2c_template(#if __has_builtin(__builtin_add_overflow)
 )w2c_template"
-R"w2c_template(  return __builtin_add_overflow(a, b, resptr);
+R"w2c_template(  if (__builtin_add_overflow(a, b, &ret))
+)w2c_template"
+R"w2c_template(    TRAP(OOB);
 )w2c_template"
 R"w2c_template(#elif defined(_MSC_VER)
 )w2c_template"
-R"w2c_template(  return _addcarry_u64(0, a, b, resptr);
+R"w2c_template(  if (_addcarry_u64(0, a, b, &ret))
+)w2c_template"
+R"w2c_template(    TRAP(OOB);
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
+R"w2c_template(  ret = a + b;
+)w2c_template"
+R"w2c_template(  if (ret < a)
+)w2c_template"
+R"w2c_template(    TRAP(OOB);
 )w2c_template"
 R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(  return ret;
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
-#define RANGE_CHECK(mem, offset, len)              \
+#define RANGE_CHECK(mem, offset, len)            \
 )w2c_template"
-R"w2c_template(  do {                                             \
+R"w2c_template(  do {                                           \
 )w2c_template"
-R"w2c_template(    uint64_t res;                                  \
+R"w2c_template(    uint64_t res = checked_add_u64(offset, len); \
 )w2c_template"
-R"w2c_template(    if (UNLIKELY(add_overflow(offset, len, &res))) \
+R"w2c_template(    if (UNLIKELY(res > (mem)->size))             \
 )w2c_template"
-R"w2c_template(      TRAP(OOB);                                   \
-)w2c_template"
-R"w2c_template(    if (UNLIKELY(res > (mem)->size))               \
-)w2c_template"
-R"w2c_template(      TRAP(OOB);                                   \
+R"w2c_template(      TRAP(OOB);                                 \
 )w2c_template"
 R"w2c_template(  } while (0);
 )w2c_template"
