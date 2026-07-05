@@ -16,8 +16,11 @@
 
 #include "gtest/gtest.h"
 
+#include "wabt/binary-reader-ir.h"
 #include "wabt/binary-reader-nop.h"
 #include "wabt/binary-reader.h"
+#include "wabt/error.h"
+#include "wabt/ir.h"
 #include "wabt/leb128.h"
 #include "wabt/opcode.h"
 
@@ -141,6 +144,43 @@ TEST(BinaryReader, OversizedSubsectionSize) {
   Result result = ReadBinary(data, &reader, options);
   // Custom section errors are not fatal by default, but ensure no crash.
   (void)result;
+}
+
+TEST(BinaryReader, NameSectionLocalFunctionIndexOutOfBounds) {
+  // With stop_on_first_error disabled the reader continues after a bad section.
+  // The function section here declares two functions but the second signature
+  // index runs past the section end, so only one Func is appended while
+  // NumTotalFuncs() still counts two.  A following name section then names a
+  // local of function index 1, which passes the reader's `index <
+  // NumTotalFuncs()` guard but is out of range for module_->funcs.  Without the
+  // bounds check in the local-name handlers this reads module_->funcs[1] out of
+  // bounds.
+  // TODO: Move this test upstream into the spec repo.
+
+  uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      0x01, 0x04, 0x01, 0x60, 0x00, 0x00,  // type section: 1 type, (func)
+      // Function section: count=2, but only one signature index fits; the
+      // second read runs past the section end and fails.
+      0x03, 0x03, 0x02, 0x80, 0x00,
+      // Custom "name" section with a local-names subsection for func index 1.
+      0x00, 0x0d,                // custom section, size=13
+      0x04, 'n', 'a', 'm', 'e',  // section name "name"
+      0x02, 0x06,                // subsection: local names, size=6
+      0x01,                      // function count = 1
+      0x01,                      // function index = 1 (past module_->funcs)
+      0x01,                      // local count = 1
+      0x00,                      // local index = 0
+      0x01, 'x',                 // local name "x"
+  };
+
+  Errors errors;
+  Module module;
+  ReadBinaryOptions options(Features{}, nullptr, /*read_debug_names=*/true,
+                            /*stop_on_first_error=*/false,
+                            /*fail_on_custom_section_error=*/false);
+  Result result = ReadBinaryIr("test", data, options, &errors, &module);
+  EXPECT_EQ(Result::Error, result);
 }
 
 TEST(Opcode, DecodeInvalidOpcode) {

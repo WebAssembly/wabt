@@ -1717,7 +1717,10 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
 }
 
 Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
-  assert(index < module_->funcs.size());
+  if (index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, index);
+    return Result::Error;
+  }
   Func* func = module_->funcs[index];
   Index num_params_and_locals = func->GetNumParamsAndLocals();
   if (count > num_params_and_locals) {
@@ -1763,6 +1766,10 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     return Result::Ok;
   }
 
+  if (func_index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, func_index);
+    return Result::Error;
+  }
   Func* func = module_->funcs[func_index];
   func->bindings.emplace(GetUniqueName(&func->bindings, MakeDollarName(name)),
                          Binding(local_index));
