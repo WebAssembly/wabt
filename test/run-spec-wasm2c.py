@@ -464,14 +464,14 @@ def Compile(cc, c_filename, out_dir, use_c11, *cflags):
         args += cstd_flag + ['/nologo', '/MDd', '/c', c_filename, '/Fo' + o_filename]
     else:
         # See "Compiling the wasm2c output" section of wasm2c/README.md
-        # When compiling with -O2, GCC and clang require '-fno-optimize-sibling-calls'
+        # When compiling with -O2/-O3, GCC and clang require '-fno-optimize-sibling-calls'
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
         if use_c11:
             args.append('-std=c11')
         else:
             args.append('-std=c99')
-        args += ['-c', c_filename, '-o', o_filename, '-O2',
+        args += ['-c', c_filename, '-o', o_filename, '-O3',
                  '-Wall', '-Werror', '-Wno-unused',
                  '-Wno-array-bounds',
                  '-Wno-ignored-optimization-argument',
