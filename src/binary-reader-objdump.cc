@@ -1995,7 +1995,7 @@ Result BinaryReaderObjdump::OnRefNullExpr(Type type) {
 Result BinaryReaderObjdump::OnOpcode(Opcode opcode) {
   BinaryReaderObjdumpBase::OnOpcode(opcode);
   if (ReadingInitExpr() && opcode != Opcode::End) {
-    InitInst i;
+    InitInst i = {};
     i.opcode = current_opcode;
     current_init_expr_.insts.push_back(i);
   }
