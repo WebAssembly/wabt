@@ -28,8 +28,10 @@
   static_cast<int>((x).length()), (x).data()
 
 #define PRItypecode "%s%#x"
-#define WABT_PRINTF_TYPE_CODE(x) \
-  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
+#define WABT_PRINTF_TYPE_CODE(x)                                     \
+  (static_cast<int32_t>(x) < 0 ? "-" : ""),                          \
+      (static_cast<int32_t>(x) < 0 ? (0u - static_cast<uint32_t>(x)) \
+                                   : static_cast<uint32_t>(x))
 
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
