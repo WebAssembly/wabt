@@ -417,14 +417,16 @@ Result NameGenerator::VisitModule(Module* module) {
     CHECK_RESULT(VisitExport(export_));
   }
 
-  VisitAll(module->globals, &NameGenerator::VisitGlobal);
-  VisitAll(module->types, &NameGenerator::VisitType);
-  VisitAll(module->funcs, &NameGenerator::VisitFunc);
-  VisitAll(module->tables, &NameGenerator::VisitTable);
-  VisitAll(module->memories, &NameGenerator::VisitMemory);
-  VisitAll(module->tags, &NameGenerator::VisitTag);
-  VisitAll(module->data_segments, &NameGenerator::VisitDataSegment);
-  VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment);
+  CHECK_RESULT(VisitAll(module->globals, &NameGenerator::VisitGlobal));
+  CHECK_RESULT(VisitAll(module->types, &NameGenerator::VisitType));
+  CHECK_RESULT(VisitAll(module->funcs, &NameGenerator::VisitFunc));
+  CHECK_RESULT(VisitAll(module->tables, &NameGenerator::VisitTable));
+  CHECK_RESULT(VisitAll(module->memories, &NameGenerator::VisitMemory));
+  CHECK_RESULT(VisitAll(module->tags, &NameGenerator::VisitTag));
+  CHECK_RESULT(
+      VisitAll(module->data_segments, &NameGenerator::VisitDataSegment));
+  CHECK_RESULT(
+      VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment));
   module_ = nullptr;
   return Result::Ok;
 }

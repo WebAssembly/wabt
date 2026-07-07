@@ -25,7 +25,8 @@ namespace wabt {
 LexerSourceLineFinder::LexerSourceLineFinder(
     std::unique_ptr<LexerSource> source)
     : source_(std::move(source)), next_line_start_(0) {
-  source_->Seek(0);
+  Result result = source_->Seek(0);
+  assert(Succeeded(result));
   // Line 0 should not be used; but it makes indexing simpler.
   line_ranges_.emplace_back(0, 0);
 }

@@ -1199,17 +1199,19 @@ Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
 }
 
 void WatWriter::WriteExpr(const Expr* expr) {
-  WABT_TRACE(WriteExprList);
+  WABT_TRACE(WriteExpr);
   ExprVisitorDelegate delegate(this);
   ExprVisitor visitor(&delegate);
-  visitor.VisitExpr(const_cast<Expr*>(expr));
+  // TODO: what should we do about errors?
+  (void)visitor.VisitExpr(const_cast<Expr*>(expr));
 }
 
 void WatWriter::WriteExprList(const ExprList& exprs) {
   WABT_TRACE(WriteExprList);
   ExprVisitorDelegate delegate(this);
   ExprVisitor visitor(&delegate);
-  visitor.VisitExprList(const_cast<ExprList&>(exprs));
+  // TODO: what should we do about errors?
+  (void)visitor.VisitExprList(const_cast<ExprList&>(exprs));
 }
 
 void WatWriter::WriteFoldedExpr(const Expr* expr) {

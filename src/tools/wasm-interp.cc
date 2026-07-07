@@ -422,11 +422,13 @@ static Result ReadAndRunModule(const char* module_filename) {
   CHECK_RESULT(InstantiateModule(imports, module, &instance));
 
   if (s_run_all_exports) {
-    RunAllExports(instance, &errors);
+    // TODO: what should we do about errors?
+    (void)RunAllExports(instance, &errors);
   }
 
   if (!s_run_exports.empty()) {
-    RunSpecificExports(instance, &errors, s_run_exports);
+    // TODO: what should we do about errors?
+    (void)RunSpecificExports(instance, &errors, s_run_exports);
   }
 #ifdef WITH_WASI
   if (s_wasi) {

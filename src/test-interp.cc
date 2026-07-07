@@ -612,10 +612,12 @@ TEST_F(InterpGCTest, Collect_TableCycle) {
   auto t2 = Table::New(store_, tt, Ref::Null);
   auto t3 = Table::New(store_, tt, Ref::Null);
 
-  t1->Set(store_, 0, t1->self());  // t1 references itself.
-  t2->Set(store_, 0, t3->self());
-  t3->Set(store_, 0, t2->self());  // t2 and t3 reference each other.
-  t3->Set(store_, 1, t1->self());  // t3 also references t1.
+  Result result = Result::Ok;
+  result |= t1->Set(store_, 0, t1->self());  // t1 references itself.
+  result |= t2->Set(store_, 0, t3->self());
+  result |= t3->Set(store_, 0, t2->self());  // t2 and t3 reference each other.
+  result |= t3->Set(store_, 1, t1->self());  // t3 also references t1.
+  ASSERT_EQ(Result::Ok, result);
 
   auto after_new = store_.object_count();
   EXPECT_EQ(before_new + 3, after_new);
@@ -715,7 +717,8 @@ TEST_F(InterpGCTest, Collect_DeepRecursion) {
   for (size_t i = 1; i < table_count; i++) {
     Table::Ptr new_table = Table::New(store_, tt, Ref::Null);
 
-    new_table->Set(store_, 0, prev_table->self());
+    Result result = new_table->Set(store_, 0, prev_table->self());
+    ASSERT_EQ(Result::Ok, result);
 
     prev_table.reset();
     prev_table = std::move(new_table);

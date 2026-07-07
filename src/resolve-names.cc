@@ -546,7 +546,8 @@ void NameResolver::VisitFunc(Func* func) {
     PrintDuplicateBindingsError(a, b, desc);
   });
 
-  visitor_.VisitFunc(func);
+  // TODO: what should we do about errors?
+  (void)visitor_.VisitFunc(func);
   current_func_ = nullptr;
 }
 
@@ -575,7 +576,8 @@ void NameResolver::VisitExport(Export* export_) {
 }
 
 void NameResolver::VisitGlobal(Global* global) {
-  visitor_.VisitExprList(global->init_expr);
+  // TODO: what should we do about errors?
+  (void)visitor_.VisitExprList(global->init_expr);
 }
 
 void NameResolver::VisitTag(Tag* tag) {
@@ -586,13 +588,15 @@ void NameResolver::VisitTag(Tag* tag) {
 
 void NameResolver::VisitTable(Table* table) {
   if (!table->init_expr.empty()) {
-    visitor_.VisitExprList(table->init_expr);
+    // TODO: what should we do about errors?
+    (void)visitor_.VisitExprList(table->init_expr);
   }
 }
 
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
-  visitor_.VisitExprList(segment->offset);
+  // TODO: what should we do about errors?
+  (void)visitor_.VisitExprList(segment->offset);
   for (ExprList& elem_expr : segment->elem_exprs) {
     if (elem_expr.size() == 1 &&
         elem_expr.front().type() == ExprType::RefFunc) {
@@ -603,7 +607,8 @@ void NameResolver::VisitElemSegment(ElemSegment* segment) {
 
 void NameResolver::VisitDataSegment(DataSegment* segment) {
   ResolveMemoryVar(&segment->memory_var);
-  visitor_.VisitExprList(segment->offset);
+  // TODO: what should we do about errors?
+  (void)visitor_.VisitExprList(segment->offset);
 }
 
 Result NameResolver::VisitModule(Module* module) {
@@ -638,18 +643,21 @@ Result NameResolver::VisitModule(Module* module) {
 
 void NameResolver::VisitScriptModule(ScriptModule* script_module) {
   if (auto* tsm = dyn_cast<TextScriptModule>(script_module)) {
-    VisitModule(&tsm->module);
+    // TODO: what should we do about errors?
+    (void)VisitModule(&tsm->module);
   }
 }
 
 void NameResolver::VisitCommand(Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      VisitModule(&cast<ModuleCommand>(command)->module);
+      // TODO: what should we do about errors?
+      (void)VisitModule(&cast<ModuleCommand>(command)->module);
       break;
 
     case CommandType::ScriptModule:
-      VisitModule(&cast<ScriptModuleCommand>(command)->module);
+      // TODO: what should we do about errors?
+      (void)VisitModule(&cast<ScriptModuleCommand>(command)->module);
       break;
 
     case CommandType::Action:

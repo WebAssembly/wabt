@@ -156,9 +156,8 @@ void TypeChecker::PushLabel(LabelType label_type,
                             type_stack_.size());
 }
 
-Result TypeChecker::PopLabel() {
+void TypeChecker::PopLabel() {
   label_stack_.pop_back();
-  return Result::Ok;
 }
 
 Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {

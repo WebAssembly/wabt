@@ -1338,7 +1338,7 @@ Result BinaryReaderIR::OnDelegateExpr(Index depth) {
 
   try_->delegate_target = Var(depth, GetLocation());
 
-  PopLabel();
+  CHECK_RESULT(PopLabel());
   return Result::Ok;
 }
 
@@ -1692,25 +1692,25 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Field:
       break;
     case NameSectionSubsection::Type:
-      SetTypeName(index, name);
+      return SetTypeName(index, name);
       break;
     case NameSectionSubsection::Tag:
-      SetTagName(index, name);
+      return SetTagName(index, name);
       break;
     case NameSectionSubsection::Global:
-      SetGlobalName(index, name);
+      return SetGlobalName(index, name);
       break;
     case NameSectionSubsection::Table:
-      SetTableName(index, name);
+      return SetTableName(index, name);
       break;
     case NameSectionSubsection::DataSegment:
-      SetDataSegmentName(index, name);
+      return SetDataSegmentName(index, name);
       break;
     case NameSectionSubsection::Memory:
-      SetMemoryName(index, name);
+      return SetMemoryName(index, name);
       break;
     case NameSectionSubsection::ElemSegment:
-      SetElemSegmentName(index, name);
+      return SetElemSegmentName(index, name);
       break;
   }
   return Result::Ok;

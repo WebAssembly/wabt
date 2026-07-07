@@ -53,7 +53,8 @@ std::string FormatError(const Error& error,
 
   LexerSourceLineFinder::SourceLine source_line;
   if (line_finder) {
-    line_finder->GetSourceLine(loc, source_line_max_length, &source_line);
+    // TODO: how should we handle errors?
+    (void)line_finder->GetSourceLine(loc, source_line_max_length, &source_line);
   }
 
   if (!source_line.line.empty()) {

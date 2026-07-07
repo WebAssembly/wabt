@@ -176,7 +176,7 @@ class TypeChecker {
   void PushLabel(LabelType label_type,
                  const TypeVector& param_types,
                  const TypeVector& result_types);
-  Result PopLabel();
+  void PopLabel();
   Result CheckLabelType(Label* label, LabelType label_type);
   Result Check2LabelTypes(Label* label,
                           LabelType label_type1,

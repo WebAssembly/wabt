@@ -238,7 +238,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   Result BeginSection(Index section_index,
                       BinarySection section_code,
                       Offset size) override {
-    BinaryReaderObjdumpBase::BeginSection(section_index, section_code, size);
+    CHECK_RESULT(BinaryReaderObjdumpBase::BeginSection(section_index,
+                                                       section_code, size));
     if (section_code != BinarySection::Custom) {
       objdump_state_->section_names.Set(section_index,
                                         wabt::GetSectionName(section_code));
@@ -501,7 +502,7 @@ Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
                                            Offset offset,
                                            Index index,
                                            uint32_t addend) {
-  BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend);
+  CHECK_RESULT(BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend));
   if (reloc_section_ == BinarySection::Code) {
     objdump_state_->code_relocations.emplace_back(type, offset, index, addend);
   } else if (reloc_section_ == BinarySection::Data) {
@@ -576,7 +577,7 @@ std::string BinaryReaderObjdumpDisassemble::BlockSigToString(Type type) const {
 }
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
-  BinaryReaderObjdumpBase::OnOpcode(opcode);
+  CHECK_RESULT(BinaryReaderObjdumpBase::OnOpcode(opcode));
   if (!in_function_body) {
     return Result::Ok;
   }
@@ -1345,7 +1346,8 @@ Result BinaryReaderObjdump::BeginCustomSection(Index section_index,
 Result BinaryReaderObjdump::BeginSection(Index section_index,
                                          BinarySection section_code,
                                          Offset size) {
-  BinaryReaderObjdumpBase::BeginSection(section_index, section_code, size);
+  CHECK_RESULT(
+      BinaryReaderObjdumpBase::BeginSection(section_index, section_code, size));
 
   // |section_name| and |match_name| are identical for known sections. For
   // custom sections, |section_name| is "Custom", but |match_name| is the name
@@ -1993,7 +1995,7 @@ Result BinaryReaderObjdump::OnRefNullExpr(Type type) {
 }
 
 Result BinaryReaderObjdump::OnOpcode(Opcode opcode) {
-  BinaryReaderObjdumpBase::OnOpcode(opcode);
+  CHECK_RESULT(BinaryReaderObjdumpBase::OnOpcode(opcode));
   if (ReadingInitExpr() && opcode != Opcode::End) {
     InitInst i{};
     i.opcode = current_opcode;

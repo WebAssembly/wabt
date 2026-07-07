@@ -400,7 +400,8 @@ Token WastLexer::GetStringToken(TokenType token_type) {
             uint32_t scalar_value = 0;
 
             while (IsHexDigit(PeekChar())) {
-              ParseHexdigit(*cursor_++, &digit);
+              Result result = ParseHexdigit(*cursor_++, &digit);
+              assert(Succeeded(result));
 
               scalar_value = (scalar_value << 4) | digit;
               // Maximum value of a unicode code point.

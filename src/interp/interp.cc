@@ -580,7 +580,8 @@ Table::Table(Store& store, TableType type, Ref init_ref)
     : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
   if (init_ref != Ref::Null) {
-    Fill(store, 0, init_ref, type.limits.initial);
+    Result result = Fill(store, 0, init_ref, type.limits.initial);
+    assert(Succeeded(result));
   }
 }
 
@@ -637,8 +638,7 @@ Result Table::Grow(Store& store, u64 count, Ref ref) {
     // import to another module its new size is honored.
     type_.limits.initial += count;
     elements_.resize(new_size);
-    Fill(store, old_size, ref, new_size - old_size);
-    return Result::Ok;
+    return Fill(store, old_size, ref, new_size - old_size);
   }
   return Result::Error;
 }
