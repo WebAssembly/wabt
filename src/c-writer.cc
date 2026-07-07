@@ -5376,9 +5376,16 @@ void CWriter::Write(const StoreExpr& expr) {
   func = GetMemoryAPIString(*memory, func);
 
   Write(func, "(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
-        ", (u64)(", StackVar(1), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(1), ")");
+  } else if (memory->page_limits.is_64) {
+    // two u64's being added. Use checked addition
+    Write("checked_add_u64(", StackVar(1), ", ", expr.offset, "u)");
+  } else {
+    // two u32's being added and promoted to u64
+    Write("(", StackVar(1), ") + ", expr.offset);
+  }
   Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
 }
@@ -5836,11 +5843,14 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", func, expr.val, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(1), ")");
-
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(1), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(1), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(1), ") + ", expr.offset, "u");
+  }
   Write(", ", StackVar(0));
   Write(");", Newline());
 
@@ -5863,11 +5873,14 @@ void CWriter::Write(const SimdStoreLaneExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
   Write(func, expr.val, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(1), ")");
-
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(1), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(1), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(1), ") + ", expr.offset, "u");
+  }
   Write(", ", StackVar(0));
   Write(");", Newline());
 
@@ -5909,10 +5922,14 @@ void CWriter::Write(const LoadSplatExpr& expr) {
   // clang-format on
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(0), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(0), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(0), ") + ", expr.offset);
+  }
   Write(");", Newline());
 
   DropTypes(1);
@@ -5934,10 +5951,14 @@ void CWriter::Write(const LoadZeroExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(0), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(0), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(0), ") + ", expr.offset);
+  }
   Write(");", Newline());
 
   DropTypes(1);
@@ -5966,10 +5987,14 @@ void CWriter::Write(const AtomicLoadExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(0), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset, "u");
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(0), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(0), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(0), ") + ", expr.offset, "u");
+  }
   Write(");", Newline());
   DropTypes(1);
   PushType(result_type);
@@ -5996,9 +6021,14 @@ void CWriter::Write(const AtomicStoreExpr& expr) {
   func = GetMemoryAPIString(*memory, func);
 
   Write(func, "(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
-        ", (u64)(", StackVar(1), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(1), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(1), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(1), ") + ", expr.offset);
+  }
   Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
 }
@@ -6060,10 +6090,14 @@ void CWriter::Write(const AtomicRmwExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
 
   Write(StackVar(1, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(1), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(1), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(1), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(1), ") + ", expr.offset);
+  }
   Write(", ", StackVar(0), ");", Newline());
   DropTypes(2);
   PushType(result_type);
@@ -6091,10 +6125,14 @@ void CWriter::Write(const AtomicRmwCmpxchgExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
 
   Write(StackVar(2, result_type), " = ", func, "(",
-        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)(",
-        StackVar(2), ")");
-  if (expr.offset != 0)
-    Write(" + ", expr.offset);
+        ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", (u64)");
+  if (expr.offset == 0) {
+    Write("(", StackVar(2), ")");
+  } else if (memory->page_limits.is_64) {
+    Write("checked_add_u64(", StackVar(2), ", ", expr.offset, "u)");
+  } else {
+    Write("(", StackVar(2), ") + ", expr.offset);
+  }
   Write(", ", StackVar(1), ", ", StackVar(0), ");", Newline());
   DropTypes(3);
   PushType(result_type);
