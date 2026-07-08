@@ -29,7 +29,7 @@
 #define WABT_PRINTF_STRING_VIEW_ARG(x) \
   static_cast<int>((x).length()), (x).data()
 
-#define PRItypecode "%s%" PRIx64
+#define PRItypecode "%s%#" PRIx64
 #define WABT_PRINTF_TYPE_CODE(x) \
   (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int64_t>(x))
 
