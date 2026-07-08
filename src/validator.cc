@@ -1101,14 +1101,16 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::Module: {
       Validator module_validator(errors_, &cast<ModuleCommand>(command)->module,
                                  options_);
-      module_validator.CheckModule();
+      // TODO: what should we do about errors?
+      (void)module_validator.CheckModule();
       break;
     }
 
     case CommandType::ScriptModule: {
       Validator module_validator(
           errors_, &cast<ScriptModuleCommand>(command)->module, options_);
-      module_validator.CheckModule();
+      // TODO: what should we do about errors?
+      (void)module_validator.CheckModule();
       break;
     }
 

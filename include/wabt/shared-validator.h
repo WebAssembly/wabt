@@ -63,7 +63,7 @@ class SharedValidator {
     return typechecker_.GetCatchCount(depth, out_count);
   }
 
-  Result WABT_PRINTF_FORMAT(3, 4)
+  void WABT_PRINTF_FORMAT(3, 4)
       PrintError(const Location& loc, const char* fmt, ...);
 
   void OnTypecheckerError(const char* msg);
@@ -343,8 +343,8 @@ class SharedValidator {
 
   TypeVector ToTypeVector(Index count, const Type* types);
 
-  void SaveLocalRefs();
-  void RestoreLocalRefs(Result result);
+  Result SaveLocalRefs();
+  Result RestoreLocalRefs(Result result);
   void IgnoreLocalRefs();
 
   ValidateOptions options_;

@@ -138,7 +138,7 @@ Result Wasm2cMain(Errors& errors) {
   CHECK_RESULT(GenerateNames(&module));
   /* TODO(binji): This shouldn't fail; if a name can't be applied
    * (because the index is invalid, say) it should just be skipped. */
-  ApplyNames(&module);
+  (void)ApplyNames(&module);
 
   if (!s_outfile.empty()) {
     std::string header_name_full =

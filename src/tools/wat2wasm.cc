@@ -96,8 +96,8 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static void WriteBufferToFile(std::string_view filename,
-                              const OutputBuffer& buffer) {
+static Result WriteBufferToFile(std::string_view filename,
+                                const OutputBuffer& buffer) {
   if (s_dump_module) {
     std::unique_ptr<FileStream> stream = FileStream::CreateStdout();
     if (s_verbose) {
@@ -109,10 +109,11 @@ static void WriteBufferToFile(std::string_view filename,
   }
 
   if (filename == "-") {
-    buffer.WriteToStdout();
+    CHECK_RESULT(buffer.WriteToStdout());
   } else {
-    buffer.WriteToFile(filename);
+    CHECK_RESULT(buffer.WriteToFile(filename));
   }
+  return Result::Ok;
 }
 
 static std::string DefaultOuputName(std::string_view input_name) {
@@ -155,7 +156,7 @@ int ProgramMain(int argc, char** argv) {
       if (s_outfile.empty()) {
         s_outfile = DefaultOuputName(s_infile);
       }
-      WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
+      result = WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
     }
   }
 

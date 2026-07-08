@@ -1299,7 +1299,8 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
                           lexer_->Filename(), "empty module");
   } else {
     ConsumeIfLpar();
-    ErrorExpected({"a module field", "a module"});
+    // Intentionally continuing to report additional errors.
+    (void)ErrorExpected({"a module field", "a module"});
   }
 
   EXPECT(Eof);
@@ -1332,7 +1333,8 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
                           lexer_->Filename(), "empty script");
   } else {
     ConsumeIfLpar();
-    ErrorExpected({"a module field", "a command"});
+    // Intentionally continuing to report additional errors.
+    (void)ErrorExpected({"a module field", "a command"});
   }
 
   EXPECT(Eof);
@@ -3365,7 +3367,7 @@ Result WastParser::ParseLabelOpt(std::string* out_label) {
   WABT_TRACE(ParseLabelOpt);
   if (PeekMatch(TokenType::Var)) {
     Token token = Consume();
-    ParseVarText(token, out_label);
+    CHECK_RESULT(ParseVarText(token, out_label));
   } else {
     out_label->clear();
   }
@@ -3513,7 +3515,8 @@ Result WastParser::ParseExpr(ExprList* exprs) {
               break;
             }
             default:
-              ErrorExpected({"catch", "catch_all", "delegate"});
+              // Intentionally continuing to report additional errors.
+              (void)ErrorExpected({"catch", "catch_all", "delegate"});
               break;
           }
         }
@@ -3813,7 +3816,8 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       Errors errors;
       const char* filename = "<text>";
       if (options_->parse_binary_modules) {
-        ReadBinaryIr(filename, bsm->data, options, &errors, module);
+        // TODO: what should we do about errors?
+        (void)ReadBinaryIr(filename, bsm->data, options, &errors, module);
       }
       module->name = bsm->name;
       module->loc = bsm->loc;

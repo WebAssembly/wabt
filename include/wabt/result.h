@@ -19,7 +19,7 @@
 
 namespace wabt {
 
-struct Result {
+struct [[nodiscard]] Result {
   enum Enum {
     Ok,
     Error,
