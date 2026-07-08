@@ -581,6 +581,7 @@ Table::Table(Store& store, TableType type, Ref init_ref)
   elements_.resize(type.limits.initial);
   if (init_ref != Ref::Null) {
     Result result = Fill(store, 0, init_ref, type.limits.initial);
+    WABT_USE(result);
     assert(Succeeded(result));
   }
 }

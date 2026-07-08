@@ -401,6 +401,7 @@ Token WastLexer::GetStringToken(TokenType token_type) {
 
             while (IsHexDigit(PeekChar())) {
               Result result = ParseHexdigit(*cursor_++, &digit);
+              WABT_USE(result);
               assert(Succeeded(result));
 
               scalar_value = (scalar_value << 4) | digit;
