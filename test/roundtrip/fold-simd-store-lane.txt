@@ -1,0 +1,36 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs
+(module
+  (memory 1)
+
+  ;; store_lane consumes the address and the vector and pushes nothing, so the
+  ;; f32 below it is what f32.neg consumes; the store must not be folded into
+  ;; f32.neg as if it produced a value.
+  (func (param i32 v128 f32) (result f32)
+    local.get 2
+    local.get 0
+    local.get 1
+    v128.store8_lane 0
+    f32.neg)
+
+  (func (param i32 v128)
+    local.get 0
+    local.get 1
+    v128.store16_lane offset=4 1)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32 v128 f32) (result f32)))
+  (type (;1;) (func (param i32 v128)))
+  (func (;0;) (type 0) (param i32 v128 f32) (result f32)
+    (local.get 2)
+    (v128.store8_lane 0
+      (local.get 0)
+      (local.get 1))
+    (f32.neg))
+  (func (;1;) (type 1) (param i32 v128)
+    (v128.store16_lane offset=4 1
+      (local.get 0)
+      (local.get 1)))
+  (memory (;0;) 1))
+;;; STDOUT ;;)
