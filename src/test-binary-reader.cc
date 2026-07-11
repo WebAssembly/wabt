@@ -23,6 +23,7 @@
 #include "wabt/ir.h"
 #include "wabt/leb128.h"
 #include "wabt/opcode.h"
+#include "wabt/stream.h"
 
 using namespace wabt;
 
@@ -181,6 +182,44 @@ TEST(BinaryReader, NameSectionLocalFunctionIndexOutOfBounds) {
                             /*fail_on_custom_section_error=*/false);
   Result result = ReadBinaryIr("test", data, options, &errors, &module);
   EXPECT_EQ(Result::Error, result);
+}
+
+TEST(BinaryReaderLogging, DeepIndentDoesNotOverflowBuffer) {
+  // With verbose logging on (e.g. `wasm-objdump --debug`) every section Begin
+  // callback bumps the log indent.  A custom "name" section whose sub-section
+  // size runs past the section end fails after BeginNamesSection, so with
+  // stop_on_first_error / fail_on_custom_section_error both disabled the reader
+  // continues and the matching End callbacks are skipped, leaking indent.  Once
+  // the indent passed the fixed 142-byte indent buffer, WriteIndent's remainder
+  // write used the whole indent count instead of the leftover, reading off the
+  // end of the buffer (ASan: global-buffer-overflow READ).
+  // TODO: Move this test upstream into the spec repo.
+
+  std::vector<uint8_t> data = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+  };
+  // One malformed "name" custom section whose sub-section size overflows the
+  // section; each one leaks four columns of indent.
+  const uint8_t section[] = {
+      0x00,                        // custom section
+      0x09,                        // section size = 9
+      0x04, 'n',  'a',  'm', 'e',  // section name "name"
+      0x01,                        // subsection: function names
+      0x80, 0x80, 0x04,  // subsection size 65536, extends past section
+  };
+  // 60 sections drives the indent well past the buffer.
+  for (int i = 0; i < 60; i++) {
+    data.insert(data.end(), std::begin(section), std::end(section));
+  }
+
+  MemoryStream log_stream;
+  BinaryReaderError reader;
+  ReadBinaryOptions options(Features{}, &log_stream, /*read_debug_names=*/true,
+                            /*stop_on_first_error=*/false,
+                            /*fail_on_custom_section_error=*/false);
+  // Just ensure the deep indent is written without overrunning the buffer.
+  Result result = ReadBinary(data, &reader, options);
+  (void)result;
 }
 
 TEST(Opcode, DecodeInvalidOpcode) {
