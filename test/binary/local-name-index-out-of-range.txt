@@ -1,0 +1,34 @@
+;;; TOOL: run-gen-wasm
+;; The name section's local subsection can carry a local index that is out of
+;; range for the function it names. The reader accepts such an entry, so
+;; MakeTypeBindingReverseMapping used to write past the reverse-mapping vector
+;; (heap overflow in a release build, assert in a debug build). The out of range
+;; name is now dropped and wasm2wat prints the module unchanged.
+magic
+version
+section(TYPE) {
+  count[1]
+  function params[1] i32 results[0]
+}
+section(FUNCTION) {
+  count[1]
+  type[0]
+}
+section(CODE) {
+  count[1]
+  func { locals[0] }
+}
+section("name") {
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[1]
+    index[5]           ;; function has a single param (index 0), so 5 is invalid
+    str("BAD")
+  }
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32)))
+  (func (;0;) (type 0) (param i32)))
+;;; STDOUT ;;)
