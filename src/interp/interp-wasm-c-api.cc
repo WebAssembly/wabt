@@ -742,7 +742,11 @@ own wasm_instance_t* wasm_instance_new(wasm_store_t* store,
   assert(store);
 
   RefVec import_refs;
-  for (size_t i = 0; i < module->As<Module>()->import_types().size(); i++) {
+  // Bound the read by imports->size so a module that declares more imports
+  // than the caller supplied cannot walk off the end of the imports array;
+  // the short list is then rejected by Instance::Instantiate below.
+  size_t import_count = module->As<Module>()->import_types().size();
+  for (size_t i = 0; i < import_count && i < imports->size; i++) {
     import_refs.push_back(imports->data[i]->I->self());
   }
 
