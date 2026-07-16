@@ -4187,7 +4187,9 @@ void CWriter::Write(const ExprList& exprs) {
         Write("wasm_rt_load_exception(", ex, "_tag, ", ex, "_size, ", ex, ");",
               Newline());
         WriteThrow();
-      } break;
+        // Stop processing this ExprList, since the following are unreachable.
+        return;
+      }
 
       case ExprType::Try: {
         const TryExpr& tryexpr = *cast<TryExpr>(&expr);

@@ -45,13 +45,15 @@ const uint8_t s_float_globals[] = {
     0x03, 0x00, 0x05, 0x67, 0x5f, 0x66, 0x33, 0x32, 0x03, 0x01,
 };
 
-std::string WriteCSource(const uint8_t* data, size_t size) {
+std::string WriteCSource(const uint8_t* data,
+                         size_t size,
+                         const Features& features = Features{}) {
   Errors errors;
   Module module;
   ReadBinaryOptions read_options;
+  read_options.features = features;
   EXPECT_EQ(Result::Ok,
             ReadBinaryIr("test", data, size, read_options, &errors, &module));
-  Features features;
   ValidateOptions validate_options(features);
   EXPECT_EQ(Result::Ok, ValidateModule(&module, &errors, validate_options));
   EXPECT_EQ(Result::Ok, GenerateNames(&module));
@@ -100,4 +102,34 @@ TEST(CWriter, FloatConstLocaleIndependent) {
   EXPECT_NE(source.find("0.5"), std::string::npos);
   EXPECT_EQ(source.find("1,5"), std::string::npos);
   EXPECT_EQ(source.find("0,5"), std::string::npos);
+}
+
+// rethrow transfers control unconditionally, so the validator marks the rest
+// of the block unreachable and accepts instructions there against a
+// polymorphic stack. The generator must stop emitting the block at such a
+// terminator; walking into the unreachable tail pops operands that do not
+// exist and reads past the end of the type stack (StackVar underflow).
+// Translating this valid module must not fault.
+TEST(CWriter, RethrowFollowedByUnreachableCode) {
+  // (module
+  //   (memory 1)
+  //   (func try nop catch_all rethrow 0 i32.store end))
+  const uint8_t data[] = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
+      0x01, 0x04, 0x01, 0x60, 0x00, 0x00,              // type: () -> ()
+      0x03, 0x02, 0x01, 0x00,                          // func: type 0
+      0x05, 0x03, 0x01, 0x00, 0x01,                    // memory: min 1
+      0x0a, 0x0e, 0x01, 0x0c, 0x00,                    // code: 1 body, size 12
+      0x06, 0x40,                                      // try (void)
+      0x01,                                            // nop
+      0x19,                                            // catch_all
+      0x09, 0x00,                                      // rethrow 0
+      0x36, 0x02, 0x00,  // i32.store (unreachable)
+      0x0b,              // end try
+      0x0b,              // end func
+  };
+
+  Features features;
+  features.enable_exceptions();
+  WriteCSource(data, sizeof(data), features);
 }
