@@ -2222,12 +2222,12 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
 
 template <typename T>
 RunResult Thread::Load(Instr instr, T* out, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Load(offset, instr.imm_u32x2.snd, out)),
+  TRAP_IF(Failed(memory->Load(offset, instr.imm_index_offset.offset, out)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2.snd, sizeof(T),
+                       offset + instr.imm_index_offset.offset, sizeof(T),
                        memory->ByteSize()));
   return RunResult::Ok;
 }
@@ -2244,13 +2244,13 @@ RunResult Thread::DoLoad(Instr instr, Trap::Ptr* out_trap) {
 
 template <typename T, typename V>
 RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V val = static_cast<V>(Pop<T>());
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2.snd, val)),
+  TRAP_IF(Failed(memory->Store(offset, instr.imm_index_offset.offset, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2.snd, sizeof(V),
+                       offset + instr.imm_index_offset.offset, sizeof(V),
                        memory->ByteSize()));
   return RunResult::Ok;
 }
@@ -2581,7 +2581,7 @@ RunResult Thread::DoSimdLoadLane(Instr instr, Trap::Ptr* out_trap) {
   if (Load<T>(instr, &val, out_trap) != RunResult::Ok) {
     return RunResult::Trap;
   }
-  result[instr.imm_u32x2_u8.idx] = val;
+  result[instr.imm_index_offset_lane.lane] = val;
   Push(result);
   return RunResult::Ok;
 }
@@ -2589,15 +2589,17 @@ RunResult Thread::DoSimdLoadLane(Instr instr, Trap::Ptr* out_trap) {
 template <typename S>
 RunResult Thread::DoSimdStoreLane(Instr instr, Trap::Ptr* out_trap) {
   using T = typename S::LaneType;
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2_u8.fst]};
+  Memory::Ptr memory{store_,
+                     inst_->memories()[instr.imm_index_offset_lane.memidx]};
   auto result = Pop<S>();
-  T val = result[instr.imm_u32x2_u8.idx];
+  T val = result[instr.imm_index_offset_lane.lane];
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2_u8.snd, val)),
-          StringPrintf("out of bounds memory access: access at %" PRIu64
-                       "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2_u8.snd, sizeof(T),
-                       memory->ByteSize()));
+  TRAP_IF(
+      Failed(memory->Store(offset, instr.imm_index_offset_lane.offset, val)),
+      StringPrintf("out of bounds memory access: access at %" PRIu64 "+%" PRIzd
+                   " >= max value %" PRIu64,
+                   offset + instr.imm_index_offset_lane.offset, sizeof(T),
+                   memory->ByteSize()));
   return RunResult::Ok;
 }
 
@@ -2774,24 +2776,26 @@ RunResult Thread::DoSimdRelaxedNmadd() {
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicLoad(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   u64 offset = PopPtr(memory);
   V val;
-  TRAP_IF(Failed(memory->AtomicLoad(offset, instr.imm_u32x2.snd, &val)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(
+      Failed(memory->AtomicLoad(offset, instr.imm_index_offset.offset, &val)),
+      StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64, offset,
+                   instr.imm_index_offset.offset));
   Push(static_cast<T>(val));
   return RunResult::Ok;
 }
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicStore(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V val = static_cast<V>(Pop<T>());
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->AtomicStore(offset, instr.imm_u32x2.snd, val)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(
+      Failed(memory->AtomicStore(offset, instr.imm_index_offset.offset, val)),
+      StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64, offset,
+                   instr.imm_index_offset.offset));
   return RunResult::Ok;
 }
 
@@ -2799,28 +2803,29 @@ template <typename R, typename T>
 RunResult Thread::DoAtomicRmw(BinopFunc<T, T> f,
                               Instr instr,
                               Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   T val = static_cast<T>(Pop<R>());
   u64 offset = PopPtr(memory);
   T old;
-  TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_u32x2.snd, val, f, &old)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_index_offset.offset, val,
+                                   f, &old)),
+          StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64,
+                       offset, instr.imm_index_offset.offset));
   Push(static_cast<R>(old));
   return RunResult::Ok;
 }
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V replace = static_cast<V>(Pop<T>());
   V expect = static_cast<V>(Pop<T>());
   V old;
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_u32x2.snd, expect,
-                                          replace, &old)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_index_offset.offset,
+                                          expect, replace, &old)),
+          StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64,
+                       offset, instr.imm_index_offset.offset));
   Push(static_cast<T>(old));
   return RunResult::Ok;
 }
