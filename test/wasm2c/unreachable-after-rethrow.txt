@@ -1,0 +1,15 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS*: --enable-exceptions
+(module
+  (memory 1)
+  (func (export "test")
+    try
+      nop
+    catch_all
+      rethrow 0
+      i32.store
+    end))
+(assert_return (invoke "test"))
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)
