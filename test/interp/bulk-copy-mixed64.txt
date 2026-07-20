@@ -1,0 +1,36 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-memory64 --enable-multi-memory
+(module
+  (memory $m32 1 1)
+  (memory $m64 i64 1 1)
+  (data (memory $m64) (i64.const 0) "\11\22\33\44")
+
+  (table $t32 10 funcref)
+  (table $t64 i64 10 funcref)
+  (elem (table $t64) (i64.const 1) func $a $b)
+  (type $r (func (result i32)))
+  (func $a (result i32) (i32.const 111))
+  (func $b (result i32) (i32.const 222))
+
+  ;; memory.copy/table.copy from a 64-bit source into a 32-bit destination: the
+  ;; length operand's type is the minimum of the two index types (i32 here), so
+  ;; the interpreter must pop it as i32, not as the source's i64.
+  (func (export "mem_copy_64to32")
+    (memory.copy $m32 $m64 (i32.const 0) (i64.const 0) (i32.const 4)))
+  (func (export "mem_read0") (result i32) (i32.load8_u $m32 (i32.const 0)))
+  (func (export "mem_read3") (result i32) (i32.load8_u $m32 (i32.const 3)))
+
+  (func (export "tbl_copy_64to32")
+    (table.copy $t32 $t64 (i32.const 5) (i64.const 1) (i32.const 2)))
+  (func (export "tbl_call5") (result i32)
+    (call_indirect $t32 (type $r) (i32.const 5)))
+  (func (export "tbl_call6") (result i32)
+    (call_indirect $t32 (type $r) (i32.const 6))))
+(;; STDOUT ;;;
+mem_copy_64to32() =>
+mem_read0() => i32:17
+mem_read3() => i32:68
+tbl_copy_64to32() =>
+tbl_call5() => i32:111
+tbl_call6() => i32:222
+;;; STDOUT ;;)

@@ -2326,7 +2326,11 @@ RunResult Thread::DoDataDrop(Instr instr) {
 RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr mem_dst{store_, inst_->memories()[instr.imm_u32x2.fst]};
   Memory::Ptr mem_src{store_, inst_->memories()[instr.imm_u32x2.snd]};
-  u64 size = PopPtr(mem_src);
+  // The size operand's type is the minimum of the two memory index types, so it
+  // is only 64-bit when both memories are (see TypeChecker::OnMemoryCopy).
+  bool size_is_64 =
+      mem_dst->type().limits.is_64 && mem_src->type().limits.is_64;
+  u64 size = size_is_64 ? Pop<u64>() : Pop<u32>();
   u64 src = PopPtr(mem_src);
   u64 dst = PopPtr(mem_dst);
   // TODO: change to "out of bounds"
@@ -2364,7 +2368,11 @@ RunResult Thread::DoElemDrop(Instr instr) {
 RunResult Thread::DoTableCopy(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table_dst{store_, inst_->tables()[instr.imm_u32x2.fst]};
   Table::Ptr table_src{store_, inst_->tables()[instr.imm_u32x2.snd]};
-  u64 size = PopPtr(table_src);
+  // The size operand's type is the minimum of the two table index types, so it
+  // is only 64-bit when both tables are (see TypeChecker::OnTableCopy).
+  bool size_is_64 =
+      table_dst->type().limits.is_64 && table_src->type().limits.is_64;
+  u64 size = size_is_64 ? Pop<u64>() : Pop<u32>();
   u64 src = PopPtr(table_src);
   u64 dst = PopPtr(table_dst);
   TRAP_IF(Failed(Table::Copy(store_, *table_dst, dst, *table_src, src, size)),
