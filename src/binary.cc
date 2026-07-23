@@ -63,7 +63,9 @@ const char* GetNameSectionSubsectionName(NameSectionSubsection subsec) {
   static_assert(WABT_ENUM_COUNT(NameSectionSubsection) ==
                     WABT_ARRAY_SIZE(NameSubsectionName),
                 "Malformed ExprTypeName array");
-  return NameSubsectionName[size_t(subsec)];
+  return size_t(subsec) < WABT_ARRAY_SIZE(NameSubsectionName)
+             ? NameSubsectionName[size_t(subsec)]
+             : "<error_name_subsection>";
 }
 
 }  // namespace wabt
