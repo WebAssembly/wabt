@@ -94,8 +94,8 @@ struct Instr {
     } imm_index_offset;
     struct {
       u32 memidx;
-      u64 offset;
       u8 lane;
+      u64 offset;
     } imm_index_offset_lane;
   };
 };
