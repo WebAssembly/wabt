@@ -6,8 +6,8 @@
   ;; A static offset >= 2^32 must not be truncated to 32 bits: address 0 with
   ;; offset 2^32 is out of bounds and must trap, not read a wrapped in-range
   ;; address.
-  (func (export "load_offset_wrap") (result i64)
-    (i64.load offset=0x1_0000_0000 (i64.const 0)))
+  (func (export "load_offset_wrap") (result i32)
+    (i32.load offset=0x1_0000_0000 (i64.const 0)))
   (func (export "store_offset_wrap")
     (i64.store offset=0x1_0000_0000 (i64.const 0) (i64.const 1)))
 
@@ -18,7 +18,7 @@
     (i64.load offset=8 (i64.const 0)))
 )
 (;; STDOUT ;;;
-load_offset_wrap() => error: out of bounds memory access: access at 4294967296+8 >= max value 65536
+load_offset_wrap() => error: out of bounds memory access: access at 4294967296+4 >= max value 65536
 store_offset_wrap() => error: out of bounds memory access: access at 4294967296+8 >= max value 65536
 store_ok() =>
 load_ok() => i64:42
