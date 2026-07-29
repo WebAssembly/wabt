@@ -1,0 +1,36 @@
+;;; TOOL: run-interp-spec
+;;; ARGS: --trace
+(module
+  ;; The global.set/table.* immediates count imported globals and tables, so
+  ;; tracing them has to resolve the index against the instance rather than the
+  ;; module's defined-only descriptions.
+  (import "spectest" "global_i32" (global i32))
+  (import "spectest" "table" (table 10 20 funcref))
+  (global $g (mut i64) (i64.const 0))
+  (table $t 1 2 funcref)
+
+  (func (export "set_global") (global.set $g (i64.const 7)))
+  (func (export "grow_table") (drop (table.grow $t (ref.null func) (i32.const 1))))
+  (func (export "fill_table") (table.fill $t (i32.const 0) (ref.null func) (i32.const 1))))
+(invoke "set_global")
+(invoke "grow_table")
+(invoke "fill_table")
+(;; STDOUT ;;;
+#0.   16: V:0  | i64.const 7
+#0.   28: V:1  | global.set $1, 7
+#0.   36: V:0  | return
+set_global() =>
+#0.   40: V:0  | ref.null
+#0.   44: V:1  | i32.const 1
+#0.   52: V:2  | table.grow $1, funcref:0, 1
+#0.   60: V:1  | drop
+#0.   64: V:0  | return
+grow_table() =>
+#0.   68: V:0  | i32.const 0
+#0.   76: V:1  | ref.null
+#0.   80: V:2  | i32.const 1
+#0.   88: V:3  | table.fill $1, 0, funcref:0, 1
+#0.   96: V:0  | return
+fill_table() =>
+4/4 tests passed.
+;;; STDOUT ;;)
