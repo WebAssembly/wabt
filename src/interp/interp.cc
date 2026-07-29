@@ -3019,11 +3019,15 @@ ValueType Thread::TraceSource::GetLocalType(Index stack_slot) {
 }
 
 ValueType Thread::TraceSource::GetGlobalType(Index index) {
-  return thread_->mod_->desc().globals[index].type.type;
+  // The immediate counts imported globals, so resolve it against the
+  // instance's globals rather than the module's defined-only descriptions.
+  Global::Ptr global{thread_->store_, thread_->inst_->globals()[index]};
+  return global->type().type;
 }
 
 ValueType Thread::TraceSource::GetTableElementType(Index index) {
-  return thread_->mod_->desc().tables[index].type.element;
+  Table::Ptr table{thread_->store_, thread_->inst_->tables()[index]};
+  return table->type().element;
 }
 
 }  // namespace interp
