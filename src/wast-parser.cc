@@ -1464,7 +1464,20 @@ Result WastParser::ParseModuleFieldList(Module* module) {
       CHECK_RESULT(ParseCustomSectionAnnotation(module));
       continue;
     }
+    // A field that fails to parse is destroyed instead of being appended to
+    // the module, so the deferred resolutions registered while parsing it
+    // point into freed memory. Drop them again.
+    size_t ref_types_size = resolve_ref_types_.size();
+    size_t type_vectors_size = resolve_type_vectors_.size();
+    size_t funcs_size = resolve_funcs_.size();
     if (Failed(ParseModuleField(module))) {
+      resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
+                               resolve_ref_types_.end());
+      resolve_type_vectors_.erase(
+          resolve_type_vectors_.begin() + type_vectors_size,
+          resolve_type_vectors_.end());
+      resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
+                           resolve_funcs_.end());
       CHECK_RESULT(Synchronize(IsModuleField));
     }
   }
