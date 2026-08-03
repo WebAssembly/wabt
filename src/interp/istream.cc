@@ -76,6 +76,19 @@ void Istream::Emit(Opcode::Enum op, u32 val1, u32 val2, u8 val3) {
   EmitInternal(val3);
 }
 
+void Istream::Emit(Opcode::Enum op, u32 val1, u64 val2) {
+  Emit(op);
+  EmitInternal(val1);
+  EmitInternal(val2);
+}
+
+void Istream::Emit(Opcode::Enum op, u32 val1, u64 val2, u8 val3) {
+  Emit(op);
+  EmitInternal(val1);
+  EmitInternal(val2);
+  EmitInternal(val3);
+}
+
 void Istream::EmitDropKeep(u32 drop, u32 keep) {
   if (drop > 0) {
     if (drop == 1 && keep == 0) {
@@ -623,8 +636,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::V128Load64Zero:
       // Index + memory offset immediates, 1 operand.
       instr.kind = InstrKind::Imm_Index_Offset_Op_1;
-      instr.imm_u32x2.fst = ReadAt<u32>(offset);
-      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      instr.imm_index_offset.memidx = ReadAt<u32>(offset);
+      instr.imm_index_offset.offset = ReadAt<u64>(offset);
       break;
 
     case Opcode::MemoryAtomicNotify:
@@ -689,8 +702,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::V128Store:
       // Index and memory offset immediates, 2 operands.
       instr.kind = InstrKind::Imm_Index_Offset_Op_2;
-      instr.imm_u32x2.fst = ReadAt<u32>(offset);
-      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      instr.imm_index_offset.memidx = ReadAt<u32>(offset);
+      instr.imm_index_offset.offset = ReadAt<u64>(offset);
       break;
 
     case Opcode::V128Load8Lane:
@@ -703,9 +716,9 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::V128Store64Lane:
       // Index, memory offset, lane index immediates, 2 operands.
       instr.kind = InstrKind::Imm_Index_Offset_Lane_Op_2;
-      instr.imm_u32x2_u8.fst = ReadAt<u32>(offset);
-      instr.imm_u32x2_u8.snd = ReadAt<u32>(offset);
-      instr.imm_u32x2_u8.idx = ReadAt<u8>(offset);
+      instr.imm_index_offset_lane.memidx = ReadAt<u32>(offset);
+      instr.imm_index_offset_lane.offset = ReadAt<u64>(offset);
+      instr.imm_index_offset_lane.lane = ReadAt<u8>(offset);
       break;
 
     case Opcode::I32AtomicRmw16CmpxchgU:
@@ -719,8 +732,8 @@ Instr Istream::Read(Offset* offset) const {
     case Opcode::MemoryAtomicWait64:
       // Index and memory offset immediates, 3 operands.
       instr.kind = InstrKind::Imm_Index_Offset_Op_3;
-      instr.imm_u32x2.fst = ReadAt<u32>(offset);
-      instr.imm_u32x2.snd = ReadAt<u32>(offset);
+      instr.imm_index_offset.memidx = ReadAt<u32>(offset);
+      instr.imm_index_offset.offset = ReadAt<u64>(offset);
       break;
 
     case Opcode::AtomicFence:
@@ -916,28 +929,31 @@ Istream::Offset Istream::Trace(Stream* stream,
       break;
 
     case InstrKind::Imm_Index_Offset_Op_1:
-      stream->Writef(" $%u:%s+$%u\n", instr.imm_u32x2.fst,
-                     source->Pick(1, instr).c_str(), instr.imm_u32x2.snd);
+      stream->Writef(" $%u:%s+$%" PRIu64 "\n", instr.imm_index_offset.memidx,
+                     source->Pick(1, instr).c_str(),
+                     instr.imm_index_offset.offset);
       break;
 
     case InstrKind::Imm_Index_Offset_Op_2:
-      stream->Writef(" $%u:%s+$%u, %s\n", instr.imm_u32x2.fst,
-                     source->Pick(2, instr).c_str(), instr.imm_u32x2.snd,
-                     source->Pick(1, instr).c_str());
+      stream->Writef(
+          " $%u:%s+$%" PRIu64 ", %s\n", instr.imm_index_offset.memidx,
+          source->Pick(2, instr).c_str(), instr.imm_index_offset.offset,
+          source->Pick(1, instr).c_str());
       break;
 
     case InstrKind::Imm_Index_Offset_Op_3:
-      stream->Writef(" $%u:%s+$%u, %s, %s\n", instr.imm_u32x2.fst,
-                     source->Pick(3, instr).c_str(), instr.imm_u32x2.snd,
-                     source->Pick(2, instr).c_str(),
-                     source->Pick(1, instr).c_str());
+      stream->Writef(
+          " $%u:%s+$%" PRIu64 ", %s, %s\n", instr.imm_index_offset.memidx,
+          source->Pick(3, instr).c_str(), instr.imm_index_offset.offset,
+          source->Pick(2, instr).c_str(), source->Pick(1, instr).c_str());
       break;
 
     case InstrKind::Imm_Index_Offset_Lane_Op_2:
-      stream->Writef(" $%u:%s+$%u, %s (Lane imm: $%u)\n",
-                     instr.imm_u32x2_u8.fst, source->Pick(2, instr).c_str(),
-                     instr.imm_u32x2_u8.snd, source->Pick(1, instr).c_str(),
-                     instr.imm_u32x2_u8.idx);
+      stream->Writef(
+          " $%u:%s+$%" PRIu64 ", %s (Lane imm: $%u)\n",
+          instr.imm_index_offset_lane.memidx, source->Pick(2, instr).c_str(),
+          instr.imm_index_offset_lane.offset, source->Pick(1, instr).c_str(),
+          instr.imm_index_offset_lane.lane);
       break;
 
     case InstrKind::Imm_I32_Op_0:
