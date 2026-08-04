@@ -224,14 +224,14 @@ TEST(BinaryReaderLogging, DeepIndentDoesNotOverflowBuffer) {
 
 TEST(BinaryReaderLogging, NameSubsectionTypeDoesNotOverflowNameTable) {
   // NameSectionSubsection has no explicit underlying type, so it is backed by
-  // signed int.  ReadNameSection reads the subsection id as a uint32_t and
-  // gates the OnNameSubsection callback with `type <= Last`, a signed compare
-  // with no lower bound, so an id >= 0x80000000 becomes a negative enum, slips
-  // through, and reaches GetNameSectionSubsectionName, which indexed
-  // NameSubsectionName[size_t(subsec)] with no range check (ASan:
-  // global-buffer-overflow READ).  The module itself is valid: the unknown
-  // subsection is skipped, so this is on the normal stop-on-first-error path,
-  // reached with verbose logging on (e.g. `wasm2wat -v`).
+  // signed int.  ReadNameSection used to cast the subsection id and gate the
+  // OnNameSubsection callback with `type <= Last`, a signed compare with no
+  // lower bound, so an id >= 0x80000000 became a negative enum, slipped
+  // through, and reached GetNameSectionSubsectionName, which indexes
+  // NameSubsectionName[size_t(subsec)] (ASan: global-buffer-overflow READ).
+  // The module itself is valid: the unknown subsection is skipped, so this is
+  // on the normal stop-on-first-error path, reached with verbose logging on
+  // (e.g. `wasm2wat -v`).
   // TODO: Move this test upstream into the spec repo.
 
   uint8_t data[] = {

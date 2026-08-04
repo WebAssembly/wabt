@@ -2059,10 +2059,16 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
-    NameSectionSubsection type = static_cast<NameSectionSubsection>(name_type);
-    if (type <= NameSectionSubsection::Last) {
-      CALLBACK(OnNameSubsection, i, type, subsection_size);
+    if (name_type > static_cast<uint32_t>(NameSectionSubsection::Last)) {
+      // Unknown subsection, skip it.  Checked before the cast so that an
+      // out-of-range id never becomes a NameSectionSubsection.
+      state_.offset = subsection_end;
+      ++i;
+      continue;
     }
+
+    NameSectionSubsection type = static_cast<NameSectionSubsection>(name_type);
+    CALLBACK(OnNameSubsection, i, type, subsection_size);
 
     switch (type) {
       case NameSectionSubsection::Module:
