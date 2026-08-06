@@ -1494,6 +1494,31 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
+  // A field is only appended to the module once it has parsed successfully; a
+  // field that fails to parse is destroyed instead, so the deferred reference
+  // type resolutions registered while parsing it would point into freed
+  // memory. Remember where the resolve lists ended and drop those entries
+  // again if the field fails.
+  size_t ref_types_size = resolve_ref_types_.size();
+  size_t type_vectors_size = resolve_type_vectors_.size();
+  size_t funcs_size = resolve_funcs_.size();
+
+  Result result = ParseModuleFieldImpl(module);
+
+  if (Failed(result)) {
+    resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
+                             resolve_ref_types_.end());
+    resolve_type_vectors_.erase(
+        resolve_type_vectors_.begin() + type_vectors_size,
+        resolve_type_vectors_.end());
+    resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
+                         resolve_funcs_.end());
+  }
+
+  return result;
+}
+
+Result WastParser::ParseModuleFieldImpl(Module* module) {
   switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
