@@ -885,6 +885,10 @@ Result Validator::CheckModule() {
   // Global section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
+      Result global_type_result =
+          validator_.OnGlobalType(field.loc, f->global.type);
+      result_ |= global_type_result;
+
       // Validate the initializer expression before publishing the global so
       // that it is only visible to later globals, and not to itself.
       result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
@@ -892,8 +896,9 @@ Result Validator::CheckModule() {
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
       result_ |= validator_.EndInitExpr();
-      result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
+      if (Succeeded(global_type_result)) {
+        result_ |= validator_.OnGlobal(f->global.type, f->global.mutable_);
+      }
     }
   }
 

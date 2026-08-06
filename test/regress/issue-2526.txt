@@ -8,21 +8,43 @@
 (module
   (global i32 (i32.const 0))
   (table 1 funcref)
-  (func $f (export "f"))
+  (type $t (func (result i32)))
+  (func $f (type $t) (result i32) (i32.const 42))
   (elem (global.get 0) $f)
+  (func (export "main") (result i32)
+    (call_indirect (type $t) (i32.const 0)))
 )
-(assert_return (invoke "f"))
+(assert_return (invoke "main") (i32.const 42))
 
 (module
   (global $g i32 (i32.const 0))
   (table 1 funcref)
-  (func $f (export "f"))
+  (type $t (func (result i32)))
+  (func $f (type $t) (result i32) (i32.const 42))
   (elem (global.get $g) $f)
+  (func (export "main") (result i32)
+    (call_indirect (type $t) (i32.const 0)))
 )
+(assert_return (invoke "main") (i32.const 42))
 
 ;; data offset referencing a defined immutable global
-(module (memory 1) (global i32 (i32.const 0)) (data (global.get 0) "a"))
-(module (memory 1) (global $g i32 (i32.const 0)) (data (global.get $g) "a"))
+(module
+  (memory 1)
+  (global i32 (i32.const 0))
+  (data (global.get 0) "a")
+  (func (export "main") (result i32)
+    (i32.load8_u (global.get 0)))
+)
+(assert_return (invoke "main") (i32.const 97))
+
+(module
+  (memory 1)
+  (global $g i32 (i32.const 0))
+  (data (global.get $g) "a")
+  (func (export "main") (result i32)
+    (i32.load8_u (global.get $g)))
+)
+(assert_return (invoke "main") (i32.const 97))
 
 ;; global initializer referencing a defined immutable global
 (module (global i32 (i32.const 0)) (global i32 (global.get 0)))
@@ -31,6 +53,15 @@
   (global i32 (i32.const 0))
   (global $x i32 (global.get 0))
   (func (export "get") (result i32) (global.get $x))
+)
+(assert_return (invoke "get") (i32.const 0))
+
+;; global chaining: $a visible to $b, $b visible to $c
+(module
+  (global $a i32 (i32.const 0))
+  (global $b i32 (global.get $a))
+  (global $c i32 (global.get $b))
+  (func (export "get") (result i32) (global.get $c))
 )
 (assert_return (invoke "get") (i32.const 0))
 
@@ -48,17 +79,17 @@
   (module (table 1 funcref) (global i64 (i64.const 0)) (elem (global.get 0)))
   "type mismatch")
 (;; STDOUT ;;;
-out/test/regress/issue-2526.txt:39: assert_invalid passed:
-  out/test/regress/issue-2526/issue-2526.7.wasm:000000f: error: global variable out of range: 0 (max 0)
+out/test/regress/issue-2526.txt:70: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.8.wasm:000000f: error: global variable out of range: 0 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
-out/test/regress/issue-2526.txt:42: assert_invalid passed:
-  out/test/regress/issue-2526/issue-2526.8.wasm:000000f: error: global variable out of range: 1 (max 0)
+out/test/regress/issue-2526.txt:73: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.9.wasm:000000f: error: global variable out of range: 1 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
-out/test/regress/issue-2526.txt:45: assert_invalid passed:
-  out/test/regress/issue-2526/issue-2526.9.wasm:0000014: error: initializer expression cannot reference a mutable global
+out/test/regress/issue-2526.txt:76: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.10.wasm:0000014: error: initializer expression cannot reference a mutable global
   0000014: error: OnGlobalGetExpr callback failed
-out/test/regress/issue-2526.txt:48: assert_invalid passed:
-  out/test/regress/issue-2526/issue-2526.10.wasm:000001c: error: type mismatch in initializer expression, expected [i32] but got [i64]
+out/test/regress/issue-2526.txt:79: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.11.wasm:000001c: error: type mismatch in initializer expression, expected [i32] but got [i64]
   000001d: error: EndElemSegmentInitExpr callback failed
-13/13 tests passed.
+18/18 tests passed.
 ;;; STDOUT ;;)

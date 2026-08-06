@@ -47,11 +47,11 @@ out/test/spec/global.wast:345: assert_invalid passed:
 out/test/spec/global.wast:350: assert_invalid passed:
   out/test/spec/global/global.17.wasm:000000f: error: global variable out of range: 0 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
-out/test/spec/global.wast:355: assert_invalid passed:
-  out/test/spec/global/global.18.wasm:000000f: error: global variable out of range: 1 (max 0)
+out/test/spec/global.wast:358: assert_invalid passed:
+  out/test/spec/global/global.20.wasm:000000f: error: global variable out of range: 1 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
-out/test/spec/global.wast:360: assert_invalid passed:
-  out/test/spec/global/global.19.wasm:0000025: error: global variable out of range: 2 (max 1)
+out/test/spec/global.wast:363: assert_invalid passed:
+  out/test/spec/global/global.21.wasm:0000025: error: global variable out of range: 2 (max 1)
   0000025: error: OnGlobalGetExpr callback failed
 out/test/spec/global.wast:368: assert_invalid passed:
   out/test/spec/global/global.22.wasm:0000029: error: initializer expression cannot reference a mutable global

@@ -215,10 +215,11 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
   return result;
 }
 
-Result SharedValidator::OnGlobal(const Location& loc,
-                                 Type type,
-                                 bool mutable_) {
-  CHECK_RESULT(CheckReferenceType(loc, type, "globals"));
+Result SharedValidator::OnGlobalType(const Location& loc, Type type) {
+  return CheckReferenceType(loc, type, "globals");
+}
+
+Result SharedValidator::OnGlobal(Type type, bool mutable_) {
   globals_.push_back(GlobalType{type, mutable_});
   return Result::Ok;
 }

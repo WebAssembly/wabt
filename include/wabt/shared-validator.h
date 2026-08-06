@@ -85,7 +85,8 @@ class SharedValidator {
   Result OnTable(const Location&, Type elem_type, const Limits&, TableImportStatus import_status, TableInitExprStatus init_provided);
   Result OnMemory(const Location&, const Limits&, uint32_t page_size);
   Result OnGlobalImport(const Location&, Type type, bool mutable_);
-  Result OnGlobal(const Location&, Type type, bool mutable_);
+  Result OnGlobalType(const Location&, Type type);
+  Result OnGlobal(Type type, bool mutable_);
   Result OnTag(const Location&, Var sig_var);
 
   Result OnExport(const Location&,

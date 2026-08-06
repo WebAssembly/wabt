@@ -28,7 +28,25 @@ SPEC_TEST_DIR = os.path.join(TEST_DIR, 'spec')
 WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
 
 # snapshot of older version of proposals where WABT doesn't support current version
-OLD_PROPOSALS_DIR = os.path.join(REPO_ROOT_DIR, 'test', 'old-spec', 'proposals')
+OLD_SPEC_DIR = os.path.join(REPO_ROOT_DIR, 'test', 'old-spec')
+OLD_PROPOSALS_DIR = os.path.join(OLD_SPEC_DIR, 'proposals')
+
+# Core testsuite files patched for spec changes not yet in the pinned testsuite.
+CORE_OLD_SPEC_OVERRIDES = {
+    'global': os.path.join(OLD_SPEC_DIR, 'global.wast'),
+    'elem': os.path.join(OLD_SPEC_DIR, 'elem.wast'),
+    'data': os.path.join(OLD_SPEC_DIR, 'data.wast'),
+}
+
+# Proposal directories fully replaced by patched snapshots under test/old-spec/.
+OLD_PROPOSAL_DIRS = {
+    'extended-const': os.path.join(OLD_PROPOSALS_DIR, 'extended-const'),
+}
+
+# Individual proposal tests replaced by patched snapshots.
+OLD_PROPOSAL_WAST_OVERRIDES = {
+    'multi-memory/data': os.path.join(OLD_PROPOSALS_DIR, 'multi-memory', 'data.wast'),
+}
 
 options = None
 
@@ -43,7 +61,17 @@ def GetFilesWithExtension(src_dir, want_ext):
     return result
 
 
-def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
+def GetWastPath(testsuite_dir, test_name, overrides=None):
+    if overrides and test_name in overrides:
+        override_path = overrides[test_name]
+        assert os.path.exists(override_path), override_path
+        return os.path.relpath(override_path, REPO_ROOT_DIR).replace(os.sep, '/')
+    return os.path.join(
+        os.path.relpath(testsuite_dir, REPO_ROOT_DIR),
+        test_name + '.wast').replace(os.sep, '/')
+
+
+def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None, overrides=None):
     testsuite_tests = GetFilesWithExtension(testsuite_dir, '.wast')
     wabt_tests = GetFilesWithExtension(wabt_test_dir, '.txt')
 
@@ -54,9 +82,7 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
         os.remove(test_filename)
 
     for added_test_name in testsuite_tests - wabt_tests:
-        wast_filename = os.path.join(
-            os.path.relpath(testsuite_dir, REPO_ROOT_DIR),
-            added_test_name + '.wast')
+        wast_filename = GetWastPath(testsuite_dir, added_test_name, overrides)
         test_filename = os.path.join(wabt_test_dir, added_test_name + '.txt')
         if options.verbose:
             print('Adding %s' % test_filename)
@@ -67,21 +93,35 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
 
         with open(test_filename, 'w') as f:
             f.write(';;; TOOL: %s\n' % tool)
-            f.write(';;; STDIN_FILE: %s\n' % wast_filename.replace(os.sep, '/'))
+            f.write(';;; STDIN_FILE: %s\n' % wast_filename)
             if flags:
                 f.write(';;; ARGS*: %s\n' % flags)
 
 
 def ProcessProposalDir(name, flags=None, old=False):
-    proposals_dir = OLD_PROPOSALS_DIR if old else PROPOSALS_DIR
+    if old:
+        proposals_dir = os.path.join(OLD_PROPOSALS_DIR, name)
+    elif name in OLD_PROPOSAL_DIRS:
+        proposals_dir = OLD_PROPOSAL_DIRS[name]
+    else:
+        proposals_dir = os.path.join(PROPOSALS_DIR, name)
+
+    per_proposal_overrides = {}
+    for test_name in GetFilesWithExtension(proposals_dir, '.wast'):
+        override_key = '%s/%s' % (name, test_name)
+        if override_key in OLD_PROPOSAL_WAST_OVERRIDES:
+            per_proposal_overrides[test_name] = OLD_PROPOSAL_WAST_OVERRIDES[override_key]
+
     ProcessDir(os.path.join(SPEC_TEST_DIR, name),
-               os.path.join(proposals_dir, name),
+               proposals_dir,
                'run-interp-spec',
-               flags)
+               flags,
+               per_proposal_overrides)
     ProcessDir(os.path.join(WASM2C_SPEC_TEST_DIR, name),
-               os.path.join(proposals_dir, name),
+               proposals_dir,
                'run-spec-wasm2c',
-               flags)
+               flags,
+               per_proposal_overrides)
 
 
 def main(args):
@@ -91,8 +131,10 @@ def main(args):
     global options
     options = parser.parse_args(args)
 
-    ProcessDir(SPEC_TEST_DIR, TESTSUITE_DIR, 'run-interp-spec')
-    ProcessDir(WASM2C_SPEC_TEST_DIR, TESTSUITE_DIR, 'run-spec-wasm2c')
+    ProcessDir(SPEC_TEST_DIR, TESTSUITE_DIR, 'run-interp-spec',
+               overrides=CORE_OLD_SPEC_OVERRIDES)
+    ProcessDir(WASM2C_SPEC_TEST_DIR, TESTSUITE_DIR, 'run-spec-wasm2c',
+               overrides=CORE_OLD_SPEC_OVERRIDES)
 
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
@@ -124,6 +166,13 @@ def main(args):
     # sanity check to verify that all unimplemented are valid
     for proposal in unimplemented:
         assert proposal in all_proposals, proposal
+
+    for name, path in CORE_OLD_SPEC_OVERRIDES.items():
+        assert os.path.exists(path), path
+    for name, path in OLD_PROPOSAL_WAST_OVERRIDES.items():
+        assert os.path.exists(path), path
+    for name, path in OLD_PROPOSAL_DIRS.items():
+        assert os.path.isdir(path), path
 
     proposals = [p for p in all_proposals if p not in unimplemented]
     for proposal in proposals:

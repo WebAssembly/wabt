@@ -1,6 +1,6 @@
 ;; Vendored copy of elem.wast from the pinned testsuite, patched with the
-;; 2025-09 spec change that allows global.get of defined immutable globals
-;; in initializer expressions (ref: WebAssembly/testsuite@4b24564c84).
+;; spec change that allows global.get of defined immutable globals in
+;; element segment offsets (ref: WebAssembly/testsuite@4b24564c84).
 ;; Test the element section
 
 ;; Syntax

@@ -363,9 +363,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // published to the validator only after its initializer has been validated,
   // so it is visible to later globals but not to itself.
   bool has_pending_global_ = false;
+  bool pending_global_type_valid_ = false;
   Type pending_global_type_ = Type::Void;
   bool pending_global_mutable_ = false;
-  Location pending_global_loc_;
 
   std::string_view filename_;
 };
@@ -700,10 +700,11 @@ Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
   // has been validated (see EndGlobalInitExpr), so it is visible to later
   // globals but not to itself.
   has_pending_global_ = true;
+  Result global_type_result = validator_.OnGlobalType(GetLocation(), type);
+  pending_global_type_valid_ = Succeeded(global_type_result);
   pending_global_type_ = type;
   pending_global_mutable_ = mutable_;
-  pending_global_loc_ = GetLocation();
-  return Result::Ok;
+  return global_type_result;
 }
 
 Result BinaryReaderInterp::BeginGlobalInitExpr(Index index) {
@@ -733,8 +734,10 @@ Result BinaryReaderInterp::BeginInitExpr(FuncDesc* func) {
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
   Result result = EndInitExpr();
   if (has_pending_global_) {
-    result |= validator_.OnGlobal(pending_global_loc_, pending_global_type_,
-                                  pending_global_mutable_);
+    if (pending_global_type_valid_) {
+      result |=
+          validator_.OnGlobal(pending_global_type_, pending_global_mutable_);
+    }
     has_pending_global_ = false;
   }
   return result;
