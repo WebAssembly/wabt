@@ -367,7 +367,6 @@ class SharedValidator {
   std::vector<TagType> tags_;         // Includes imported and defined.
   std::vector<ElemType> elems_;
   Index starts_ = 0;
-  Index num_imported_globals_ = 0;
   Index data_segments_ = 0;
 
   // Includes parameters, since this is only used for validating

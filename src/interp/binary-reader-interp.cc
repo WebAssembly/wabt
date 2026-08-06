@@ -359,6 +359,14 @@ class BinaryReaderInterp : public BinaryReaderNop {
   std::vector<GlobalType> global_types_;  // Includes imported and defined.
   std::vector<TagType> tag_types_;        // Includes imported and defined.
 
+  // The defined global whose initializer is currently being validated. It is
+  // published to the validator only after its initializer has been validated,
+  // so it is visible to later globals but not to itself.
+  bool has_pending_global_ = false;
+  Type pending_global_type_ = Type::Void;
+  bool pending_global_mutable_ = false;
+  Location pending_global_loc_;
+
   std::string_view filename_;
 };
 
@@ -683,11 +691,18 @@ Result BinaryReaderInterp::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderInterp::BeginGlobal(Index index, Type type, bool mutable_) {
-  CHECK_RESULT(validator_.OnGlobal(GetLocation(), type, mutable_));
   GlobalType global_type{type, ToMutability(mutable_)};
   FuncDesc init_func{FuncType{{}, {type}}, {}, Istream::kInvalidOffset, {}};
   module_.globals.push_back(GlobalDesc{global_type, init_func});
   global_types_.push_back(global_type);
+
+  // Defer publishing the global to the validator until after its initializer
+  // has been validated (see EndGlobalInitExpr), so it is visible to later
+  // globals but not to itself.
+  has_pending_global_ = true;
+  pending_global_type_ = type;
+  pending_global_mutable_ = mutable_;
+  pending_global_loc_ = GetLocation();
   return Result::Ok;
 }
 
@@ -716,7 +731,13 @@ Result BinaryReaderInterp::BeginInitExpr(FuncDesc* func) {
 }
 
 Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
-  return EndInitExpr();
+  Result result = EndInitExpr();
+  if (has_pending_global_) {
+    result |= validator_.OnGlobal(pending_global_loc_, pending_global_type_,
+                                  pending_global_mutable_);
+    has_pending_global_ = false;
+  }
+  return result;
 }
 
 Result BinaryReaderInterp::OnTagCount(Index count) {

@@ -46,13 +46,13 @@ out/test/spec/function-references/global.wast:342: assert_invalid passed:
   out/test/spec/function-references/global/global.16.wasm:0000027: error: type mismatch at end of initializer expression, expected [] but got [i32]
   0000028: error: EndGlobalInitExpr callback failed
 out/test/spec/function-references/global.wast:347: assert_invalid passed:
-  out/test/spec/function-references/global/global.17.wasm:000000f: error: initializer expression can only reference an imported global
+  out/test/spec/function-references/global/global.17.wasm:000000f: error: global variable out of range: 0 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/function-references/global.wast:352: assert_invalid passed:
-  out/test/spec/function-references/global/global.18.wasm:000000f: error: global variable out of range: 1 (max 1)
+  out/test/spec/function-references/global/global.18.wasm:000000f: error: global variable out of range: 1 (max 0)
   000000f: error: OnGlobalGetExpr callback failed
 out/test/spec/function-references/global.wast:357: assert_invalid passed:
-  out/test/spec/function-references/global/global.19.wasm:0000025: error: global variable out of range: 2 (max 2)
+  out/test/spec/function-references/global/global.19.wasm:0000025: error: global variable out of range: 2 (max 1)
   0000025: error: OnGlobalGetExpr callback failed
 out/test/spec/function-references/global.wast:362: assert_invalid passed:
   out/test/spec/function-references/global/global.20.wasm:0000029: error: initializer expression cannot reference a mutable global

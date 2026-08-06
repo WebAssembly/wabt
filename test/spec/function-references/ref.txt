@@ -9,8 +9,8 @@ out/test/spec/function-references/ref.wast:32: assert_invalid passed:
   out/test/spec/function-references/ref/ref.2.wasm:0000010: error: reference 1 is out of range (max: 0) in results
   0000010: error: OnFuncType callback failed
 out/test/spec/function-references/ref.wast:37: assert_invalid passed:
-  out/test/spec/function-references/ref/ref.3.wasm:000000e: error: reference 1 is out of range (max: 0) in globals
-  000000e: error: BeginGlobal callback failed
+  out/test/spec/function-references/ref/ref.3.wasm:0000010: error: function type variable out of range: 1 (max 0)
+  0000010: error: OnRefNullExpr callback failed
 out/test/spec/function-references/ref.wast:42: assert_invalid passed:
   out/test/spec/function-references/ref/ref.4.wasm:000000f: error: reference 1 is out of range (max: 0) in tables
   000000f: error: BeginTable callback failed

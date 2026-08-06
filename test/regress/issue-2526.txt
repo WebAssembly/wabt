@@ -1,0 +1,64 @@
+;;; TOOL: run-interp-spec
+;;; NOTE: ref: issue-2526
+;; A global initializer may reference a defined (non-imported) immutable
+;; global, and elem/data segment offsets may use one as well.
+;; ref: WebAssembly/spec#2004, WebAssembly/testsuite#140
+
+;; elem offset referencing a defined immutable global
+(module
+  (global i32 (i32.const 0))
+  (table 1 funcref)
+  (func $f (export "f"))
+  (elem (global.get 0) $f)
+)
+(assert_return (invoke "f"))
+
+(module
+  (global $g i32 (i32.const 0))
+  (table 1 funcref)
+  (func $f (export "f"))
+  (elem (global.get $g) $f)
+)
+
+;; data offset referencing a defined immutable global
+(module (memory 1) (global i32 (i32.const 0)) (data (global.get 0) "a"))
+(module (memory 1) (global $g i32 (i32.const 0)) (data (global.get $g) "a"))
+
+;; global initializer referencing a defined immutable global
+(module (global i32 (i32.const 0)) (global i32 (global.get 0)))
+(module (global $g i32 (i32.const 0)) (global i32 (global.get $g)))
+(module
+  (global i32 (i32.const 0))
+  (global $x i32 (global.get 0))
+  (func (export "get") (result i32) (global.get $x))
+)
+(assert_return (invoke "get") (i32.const 0))
+
+;; still rejected: self/forward references and mutable globals
+(assert_invalid
+  (module (global i32 (global.get 0)))
+  "global variable out of range")
+(assert_invalid
+  (module (global i32 (global.get 1)) (global i32 (i32.const 0)))
+  "global variable out of range")
+(assert_invalid
+  (module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))
+  "initializer expression cannot reference a mutable global")
+(assert_invalid
+  (module (table 1 funcref) (global i64 (i64.const 0)) (elem (global.get 0)))
+  "type mismatch")
+(;; STDOUT ;;;
+out/test/regress/issue-2526.txt:39: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.7.wasm:000000f: error: global variable out of range: 0 (max 0)
+  000000f: error: OnGlobalGetExpr callback failed
+out/test/regress/issue-2526.txt:42: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.8.wasm:000000f: error: global variable out of range: 1 (max 0)
+  000000f: error: OnGlobalGetExpr callback failed
+out/test/regress/issue-2526.txt:45: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.9.wasm:0000014: error: initializer expression cannot reference a mutable global
+  0000014: error: OnGlobalGetExpr callback failed
+out/test/regress/issue-2526.txt:48: assert_invalid passed:
+  out/test/regress/issue-2526/issue-2526.10.wasm:000001c: error: type mismatch in initializer expression, expected [i32] but got [i64]
+  000001d: error: EndElemSegmentInitExpr callback failed
+13/13 tests passed.
+;;; STDOUT ;;)

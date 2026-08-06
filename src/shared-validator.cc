@@ -212,7 +212,6 @@ Result SharedValidator::OnGlobalImport(const Location& loc,
     result |= Result::Error;
   }
   globals_.push_back(GlobalType{type, mutable_});
-  ++num_imported_globals_;
   return result;
 }
 
@@ -985,12 +984,6 @@ Result SharedValidator::OnGlobalGet(const Location& loc, Var global_var) {
   result |= CheckGlobalIndex(global_var, &global_type);
   result |= typechecker_.OnGlobalGet(global_type.type);
   if (Succeeded(result) && in_init_expr_) {
-    if (global_var.index() >= num_imported_globals_) {
-      PrintError(
-          global_var.loc,
-          "initializer expression can only reference an imported global");
-      result |= Result::Error;
-    }
     if (global_type.mutable_) {
       PrintError(loc,
                  "initializer expression cannot reference a mutable global");

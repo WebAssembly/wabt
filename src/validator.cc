@@ -885,15 +885,15 @@ Result Validator::CheckModule() {
   // Global section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<GlobalModuleField>(&field)) {
-      result_ |=
-          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
-
-      // Init expr.
+      // Validate the initializer expression before publishing the global so
+      // that it is only visible to later globals, and not to itself.
       result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
       ExprVisitor visitor(this);
       result_ |=
           visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
       result_ |= validator_.EndInitExpr();
+      result_ |=
+          validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
     }
   }
 
