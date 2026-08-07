@@ -414,6 +414,7 @@ class CWriter {
   void WriteElemInitializers();
   void WriteFuncRefWrappers();
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
+  bool IsSingleUnsharedDefault32Memory();
   bool IsSingleUnsharedMemory();
   void InstallSegueBase(Memory* memory, bool save_old_value);
   void RestoreSegueBase();
@@ -1593,8 +1594,8 @@ void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
 
-  if (IsSingleUnsharedMemory()) {
-    Write("#define IS_SINGLE_UNSHARED_MEMORY 1", Newline());
+  if (IsSingleUnsharedDefault32Memory()) {
+    Write("#define IS_SINGLE_UNSHARED_DEFAULT32_MEMORY 1", Newline());
   }
 
   Write(s_source_declarations, Newline());
@@ -2612,9 +2613,11 @@ void CWriter::WriteElemTableInit(bool active_initialization,
   Write(");", Newline());
 }
 
-bool CWriter::IsSingleUnsharedMemory() {
+bool CWriter::IsSingleUnsharedDefault32Memory() {
   return module_->memories.size() == 1 &&
-         !module_->memories[0]->page_limits.is_shared;
+         !module_->memories[0]->page_limits.is_shared &&
+         module_->memories[0]->page_size == WABT_DEFAULT_PAGE_SIZE &&
+         !module_->memories[0]->page_limits.is_64;
 }
 
 void CWriter::InstallSegueBase(Memory* memory, bool save_old_value) {
@@ -2716,7 +2719,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
     switch (export_->kind) {
       case ExternalKind::Func: {
         Write(OpenBrace());
-        if (IsSingleUnsharedMemory()) {
+        if (IsSingleUnsharedDefault32Memory()) {
           InstallSegueBase(module_->memories[0], true /* save_old_value */);
         }
         auto num_results = func_->GetNumResults();
@@ -2735,7 +2738,7 @@ void CWriter::WriteExports(CWriterPhase kind) {
           Write("instance");
         }
         WriteParamSymbols(index_to_name);
-        if (IsSingleUnsharedMemory()) {
+        if (IsSingleUnsharedDefault32Memory()) {
           RestoreSegueBase();
         }
         if (num_results > 0) {
@@ -2839,7 +2842,7 @@ void CWriter::WriteInit() {
   }
   if (!module_->memories.empty()) {
     Write("init_memories(instance);", Newline());
-    if (IsSingleUnsharedMemory()) {
+    if (IsSingleUnsharedDefault32Memory()) {
       InstallSegueBase(module_->memories[0], true /* save_old_value */);
     }
   }
@@ -2863,7 +2866,7 @@ void CWriter::WriteInit() {
     Write(Newline());
   }
 
-  if (IsSingleUnsharedMemory()) {
+  if (IsSingleUnsharedDefault32Memory()) {
     RestoreSegueBase();
   }
   Write(CloseBrace(), Newline());
@@ -3766,7 +3769,7 @@ void CWriter::Write(const ExprList& exprs) {
           Write(", ", StackVar(num_params - i));
         }
         Write(");", Newline());
-        if (IsSingleUnsharedMemory()) {
+        if (IsSingleUnsharedDefault32Memory()) {
           InstallSegueBase(module_->memories[0], false /* save_old_value */);
         }
         DropTypes(num_params + 1);
@@ -4094,7 +4097,7 @@ void CWriter::Write(const ExprList& exprs) {
         Write(StackVar(0), " = ", func, "(",
               ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ",
               StackVar(0), ");", Newline());
-        if (IsSingleUnsharedMemory()) {
+        if (IsSingleUnsharedDefault32Memory()) {
           InstallSegueBase(module_->memories[0], false /* save_old_value */);
         }
         break;

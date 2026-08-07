@@ -20,9 +20,9 @@
 #define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
-// We can only use Segue for this module if it uses a single unshared imported
-// or exported memory
-#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_MEMORY
+// We can only use Segue for this module if it uses a single unshared,
+// default-page, 32-bit imported or exported memory.
+#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 1
 #else
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0

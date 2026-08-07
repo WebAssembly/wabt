@@ -40,11 +40,11 @@ R"w2c_template(#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-// We can only use Segue for this module if it uses a single unshared imported
+// We can only use Segue for this module if it uses a single unshared,
 )w2c_template"
-R"w2c_template(// or exported memory
+R"w2c_template(// default-page, 32-bit imported or exported memory.
 )w2c_template"
-R"w2c_template(#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_MEMORY
+R"w2c_template(#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
 )w2c_template"
 R"w2c_template(#define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 1
 )w2c_template"
