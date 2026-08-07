@@ -813,8 +813,7 @@ Result BinaryReader::ReadInstructions(Offset end_offset, const char* context) {
       case Opcode::SelectT: {
         Index num_results;
         CHECK_RESULT(ReadCount(&num_results, "num result types"));
-        ERROR_IF(num_results == 0,
-                 "invalid arity in select instruction: 0.");
+        ERROR_IF(num_results == 0, "invalid arity in select instruction: 0.");
 
         result_types_.resize(num_results);
         for (Index i = 0; i < num_results; ++i) {
