@@ -21,7 +21,9 @@
 // defined and regular pointers otherwse. memcpy into the local works correctly
 // in both cases.
 #define DEFINE_SIMD_LOAD_FUNC(name, func, t)                              \
-  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) {  \
+  static inline v128 name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr) {                                                         \
     t simd_mem_value;                                                     \
     wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
                    sizeof(t));                                            \
@@ -32,8 +34,9 @@
   DEF_MEM_CHECKS0(name, _, t, return, v128);
 
 #define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                        \
-  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr,    \
-                                      v128 vec) {                         \
+  static inline v128 name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 vec) {                                               \
     t simd_mem_value;                                                     \
     wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
                    sizeof(t));                                            \
@@ -44,8 +47,9 @@
   DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
 
 #define DEFINE_SIMD_STORE(name, t)                                        \
-  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr,    \
-                                      v128 value) {                       \
+  static inline void name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 value) {                                             \
     t simd_mem_value;                                                     \
     simde_wasm_v128_store(&simd_mem_value, value);                        \
     wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
@@ -54,8 +58,9 @@
   DEF_MEM_CHECKS1(name, _, t, , void, v128);
 
 #define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                       \
-  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr,    \
-                                      v128 value) {                       \
+  static inline void name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 value) {                                             \
     t simd_mem_value;                                                     \
     func(&simd_mem_value, value, lane);                                   \
     wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
