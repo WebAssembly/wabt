@@ -1,0 +1,23 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-gc --enable-function-references
+
+(module
+  (type $t0 (struct))
+  (type $t1 (func))
+
+  (type
+    (struct
+      (field (ref 1))
+      (field (mut (ref null 1)))
+      (field (ref $t1))))
+
+  (type
+    (array (ref 1))))
+
+(;; STDOUT ;;;
+(module
+  (type (;0;) (struct))
+  (type (;1;) (func))
+  (type (;2;) (struct (field (;0;) (ref 1)) (field (;1;) (mut (ref null 1))) (field (;2;) (ref 1))))
+  (type (;3;) (array (ref 1))))
+;;; STDOUT ;;)

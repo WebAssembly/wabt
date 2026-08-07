@@ -1790,7 +1790,12 @@ Result WastParser::ParseTypeModuleField(Module* module) {
       Error(loc, "array type not allowed");
     }
     auto array_type = std::make_unique<ArrayType>(name);
-    CHECK_RESULT(ParseField(&array_type->field));
+    Var type_var;
+    bool defer_named_ref = false;
+    CHECK_RESULT(ParseField(&array_type->field, &type_var, &defer_named_ref));
+    if (defer_named_ref) {
+      VarToType(type_var, &array_type->field.type);
+    }
     field->type = std::move(array_type);
   } else {
     return ErrorExpected({"func", "struct", "array"});
@@ -1802,21 +1807,28 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   return Result::Ok;
 }
 
-Result WastParser::ParseField(Field* field) {
+Result WastParser::ParseField(Field* field,
+                              Var* out_type,
+                              bool* defer_named_ref) {
   WABT_TRACE(ParseField);
   auto parse_mut_valuetype = [&]() -> Result {
     // TODO: Share with ParseGlobalType?
     if (MatchLpar(TokenType::Mut)) {
       field->mutable_ = true;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
+      CHECK_RESULT(ParseValueType(out_type));
       EXPECT(Rpar);
     } else {
       field->mutable_ = false;
-      Var type;
-      CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
+      CHECK_RESULT(ParseValueType(out_type));
+    }
+
+    if (!Type::EnumIsReferenceWithIndex(out_type->opt_type()) ||
+        out_type->is_index()) {
+      field->type = out_type->to_type();
+      *defer_named_ref = false;
+    } else {
+      field->type = Type(out_type->opt_type(), kInvalidIndex);
+      *defer_named_ref = true;
     }
     return Result::Ok;
   };
@@ -1834,10 +1846,25 @@ Result WastParser::ParseField(Field* field) {
 
 Result WastParser::ParseFieldList(std::vector<Field>* fields) {
   WABT_TRACE(ParseFieldList);
+  struct Deferred {
+    size_t index;
+    Var var;
+  };
+  std::vector<Deferred> deferred;
+
   while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
     Field field;
-    CHECK_RESULT(ParseField(&field));
+    Var type_var;
+    bool defer_named_ref = false;
+    CHECK_RESULT(ParseField(&field, &type_var, &defer_named_ref));
+    if (defer_named_ref) {
+      deferred.push_back({fields->size(), type_var});
+    }
     fields->push_back(field);
+  }
+
+  for (const auto& d : deferred) {
+    VarToType(d.var, &(*fields)[d.index].type);
   }
   return Result::Ok;
 }
