@@ -702,6 +702,7 @@ class SelectExpr : public ExprMixin<ExprType::Select> {
   SelectExpr(const Location& loc = Location())
       : ExprMixin<ExprType::Select>(loc) {}
   TypeVector result_type;
+  bool has_result_type = false;
 };
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {

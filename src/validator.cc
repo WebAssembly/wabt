@@ -589,6 +589,12 @@ Result Validator::OnReturnCallRefExpr(ReturnCallRefExpr* expr) {
 }
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
+  if (expr->has_result_type && expr->result_type.empty()) {
+    validator_.PrintError(expr->loc,
+                          "invalid arity in select instruction: 0.");
+    result_ |= Result::Error;
+    return Result::Ok;
+  }
   result_ |= validator_.OnSelect(expr->loc, expr->result_type.size(),
                                  expr->result_type.data());
   return Result::Ok;

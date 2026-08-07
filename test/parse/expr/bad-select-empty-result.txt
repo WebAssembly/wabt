@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (func
+    i32.const 42
+    i32.const 100
+    i32.const 1
+    select (result)))
+(;; STDERR ;;;
+out/test/parse/expr/bad-select-empty-result.txt:8:5: error: invalid arity in select instruction: 0.
+    select (result)))
+    ^^^^^^
+out/test/parse/expr/bad-select-empty-result.txt:8:5: error: type mismatch at end of function, expected [] but got [i32, i32, i32]
+    select (result)))
+    ^^^^^^
+;;; STDERR ;;)

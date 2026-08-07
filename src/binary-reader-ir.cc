@@ -1212,6 +1212,7 @@ Result BinaryReaderIR::OnReturnExpr() {
 
 Result BinaryReaderIR::OnSelectExpr(Index result_count, Type* result_types) {
   auto expr_ptr = std::make_unique<SelectExpr>();
+  expr_ptr->has_result_type = result_count > 0;
   expr_ptr->result_type.assign(result_types, result_types + result_count);
   return AppendExpr(std::move(expr_ptr));
 }
