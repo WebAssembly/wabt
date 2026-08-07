@@ -55,6 +55,26 @@ R"w2c_template(#define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
+#ifndef WASM_RT_USE_LOCAL_MEMORY_BASE
+)w2c_template"
+R"w2c_template(#define WASM_RT_USE_LOCAL_MEMORY_BASE 1
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#if WASM_RT_USE_LOCAL_MEMORY_BASE && WASM_RT_USE_MMAP && \
+)w2c_template"
+R"w2c_template(    IS_SINGLE_UNSHARED_DEFAULT32_MEMORY && !WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(#define WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE 1
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE 0
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
 )w2c_template"
 R"w2c_template(// POSIX uses FS for TLS, GS is free
@@ -102,6 +122,10 @@ R"w2c_template(  }
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
+)w2c_template"
+R"w2c_template(#elif WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE
+)w2c_template"
+R"w2c_template(#define MEM_ADDR_MEMOP(mem, addr, n) (&wasm_rt_local_memory_base[(addr)])
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
@@ -427,103 +451,119 @@ R"w2c_template(  } while (0)
 R"w2c_template(
 #define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
 )w2c_template"
-R"w2c_template(  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+R"w2c_template(  static inline return_type name##_default32(                                \
 )w2c_template"
-R"w2c_template(                                             u64 addr) {                     \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base,                              \
+)w2c_template"
+R"w2c_template(      wasm_rt##shared##memory_t* mem, u64 addr) {                            \
 )w2c_template"
 R"w2c_template(    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
 )w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr);                                      \
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
 )w2c_template"
 R"w2c_template(  }                                                                          \
 )w2c_template"
-R"w2c_template(  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr) { \
+R"w2c_template(  static inline return_type name(uint8_t* const wasm_rt_local_memory_base,   \
+)w2c_template"
+R"w2c_template(                                 wasm_rt##shared##memory_t* mem, u64 addr) { \
 )w2c_template"
 R"w2c_template(    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
 )w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr);                                      \
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
-#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,         \
+#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,       \
 )w2c_template"
-R"w2c_template(                        val_type1)                                           \
+R"w2c_template(                        val_type1)                                         \
 )w2c_template"
-R"w2c_template(  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
+R"w2c_template(  static inline return_type name##_default32(                              \
 )w2c_template"
-R"w2c_template(                                             u64 addr, val_type1 val1) {     \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base,                            \
 )w2c_template"
-R"w2c_template(    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+R"w2c_template(      wasm_rt##shared##memory_t* mem, u64 addr, val_type1 val1) {          \
 )w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr, val1);                                \
+R"w2c_template(    MEMCHECK_DEFAULT32(mem, addr, mem_type);                               \
 )w2c_template"
-R"w2c_template(  }                                                                          \
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1);   \
 )w2c_template"
-R"w2c_template(  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
+R"w2c_template(  }                                                                        \
 )w2c_template"
-R"w2c_template(                                 val_type1 val1) {                           \
+R"w2c_template(  static inline return_type name(uint8_t* const wasm_rt_local_memory_base, \
 )w2c_template"
-R"w2c_template(    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
+R"w2c_template(                                 wasm_rt##shared##memory_t* mem, u64 addr, \
 )w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr, val1);                                \
+R"w2c_template(                                 val_type1 val1) {                         \
 )w2c_template"
-R"w2c_template(  }
+R"w2c_template(    MEMCHECK_GENERAL(mem, addr, mem_type);                                 \
 )w2c_template"
-R"w2c_template(
-#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,         \
-)w2c_template"
-R"w2c_template(                        val_type1, val_type2)                                \
-)w2c_template"
-R"w2c_template(  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
-)w2c_template"
-R"w2c_template(                                             u64 addr, val_type1 val1,       \
-)w2c_template"
-R"w2c_template(                                             val_type2 val2) {               \
-)w2c_template"
-R"w2c_template(    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
-)w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
-)w2c_template"
-R"w2c_template(  }                                                                          \
-)w2c_template"
-R"w2c_template(  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
-)w2c_template"
-R"w2c_template(                                 val_type1 val1, val_type2 val2) {           \
-)w2c_template"
-R"w2c_template(    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
-)w2c_template"
-R"w2c_template(    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1);   \
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
+#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,           \
 )w2c_template"
-R"w2c_template(  static inline t3 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
+R"w2c_template(                        val_type1, val_type2)                                  \
 )w2c_template"
-R"w2c_template(    t1 result;                                                         \
+R"w2c_template(  static inline return_type name##_default32(                                  \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),     \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base,                                \
 )w2c_template"
-R"w2c_template(                   sizeof(t1));                                        \
+R"w2c_template(      wasm_rt##shared##memory_t* mem, u64 addr, val_type1 val1,                \
 )w2c_template"
-R"w2c_template(    t3 ret = (t3)(t2)result;                                           \
+R"w2c_template(      val_type2 val2) {                                                        \
 )w2c_template"
-R"w2c_template(    force_read(ret);                                                   \
+R"w2c_template(    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                   \
 )w2c_template"
-R"w2c_template(    return ret;                                                        \
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1, val2); \
 )w2c_template"
-R"w2c_template(  }                                                                    \
+R"w2c_template(  }                                                                            \
+)w2c_template"
+R"w2c_template(  static inline return_type name(uint8_t* const wasm_rt_local_memory_base,     \
+)w2c_template"
+R"w2c_template(                                 wasm_rt##shared##memory_t* mem, u64 addr,     \
+)w2c_template"
+R"w2c_template(                                 val_type1 val1, val_type2 val2) {             \
+)w2c_template"
+R"w2c_template(    MEMCHECK_GENERAL(mem, addr, mem_type);                                     \
+)w2c_template"
+R"w2c_template(    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1, val2); \
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                             \
+)w2c_template"
+R"w2c_template(  static inline t3 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
+)w2c_template"
+R"w2c_template(                                    wasm_rt_memory_t* mem, u64 addr) {        \
+)w2c_template"
+R"w2c_template(    t1 result;                                                                \
+)w2c_template"
+R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),            \
+)w2c_template"
+R"w2c_template(                   sizeof(t1));                                               \
+)w2c_template"
+R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
+)w2c_template"
+R"w2c_template(    force_read(ret);                                                          \
+)w2c_template"
+R"w2c_template(    return ret;                                                               \
+)w2c_template"
+R"w2c_template(  }                                                                           \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS0(name, _, t1, return, t3)
 )w2c_template"
 R"w2c_template(
 #define DEFINE_STORE(name, t1, t2)                                     \
 )w2c_template"
-R"w2c_template(  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
+R"w2c_template(  static inline void name##_unchecked(                                 \
 )w2c_template"
-R"w2c_template(                                      t2 value) {                      \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem, \
+)w2c_template"
+R"w2c_template(      u64 addr, t2 value) {                                            \
 )w2c_template"
 R"w2c_template(    t1 wrapped = (t1)value;                                            \
 )w2c_template"
