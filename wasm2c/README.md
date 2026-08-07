@@ -155,8 +155,8 @@ compiling a Wasm module with clang, running on x86_64 Linux, the macro
 `WASM_RT_ALLOW_SEGUE` is defined, and the flag `-mfsgsbase` is passed to clang.
 Segue is not used if
 
-1. The Wasm module uses a more than a single unshared imported or exported
-   memory
+1. The Wasm module does not use exactly one unshared, default-page, 32-bit
+   imported or exported memory.
 2. The wasm2c code is compiled with GCC. Segue requires intrinsics for
    (rd|wr)gsbase, "address namespaces" for accessing pointers, and support for
    memcpy on pointers with custom "address namespaces". GCC does not support the

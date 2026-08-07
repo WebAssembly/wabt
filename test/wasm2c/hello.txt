@@ -96,7 +96,7 @@ void w2c_test_0x5Fstart(w2c_test*);
 #endif
 
 #include "wasm.h"
-#define IS_SINGLE_UNSHARED_MEMORY 1
+#define IS_SINGLE_UNSHARED_DEFAULT32_MEMORY 1
 
 // Computes a pointer to an object of the given size in a little-endian memory.
 //
@@ -119,9 +119,9 @@ void w2c_test_0x5Fstart(w2c_test*);
 #define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
-// We can only use Segue for this module if it uses a single unshared imported
-// or exported memory
-#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_MEMORY
+// We can only use Segue for this module if it uses a single unshared,
+// default-page, 32-bit imported or exported memory.
+#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 1
 #else
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0
