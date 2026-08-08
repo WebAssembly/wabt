@@ -734,6 +734,27 @@ TEST_F(InterpGCTest, Collect_DeepRecursion) {
   EXPECT_EQ(1u, store_.object_count());
 }
 
+TEST_F(InterpTest, FunctionBodyCountMismatchWithCollectErrors) {
+  // Function section declares 1 func with invalid type index 0 (no Type section).
+  // OnFunction fails -> funcs stays empty. Code section still has 1 body.
+  // Without OnFunctionBodyCount guard this container-overflows in BeginFunctionBody.
+  const std::vector<u8> data = {
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+      0x03, 0x02, 0x01, 0x00,
+      0x0a, 0x04, 0x01, 0x02, 0x00, 0x0b,
+  };
+
+  Errors errors;
+  ReadBinaryOptions options(Features{}, nullptr, /*read_debug_names=*/false,
+                            /*stop_on_first_error=*/false,
+                            /*fail_on_custom_section_error=*/false);
+  ModuleDesc module_desc;
+  Result result =
+      ReadBinaryInterp("<test>", data, options, &errors, &module_desc);
+  EXPECT_EQ(Result::Error, result);
+  EXPECT_GT(errors.size(), 0u);
+}
+
 // TODO: Test for Thread keeping references alive as locals/params/stack values.
 // This requires better tracking of references than currently exists in the
 // interpreter. (see TODOs in Select/LocalGet/GlobalGet)

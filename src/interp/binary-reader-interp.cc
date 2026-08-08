@@ -153,6 +153,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   Result OnStartFunction(Index func_index) override;
 
+  Result OnFunctionBodyCount(Index count) override;
   Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDeclCount(Index count) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
@@ -626,6 +627,17 @@ Result BinaryReaderInterp::OnFunction(Index index, Index sig_index) {
   FuncType& func_type = module_.func_types[sig_index];
   module_.funcs.push_back(FuncDesc{func_type, {}, Istream::kInvalidOffset, {}});
   func_types_.push_back(func_type);
+  return Result::Ok;
+}
+
+Result BinaryReaderInterp::OnFunctionBodyCount(Index count) {
+  // Can hit this case on a malformed module if we don't stop on first error.
+  if (count != module_.funcs.size()) {
+    PrintError(
+        "number of function bodies in code section does not match "
+        "actual number of funcs in module");
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
