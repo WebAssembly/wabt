@@ -1,12 +1,19 @@
-#if defined(__GNUC__) && defined(__x86_64__)
+#if WASM_RT_MEMCHECK_GUARD_PAGES
+#ifdef __GNUC__
+#if defined(__x86_64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
-#elif defined(__GNUC__) && defined(__aarch64__)
+#elif defined(__aarch64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 #elif defined(__s390x__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
-#else
+#endif
+#endif
+#endif
+
+#ifndef SIMD_FORCE_READ
 #define SIMD_FORCE_READ(var)
 #endif
+
 // TODO: equivalent constraint for ARM and other architectures
 
 // The below SIMD operations copy to a local variable first as the
