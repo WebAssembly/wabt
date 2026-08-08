@@ -242,6 +242,21 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 // or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
 #define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
+
+// When using guard pages, reads have to be immediately consumed so that OOB
+// trap checks are applied in the right place, and not optimized away.
+#ifdef __GNUC__
+#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
+// Clang on Mips requires "f" constraints on floats
+// See https://github.com/llvm/llvm-project/issues/64241
+#if defined(__clang__) && \
+    (defined(mips) || defined(__mips__) || defined(__mips))
+#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
+#else
+#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+#endif
+#endif
+
 #else
 #define MEMCHECK_DEFAULT32(mem, a, t)                \
   WASM_RT_CHECK_BASE(mem);                           \
@@ -254,18 +269,11 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
   WASM_RT_CHECK_BASE(mem);          \
   RANGE_CHECK(mem, a, sizeof(t));
 
-#ifdef __GNUC__
-#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-// Clang on Mips requires "f" constraints on floats
-// See https://github.com/llvm/llvm-project/issues/64241
-#if defined(__clang__) && \
-    (defined(mips) || defined(__mips__) || defined(__mips))
-#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
-#else
-#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
-#endif
-#else
+#ifndef FORCE_READ_INT
 #define FORCE_READ_INT(var)
+#endif
+
+#ifndef FORCE_READ_FLOAT
 #define FORCE_READ_FLOAT(var)
 #endif
 
