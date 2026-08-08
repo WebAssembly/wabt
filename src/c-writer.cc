@@ -378,7 +378,7 @@ class CWriter {
   void Write(const FuncTypeExpr&);
   void WriteTagDecls();
   void WriteTags();
-  void ComputeUniqueImports();
+  Result ComputeUniqueImports();
   void BeginInstance();
   void WriteImports();
   void WriteTailCallWeakImports();
@@ -1810,7 +1810,7 @@ void CWriter::WriteTags() {
   }
 }
 
-void CWriter::ComputeUniqueImports() {
+Result CWriter::ComputeUniqueImports() {
   using modname_name_pair = std::pair<std::string, std::string>;
   std::map<modname_name_pair, const Import*> import_map;
   for (const Import* import : module_->imports) {
@@ -1821,7 +1821,13 @@ void CWriter::ComputeUniqueImports() {
         modname_name_pair(import->module_name, import->field_name), import);
     if (!iterator_and_insertion_bool.second) {
       if (iterator_and_insertion_bool.first->second->kind() != import->kind()) {
-        UNIMPLEMENTED("contradictory import declaration");
+        fprintf(stderr,
+                "error: contradictory import declaration: \"%s\".\"%s\" is "
+                "imported as both a %s and a %s\n",
+                import->module_name.c_str(), import->field_name.c_str(),
+                GetKindName(iterator_and_insertion_bool.first->second->kind()),
+                GetKindName(import->kind()));
+        return Result::Error;
       } else {
         fprintf(stderr, "warning: duplicate import declaration \"%s\" \"%s\"\n",
                 import->module_name.c_str(), import->field_name.c_str());
@@ -1838,6 +1844,7 @@ void CWriter::ComputeUniqueImports() {
   for (const auto& node : import_map) {
     unique_imports_.push_back(node.second);
   }
+  return Result::Ok;
 }
 
 void CWriter::BeginInstance() {
@@ -1845,8 +1852,6 @@ void CWriter::BeginInstance() {
     Write("typedef struct ", ModuleInstanceTypeName(), " ", OpenBrace());
     return;
   }
-
-  ComputeUniqueImports();
 
   // define names of per-instance imports
   for (const Import* import : module_->imports) {
@@ -6193,6 +6198,9 @@ void CWriter::WriteCSource() {
 Result CWriter::WriteModule(const Module& module) {
   WABT_USE(options_);
   module_ = &module;
+
+  CHECK_RESULT(ComputeUniqueImports());
+
   WriteCHeader();
   WriteCSource();
   return result_;
