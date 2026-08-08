@@ -735,13 +735,13 @@ TEST_F(InterpGCTest, Collect_DeepRecursion) {
 }
 
 TEST_F(InterpTest, FunctionBodyCountMismatchWithCollectErrors) {
-  // Function section declares 1 func with invalid type index 0 (no Type section).
-  // OnFunction fails -> funcs stays empty. Code section still has 1 body.
-  // Without OnFunctionBodyCount guard this container-overflows in BeginFunctionBody.
+  // Function section declares 1 func with invalid type index 0 (no Type
+  // section). OnFunction fails -> funcs stays empty. Code section still has 1
+  // body. Without OnFunctionBodyCount guard this container-overflows in
+  // BeginFunctionBody.
   const std::vector<u8> data = {
-      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
-      0x03, 0x02, 0x01, 0x00,
-      0x0a, 0x04, 0x01, 0x02, 0x00, 0x0b,
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x03,
+      0x02, 0x01, 0x00, 0x0a, 0x04, 0x01, 0x02, 0x00, 0x0b,
   };
 
   Errors errors;
