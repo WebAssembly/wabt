@@ -14,8 +14,8 @@ section(CODE) {
     i32.const 42
     i32.const 100
     i32.const 1
-    0x1c
-    0x00
+    select_t[0x1c]
+    result_count[0x00]
     end
   }
 }
