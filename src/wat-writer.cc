@@ -977,12 +977,10 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallRefExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
   writer_->WritePutsSpace(Opcode::Select_Opcode.GetName());
-  if (expr->IsUntyped()) {
-    // no result annotation
-  } else if (expr->result_type.empty()) {
+  if (expr->result_type.empty()) {
     writer_->WriteOpenSpace("result");
     writer_->WriteCloseSpace();
-  } else {
+  } else if (!expr->IsUntyped()) {
     writer_->WriteTypes(expr->result_type, "result");
   }
   writer_->WriteNewline(NO_FORCE_NEWLINE);

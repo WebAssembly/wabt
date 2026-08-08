@@ -197,6 +197,7 @@ class SharedValidator {
   Result OnReturnCallRef(const Location&, Var function_type_var);
   Result OnReturn(const Location&);
   Result OnSelect(const Location&, Index result_count, Type* result_types);
+  Result OnSelectCondition(const Location&);
   Result OnSimdLaneOp(const Location&, Opcode, uint64_t lane_idx);
   Result OnSimdLoadLane(const Location&,
                         Opcode,
