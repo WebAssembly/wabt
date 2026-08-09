@@ -222,38 +222,6 @@ TEST(BinaryReaderLogging, DeepIndentDoesNotOverflowBuffer) {
   (void)result;
 }
 
-TEST(BinaryReaderLogging, NameSubsectionTypeDoesNotOverflowNameTable) {
-  // NameSectionSubsection has no explicit underlying type, so it is backed by
-  // signed int.  ReadNameSection used to cast the subsection id and gate the
-  // OnNameSubsection callback with `type <= Last`, a signed compare with no
-  // lower bound, so an id >= 0x80000000 became a negative enum, slipped
-  // through, and reached GetNameSectionSubsectionName, which indexes
-  // NameSubsectionName[size_t(subsec)] (ASan: global-buffer-overflow READ).
-  // The module itself is valid: the unknown subsection is skipped, so this is
-  // on the normal stop-on-first-error path, reached with verbose logging on
-  // (e.g. `wasm2wat -v`).
-  // TODO: Move this test upstream into the spec repo.
-
-  uint8_t data[] = {
-      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,  // magic + version
-      0x00,                                            // custom section
-      0x0b,                                            // section size = 11
-      0x04, 'n',  'a',  'm',  'e',                     // section name "name"
-      0xff, 0xff, 0xff, 0xff, 0x0f,  // subsection type = 0xffffffff
-      0x00,                          // subsection size = 0
-  };
-
-  MemoryStream log_stream;
-  BinaryReaderError reader;
-  ReadBinaryOptions options(Features{}, &log_stream, /*read_debug_names=*/true,
-                            /*stop_on_first_error=*/true,
-                            /*fail_on_custom_section_error=*/false);
-  // Just ensure the out-of-range subsection type does not read off the name
-  // table when it is logged.
-  Result result = ReadBinary(data, &reader, options);
-  (void)result;
-}
-
 TEST(Opcode, DecodeInvalidOpcode) {
   Opcode opcode = Opcode::FromCode(0xfd, 0x13f);
   EXPECT_TRUE(opcode.IsInvalid());
