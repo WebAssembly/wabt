@@ -1,8 +1,12 @@
-const char* s_simd_source_declarations = R"w2c_template(#if defined(__GNUC__) && defined(__x86_64__)
+const char* s_simd_source_declarations = R"w2c_template(#if WASM_RT_MEMCHECK_GUARD_PAGES
+)w2c_template"
+R"w2c_template(#ifdef __GNUC__
+)w2c_template"
+R"w2c_template(#if defined(__x86_64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 )w2c_template"
-R"w2c_template(#elif defined(__GNUC__) && defined(__aarch64__)
+R"w2c_template(#elif defined(__aarch64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 )w2c_template"
@@ -10,13 +14,21 @@ R"w2c_template(#elif defined(__s390x__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
 )w2c_template"
-R"w2c_template(#else
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#ifndef SIMD_FORCE_READ
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var)
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
-R"w2c_template(// TODO: equivalent constraint for ARM and other architectures
+R"w2c_template(
+// TODO: equivalent constraint for ARM and other architectures
 )w2c_template"
 R"w2c_template(
 // The below SIMD operations copy to a local variable first as the

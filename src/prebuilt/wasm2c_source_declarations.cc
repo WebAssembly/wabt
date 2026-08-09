@@ -137,22 +137,65 @@ R"w2c_template(
 #define UNREACHABLE TRAP(UNREACHABLE)
 )w2c_template"
 R"w2c_template(
-static inline bool func_types_eq(const wasm_rt_func_type_t a,
+#if defined(__clang__) || defined(__GNUC__)
 )w2c_template"
-R"w2c_template(                                 const wasm_rt_func_type_t b) {
+R"w2c_template(#define W2C_COLD_FUNC __attribute__((noinline, cold))
 )w2c_template"
-R"w2c_template(  return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
+R"w2c_template(#elif defined(_MSC_VER)
+)w2c_template"
+R"w2c_template(#define W2C_COLD_FUNC __declspec(noinline)
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define W2C_COLD_FUNC
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+W2C_COLD_FUNC static bool func_types_eq_slowpath(
+)w2c_template"
+R"w2c_template(    const wasm_rt_funcref_table_t* table,
+)w2c_template"
+R"w2c_template(    const wasm_rt_func_type_t expected_type,
+)w2c_template"
+R"w2c_template(    uint32_t index) {
+)w2c_template"
+R"w2c_template(  const size_t sha256size = 32;
+)w2c_template"
+R"w2c_template(  if (index >= table->size) {
+)w2c_template"
+R"w2c_template(    // Table index out of bounds. Raise Wasm trap.
+)w2c_template"
+R"w2c_template(    TRAP(CALL_INDIRECT);
+)w2c_template"
+R"w2c_template(    return false;
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(  const wasm_rt_funcref_t* const func_ref = &table->data[index];
+)w2c_template"
+R"w2c_template(  if (!expected_type || !func_ref->func || !func_ref->func_type ||
+)w2c_template"
+R"w2c_template(      memcmp(expected_type, func_ref->func_type, sha256size) != 0) {
+)w2c_template"
+R"w2c_template(    // Type check failed. Raise Wasm trap.
+)w2c_template"
+R"w2c_template(    TRAP(CALL_INDIRECT);
+)w2c_template"
+R"w2c_template(    return false;
+)w2c_template"
+R"w2c_template(  }
+)w2c_template"
+R"w2c_template(  return true;
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
-#define CHECK_CALL_INDIRECT(table, ft, x)                \
+#define CHECK_CALL_INDIRECT(table, ft, x)                       \
 )w2c_template"
-R"w2c_template(  (LIKELY((x) < table.size && table.data[x].func &&      \
+R"w2c_template(  (LIKELY((x) < table.size && ft == table.data[x].func_type) || \
 )w2c_template"
-R"w2c_template(          func_types_eq(ft, table.data[x].func_type)) || \
-)w2c_template"
-R"w2c_template(   TRAP(CALL_INDIRECT))
+R"w2c_template(   func_types_eq_slowpath(&(table), ft, x))
 )w2c_template"
 R"w2c_template(
 #define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
@@ -242,7 +285,35 @@ R"w2c_template(#if WASM_RT_MEMCHECK_GUARD_PAGES
 )w2c_template"
 R"w2c_template(#define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
 )w2c_template"
+R"w2c_template(
+// When using guard pages, reads have to be immediately consumed so that OOB
+)w2c_template"
+R"w2c_template(// trap checks are applied in the right place, and not optimized away.
+)w2c_template"
+R"w2c_template(#ifdef __GNUC__
+)w2c_template"
+R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
+)w2c_template"
+R"w2c_template(// Clang on Mips requires "f" constraints on floats
+)w2c_template"
+R"w2c_template(// See https://github.com/llvm/llvm-project/issues/64241
+)w2c_template"
+R"w2c_template(#if defined(__clang__) && \
+)w2c_template"
+R"w2c_template(    (defined(mips) || defined(__mips__) || defined(__mips))
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
+)w2c_template"
 R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#else
 )w2c_template"
 R"w2c_template(#define MEMCHECK_DEFAULT32(mem, a, t)                \
 )w2c_template"
@@ -264,29 +335,14 @@ R"w2c_template(  WASM_RT_CHECK_BASE(mem);          \
 R"w2c_template(  RANGE_CHECK(mem, a, sizeof(t));
 )w2c_template"
 R"w2c_template(
-#ifdef __GNUC__
+#ifndef FORCE_READ_INT
 )w2c_template"
-R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-)w2c_template"
-R"w2c_template(// Clang on Mips requires "f" constraints on floats
-)w2c_template"
-R"w2c_template(// See https://github.com/llvm/llvm-project/issues/64241
-)w2c_template"
-R"w2c_template(#if defined(__clang__) && \
-)w2c_template"
-R"w2c_template(    (defined(mips) || defined(__mips__) || defined(__mips))
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
-)w2c_template"
-R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+R"w2c_template(#define FORCE_READ_INT(var)
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
-R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define FORCE_READ_INT(var)
+R"w2c_template(
+#ifndef FORCE_READ_FLOAT
 )w2c_template"
 R"w2c_template(#define FORCE_READ_FLOAT(var)
 )w2c_template"

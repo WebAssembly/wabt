@@ -164,15 +164,37 @@ static inline void wasm_rt_segue_write_base(void* base) {
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
-static inline bool func_types_eq(const wasm_rt_func_type_t a,
-                                 const wasm_rt_func_type_t b) {
-  return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
+#if defined(__clang__) || defined(__GNUC__)
+#define W2C_COLD_FUNC __attribute__((noinline, cold))
+#elif defined(_MSC_VER)
+#define W2C_COLD_FUNC __declspec(noinline)
+#else
+#define W2C_COLD_FUNC
+#endif
+
+W2C_COLD_FUNC static bool func_types_eq_slowpath(
+    const wasm_rt_funcref_table_t* table,
+    const wasm_rt_func_type_t expected_type,
+    uint32_t index) {
+  const size_t sha256size = 32;
+  if (index >= table->size) {
+    // Table index out of bounds. Raise Wasm trap.
+    TRAP(CALL_INDIRECT);
+    return false;
+  }
+  const wasm_rt_funcref_t* const func_ref = &table->data[index];
+  if (!expected_type || !func_ref->func || !func_ref->func_type ||
+      memcmp(expected_type, func_ref->func_type, sha256size) != 0) {
+    // Type check failed. Raise Wasm trap.
+    TRAP(CALL_INDIRECT);
+    return false;
+  }
+  return true;
 }
 
-#define CHECK_CALL_INDIRECT(table, ft, x)                \
-  (LIKELY((x) < table.size && table.data[x].func &&      \
-          func_types_eq(ft, table.data[x].func_type)) || \
-   TRAP(CALL_INDIRECT))
+#define CHECK_CALL_INDIRECT(table, ft, x)                       \
+  (LIKELY((x) < table.size && ft == table.data[x].func_type) || \
+   func_types_eq_slowpath(&(table), ft, x))
 
 #define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
 
@@ -220,6 +242,21 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 // or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
 #define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
+
+// When using guard pages, reads have to be immediately consumed so that OOB
+// trap checks are applied in the right place, and not optimized away.
+#ifdef __GNUC__
+#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
+// Clang on Mips requires "f" constraints on floats
+// See https://github.com/llvm/llvm-project/issues/64241
+#if defined(__clang__) && \
+    (defined(mips) || defined(__mips__) || defined(__mips))
+#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
+#else
+#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+#endif
+#endif
+
 #else
 #define MEMCHECK_DEFAULT32(mem, a, t)                \
   WASM_RT_CHECK_BASE(mem);                           \
@@ -232,18 +269,11 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
   WASM_RT_CHECK_BASE(mem);          \
   RANGE_CHECK(mem, a, sizeof(t));
 
-#ifdef __GNUC__
-#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-// Clang on Mips requires "f" constraints on floats
-// See https://github.com/llvm/llvm-project/issues/64241
-#if defined(__clang__) && \
-    (defined(mips) || defined(__mips__) || defined(__mips))
-#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
-#else
-#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
-#endif
-#else
+#ifndef FORCE_READ_INT
 #define FORCE_READ_INT(var)
+#endif
+
+#ifndef FORCE_READ_FLOAT
 #define FORCE_READ_FLOAT(var)
 #endif
 
