@@ -742,11 +742,21 @@ Result BinaryReaderInterp::OnExport(Index index,
 
   std::unique_ptr<ExternType> type;
   switch (kind) {
-    case ExternalKind::Func:   type = func_types_[item_index].Clone(); break;
-    case ExternalKind::Table:  type = table_types_[item_index].Clone(); break;
-    case ExternalKind::Memory: type = memory_types_[item_index].Clone(); break;
-    case ExternalKind::Global: type = global_types_[item_index].Clone(); break;
-    case ExternalKind::Tag:    type = tag_types_[item_index].Clone(); break;
+    case ExternalKind::Func:
+      type = func_types_[item_index].Clone();
+      break;
+    case ExternalKind::Table:
+      type = table_types_[item_index].Clone();
+      break;
+    case ExternalKind::Memory:
+      type = memory_types_[item_index].Clone();
+      break;
+    case ExternalKind::Global:
+      type = global_types_[item_index].Clone();
+      break;
+    case ExternalKind::Tag:
+      type = tag_types_[item_index].Clone();
+      break;
   }
   module_.exports.push_back(
       ExportDesc{ExportType(std::string(name), std::move(type)), item_index});
@@ -1812,6 +1822,9 @@ Result ReadBinaryInterp(std::string_view filename,
                         const ReadBinaryOptions& options,
                         Errors* errors,
                         ModuleDesc* out_module) {
+  // BinaryReaderInterp does not support collect-all-errors mode; only readers
+  // such as BinaryReaderIR/objdump may be used with stop_on_first_error=false.
+  assert(options.stop_on_first_error);
   BinaryReaderInterp reader(out_module, filename, errors, options.features);
   return ReadBinary(data, &reader, options);
 }
