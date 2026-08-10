@@ -377,9 +377,12 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
     if (static_cast<int64_t>(heap_type) < 0 ||
         static_cast<int64_t>(heap_type) >= kInvalidIndex) {
       Type::Enum heap_type_code = static_cast<Type::Enum>(heap_type);
-      ERROR_UNLESS(
-          heap_type_code == Type::FuncRef || heap_type_code == Type::ExternRef,
-          "Reference type is limited to func and extern: %s", desc);
+      ERROR_UNLESS(heap_type_code == Type::FuncRef ||
+                       heap_type_code == Type::ExternRef ||
+                       (heap_type_code == Type::ExnRef &&
+                        options_.features.exceptions_enabled()),
+                   "Reference type is limited to func, extern, and exn: %s",
+                   desc);
       type = (static_cast<Type::Enum>(type) == Type::Ref)
                  ? Type::ReferenceNonNull
                  : Type::ReferenceOrNull;
