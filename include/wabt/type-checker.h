@@ -148,6 +148,7 @@ class TypeChecker {
   Result OnRethrow(Index depth);
   Result OnReturn();
   Result OnSelect(const TypeVector& result_types);
+  Result OnSelectCondition();
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdLoadLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);

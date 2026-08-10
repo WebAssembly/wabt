@@ -12,8 +12,7 @@ out/test/spec/function-references/select.wast:364: assert_invalid passed:
   out/test/spec/function-references/select/select.1.wasm:000001c: error: type mismatch in select, expected [any, any, i32] but got [i32]
   000001c: error: OnSelectExpr callback failed
 out/test/spec/function-references/select.wast:368: assert_invalid passed:
-  out/test/spec/function-references/select/select.2.wasm:000001c: error: type mismatch in select, expected [any, any, i32] but got [i32]
-  000001c: error: OnSelectExpr callback failed
+  000001d: error: invalid arity in select instruction: 0.
 out/test/spec/function-references/select.wast:372: assert_invalid passed:
   out/test/spec/function-references/select/select.3.wasm:0000027: error: invalid arity in select instruction: 2.
   0000027: error: OnSelectExpr callback failed

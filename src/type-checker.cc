@@ -1061,6 +1061,10 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
   return result;
 }
 
+Result TypeChecker::OnSelectCondition() {
+  return PopAndCheck1Type(Type::I32, "select");
+}
+
 Result TypeChecker::OnStore(Opcode opcode, const Limits& limits) {
   return CheckOpcode2(opcode, &limits);
 }

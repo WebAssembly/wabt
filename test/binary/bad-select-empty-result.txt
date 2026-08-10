@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s --enable-all %(temp_file)s.wasm --run-export=run
+;;; ERROR3: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(EXPORT) { count[1] str("run") func_kind 0 }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const 42
+    i32.const 100
+    i32.const 1
+    select_t[0x1c]
+    result_count[0x00]
+    end
+  }
+}
+(;; STDERR ;;;
+0000029: error: invalid arity in select instruction: 0.
+0000029: error: invalid arity in select instruction: 0.
+0000029: error: invalid arity in select instruction: 0.
+;;; STDERR ;;)
