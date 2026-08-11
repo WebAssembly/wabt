@@ -1,0 +1,40 @@
+;;; TOOL: run-interp-spec
+;;; ARGS*: --enable-function-references --enable-tail-call
+;;; ARGS1: --trace
+(module
+  ;; call_ref/return_call_ref carry no istream immediate, so Istream::Read has to
+  ;; give them an InstrKind explicitly; otherwise the tracer decodes them with the
+  ;; previous instruction's kind and picks operands that are not on the stack. The
+  ;; store in front leaves a two-operand kind behind to exercise that path.
+  (type $v (func))
+  (memory 1)
+  (elem declare func $t)
+  (func $t)
+  (func (export "call")
+    ref.func $t
+    (i32.store (i32.const 0) (i32.const 0))
+    call_ref $v)
+  (func (export "retcall")
+    ref.func $t
+    (i32.store (i32.const 0) (i32.const 0))
+    return_call_ref $v))
+(invoke "call")
+(invoke "retcall")
+(;; STDOUT ;;;
+#0.   16: V:0  | ref.func $0
+#0.   24: V:1  | i32.const 0
+#0.   32: V:2  | i32.const 0
+#0.   40: V:3  | i32.store $0:0+$0, 0
+#0.   56: V:1  | call_ref ?
+#1.   12: V:0  | return
+#0.   60: V:0  | return
+call() =>
+#0.   64: V:0  | ref.func $0
+#0.   72: V:1  | i32.const 0
+#0.   80: V:2  | i32.const 0
+#0.   88: V:3  | i32.store $0:0+$0, 0
+#0.  104: V:1  | return_call_ref ?
+#0.   12: V:0  | return
+retcall() =>
+3/3 tests passed.
+;;; STDOUT ;;)
