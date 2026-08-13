@@ -683,14 +683,34 @@ static double wasm_sqrt(double x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrt(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrt(x);
+#endif
 }
 
 static float wasm_sqrtf(float x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrtf(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrtf(x);
+#endif
 }
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u64 d, u32 val, u64 n) {
@@ -954,7 +974,7 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
   u32 var_i0, var_i2;
   f32 var_f1;
   var_i0 = 1u;
-  var_f1 = 2;
+  var_f1 = 2.0f;
   var_i2 = 0u;
   static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
@@ -986,7 +1006,7 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
   u32 var_i0, var_i2;
   f32 var_f1;
   var_i0 = 1u;
-  var_f1 = 2;
+  var_f1 = 2.0f;
   var_i2 = 0u;
   static_assert(sizeof(struct wasm_multi_if) <= 1024);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
