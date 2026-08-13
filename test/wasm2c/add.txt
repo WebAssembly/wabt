@@ -659,14 +659,34 @@ static double wasm_sqrt(double x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrt(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrt(x);
+#endif
 }
 
 static float wasm_sqrtf(float x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrtf(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrtf(x);
+#endif
 }
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u64 d, u32 val, u64 n) {

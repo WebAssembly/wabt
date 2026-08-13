@@ -1107,7 +1107,26 @@ R"w2c_template(    return quiet_nan(x);
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
+R"w2c_template(
+#if __has_builtin(__builtin_elementwise_sqrt)
+)w2c_template"
+R"w2c_template(  // Fastest option: doesn't set errno
+)w2c_template"
+R"w2c_template(  return __builtin_elementwise_sqrt(x);
+)w2c_template"
+R"w2c_template(#elif __has_builtin(__builtin_sqrt)
+)w2c_template"
+R"w2c_template(  // Optimized if -fno-math-errno is set
+)w2c_template"
+R"w2c_template(  return __builtin_sqrt(x);
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(  // Libc call. May/may not be optimized
+)w2c_template"
 R"w2c_template(  return sqrt(x);
+)w2c_template"
+R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
@@ -1120,7 +1139,26 @@ R"w2c_template(    return quiet_nanf(x);
 )w2c_template"
 R"w2c_template(  }
 )w2c_template"
+R"w2c_template(
+#if __has_builtin(__builtin_elementwise_sqrt)
+)w2c_template"
+R"w2c_template(  // Fastest option: doesn't set errno
+)w2c_template"
+R"w2c_template(  return __builtin_elementwise_sqrt(x);
+)w2c_template"
+R"w2c_template(#elif __has_builtin(__builtin_sqrt)
+)w2c_template"
+R"w2c_template(  // Optimized if -fno-math-errno is set
+)w2c_template"
+R"w2c_template(  return __builtin_sqrtf(x);
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(  // Libc call. May/may not be optimized
+)w2c_template"
 R"w2c_template(  return sqrtf(x);
+)w2c_template"
+R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(}
 )w2c_template"
