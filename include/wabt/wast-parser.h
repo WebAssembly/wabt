@@ -207,6 +207,9 @@ class WastParser {
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
   Result ParseModuleFieldImpl(Module*);
+  void TruncateResolveLists(size_t ref_types_size,
+                            size_t type_vectors_size,
+                            size_t funcs_size);
   Result ParseDataModuleField(Module*);
   Result ParseElemModuleField(Module*);
   Result ParseTagModuleField(Module*);

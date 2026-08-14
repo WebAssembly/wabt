@@ -1506,16 +1506,21 @@ Result WastParser::ParseModuleField(Module* module) {
   Result result = ParseModuleFieldImpl(module);
 
   if (Failed(result)) {
-    resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
-                             resolve_ref_types_.end());
-    resolve_type_vectors_.erase(
-        resolve_type_vectors_.begin() + type_vectors_size,
-        resolve_type_vectors_.end());
-    resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
-                         resolve_funcs_.end());
+    TruncateResolveLists(ref_types_size, type_vectors_size, funcs_size);
   }
 
   return result;
+}
+
+void WastParser::TruncateResolveLists(size_t ref_types_size,
+                                      size_t type_vectors_size,
+                                      size_t funcs_size) {
+  resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
+                           resolve_ref_types_.end());
+  resolve_type_vectors_.erase(resolve_type_vectors_.begin() + type_vectors_size,
+                              resolve_type_vectors_.end());
+  resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
+                       resolve_funcs_.end());
 }
 
 Result WastParser::ParseModuleFieldImpl(Module* module) {
@@ -2286,15 +2291,27 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
   while (true) {
     auto pair = PeekPair();
     if (IsInstr(pair)) {
+      // A failed instruction is destroyed along with any block signature it
+      // parsed, so drop the deferred type resolutions that pointed into it
+      // before recovering; ParseInstrList swallows the error and keeps going,
+      // so ParseModuleField never sees the failure and cannot do this itself.
+      size_t ref_types_size = resolve_ref_types_.size();
+      size_t type_vectors_size = resolve_type_vectors_.size();
+      size_t funcs_size = resolve_funcs_.size();
       if (Succeeded(ParseInstr(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        TruncateResolveLists(ref_types_size, type_vectors_size, funcs_size);
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
+      size_t ref_types_size = resolve_ref_types_.size();
+      size_t type_vectors_size = resolve_type_vectors_.size();
+      size_t funcs_size = resolve_funcs_.size();
       if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        TruncateResolveLists(ref_types_size, type_vectors_size, funcs_size);
         CHECK_RESULT(Synchronize(IsLparAnn));
       }
     } else {
@@ -3435,9 +3452,16 @@ Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
   ExprList new_exprs;
   while (PeekMatchExpr()) {
+    // See ParseInstrList: a discarded folded expression takes its block
+    // signature with it, so drop the deferred type resolutions that pointed
+    // into it before recovering.
+    size_t ref_types_size = resolve_ref_types_.size();
+    size_t type_vectors_size = resolve_type_vectors_.size();
+    size_t funcs_size = resolve_funcs_.size();
     if (Succeeded(ParseExpr(&new_exprs))) {
       exprs->splice(exprs->end(), new_exprs);
     } else {
+      TruncateResolveLists(ref_types_size, type_vectors_size, funcs_size);
       CHECK_RESULT(Synchronize(IsExpr));
     }
   }
