@@ -120,15 +120,15 @@ extern const u32 wasm2c_test_pagesize_env_0x5F_linear_memory;
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0
 #endif
 
-#ifndef WASM_RT_USE_LOCAL_MEMORY_BASE
-#define WASM_RT_USE_LOCAL_MEMORY_BASE 1
+#ifndef WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE 1
 #endif
 
-#if WASM_RT_USE_LOCAL_MEMORY_BASE && WASM_RT_USE_MMAP && \
+#if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE && WASM_RT_USE_MMAP && \
     IS_SINGLE_UNSHARED_DEFAULT32_MEMORY && !WABT_BIG_ENDIAN
-#define WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE 1
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 1
 #else
-#define WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE 0
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 0
 #endif
 
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
@@ -156,7 +156,7 @@ static inline void wasm_rt_segue_write_base(void* base) {
   }
 }
 #define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
-#elif WASM_RT_USE_LOCAL_MEMORY_BASE_FOR_THIS_MODULE
+#elif WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
 #define MEM_ADDR_MEMOP(mem, addr, n) (&wasm_rt_local_memory_base[(addr)])
 #else
 #define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
@@ -255,7 +255,8 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 // (if hardware bounds-checking is enabled via guard pages)
 // or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
-#define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
+  WASM_RT_CHECK_BASE(mem);
 
 // When using guard pages, reads have to be immediately consumed so that OOB
 // trap checks are applied in the right place, and not optimized away.
@@ -293,10 +294,17 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 #endif
 
 #else
-#define MEMCHECK_DEFAULT32(mem, a, t)                \
-  WASM_RT_CHECK_BASE(mem);                           \
-  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size)) \
+#if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t)     \
+  WASM_RT_CHECK_BASE(mem);                                   \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > local_memory_size)) \
     TRAP(OOB);
+#else
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
+  WASM_RT_CHECK_BASE(mem);                               \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size))     \
+    TRAP(OOB);
+#endif
 #endif
 
 // MEMCHECK_GENERAL can be used for any memory
@@ -334,11 +342,13 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
 #define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
   static inline return_type name##_default32(                                \
       uint8_t* const wasm_rt_local_memory_base,                              \
-      wasm_rt##shared##memory_t* mem, u64 addr) {                            \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,    \
+      u64 addr) {                                                            \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);      \
     ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
   }                                                                          \
   static inline return_type name(uint8_t* const wasm_rt_local_memory_base,   \
+                                 uint64_t wasm_rt_local_memory_size,         \
                                  wasm_rt##shared##memory_t* mem, u64 addr) { \
     MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
     ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
@@ -348,11 +358,13 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
                         val_type1)                                         \
   static inline return_type name##_default32(                              \
       uint8_t* const wasm_rt_local_memory_base,                            \
-      wasm_rt##shared##memory_t* mem, u64 addr, val_type1 val1) {          \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                               \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,  \
+      u64 addr, val_type1 val1) {                                          \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);    \
     ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1);   \
   }                                                                        \
   static inline return_type name(uint8_t* const wasm_rt_local_memory_base, \
+                                 uint64_t wasm_rt_local_memory_size,       \
                                  wasm_rt##shared##memory_t* mem, u64 addr, \
                                  val_type1 val1) {                         \
     MEMCHECK_GENERAL(mem, addr, mem_type);                                 \
@@ -363,12 +375,13 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
                         val_type1, val_type2)                                  \
   static inline return_type name##_default32(                                  \
       uint8_t* const wasm_rt_local_memory_base,                                \
-      wasm_rt##shared##memory_t* mem, u64 addr, val_type1 val1,                \
-      val_type2 val2) {                                                        \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                   \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,      \
+      u64 addr, val_type1 val1, val_type2 val2) {                              \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);        \
     ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1, val2); \
   }                                                                            \
   static inline return_type name(uint8_t* const wasm_rt_local_memory_base,     \
+                                 uint64_t wasm_rt_local_memory_size,           \
                                  wasm_rt##shared##memory_t* mem, u64 addr,     \
                                  val_type1 val1, val_type2 val2) {             \
     MEMCHECK_GENERAL(mem, addr, mem_type);                                     \
@@ -1007,13 +1020,16 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
   FUNC_PROLOGUE;
   uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = var_p0;
   var_i0 = CALL_INDIRECT((*instance->w2c_env_0x5F_indirect_function_table), u32 (*)(void*), w2c_test_t1, var_i0, (*instance->w2c_env_0x5F_indirect_function_table).data[var_i0].module_instance);
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
   wasm_rt_segue_write_base((*instance->w2c_env_0x5F_linear_memory).data);
 #endif
+  wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   FUNC_EPILOGUE;
   return var_i0;
 }
@@ -1021,10 +1037,12 @@ u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
 u32 w2c_test_f1(w2c_test* instance) {
   FUNC_PROLOGUE;
   uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = 16u;
-  var_i0 = i32_load_default32(wasm_rt_local_memory_base, instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
+  var_i0 = i32_load_default32(wasm_rt_local_memory_base, wasm_rt_local_memory_size, instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
   FUNC_EPILOGUE;
   return var_i0;
 }
@@ -1032,10 +1050,13 @@ u32 w2c_test_f1(w2c_test* instance) {
 u32 w2c_test_f2(w2c_test* instance, u32 var_p0, u32 var_p1) {
   FUNC_PROLOGUE;
   uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = 1u;
   var_i0 = w2c_test_f0(instance, var_i0);
+  wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   FUNC_EPILOGUE;
   return var_i0;
 }
