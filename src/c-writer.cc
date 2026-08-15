@@ -416,7 +416,8 @@ class CWriter {
   void WriteElemTableInit(bool, const ElemSegment*, const Table*);
   bool IsSingleUnsharedDefault32Memory();
   bool IsSingleUnsharedMemory();
-  void WriteLocalMemoryBaseDeclaration();
+  void WriteLocalMemoryBaseSizeDeclaration();
+  void RefreshLocalMemorySize();
   void InstallSegueBase(Memory* memory, bool save_old_value);
   void RestoreSegueBase();
   void WriteExports(CWriterPhase);
@@ -2621,7 +2622,7 @@ bool CWriter::IsSingleUnsharedDefault32Memory() {
          !module_->memories[0]->page_limits.is_64;
 }
 
-void CWriter::WriteLocalMemoryBaseDeclaration() {
+void CWriter::WriteLocalMemoryBaseSizeDeclaration() {
   Write("uint8_t* const wasm_rt_local_memory_base = ");
   if (IsSingleUnsharedDefault32Memory()) {
     const Memory* memory = module_->memories[0];
@@ -2630,7 +2631,25 @@ void CWriter::WriteLocalMemoryBaseDeclaration() {
   } else {
     Write("NULL");
   }
-  Write(";", Newline(), "(void)wasm_rt_local_memory_base;", Newline());
+  Write(";", Newline(), "uint64_t wasm_rt_local_memory_size = ");
+  if (IsSingleUnsharedDefault32Memory()) {
+    const Memory* memory = module_->memories[0];
+    Write("(", ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
+          ")->size");
+  } else {
+    Write("0");
+  }
+  Write(";", Newline(), "(void)wasm_rt_local_memory_base;", Newline(),
+        "(void)wasm_rt_local_memory_size;", Newline());
+}
+
+void CWriter::RefreshLocalMemorySize() {
+  if (IsSingleUnsharedDefault32Memory()) {
+    const Memory* memory = module_->memories[0];
+    Write("wasm_rt_local_memory_size = (",
+          ExternalInstancePtr(ModuleFieldType::Memory, memory->name),
+          ")->size;", Newline());
+  }
 }
 
 void CWriter::InstallSegueBase(Memory* memory, bool save_old_value) {
@@ -3204,7 +3223,7 @@ void CWriter::Write(const Func& func) {
         GlobalName(ModuleFieldType::Func, func.name), "(");
   WriteParamsAndLocals();
   Write("FUNC_PROLOGUE;", Newline());
-  WriteLocalMemoryBaseDeclaration();
+  WriteLocalMemoryBaseSizeDeclaration();
 
   size_t stack_vars_section = func_sections_.size() - 1;
   PushFuncSection();
@@ -3279,7 +3298,7 @@ void CWriter::WriteTailCallee(const Func& func) {
   Write(" ", OpenBrace());
   WriteTailCallAsserts(func.decl.sig);
   Write(ModuleInstanceTypeName(), "* instance = *instance_ptr;", Newline());
-  WriteLocalMemoryBaseDeclaration();
+  WriteLocalMemoryBaseSizeDeclaration();
 
   std::vector<std::string> index_to_name;
   MakeTypeBindingReverseMapping(func.GetNumParamsAndLocals(), func.bindings,
@@ -3448,6 +3467,7 @@ size_t CWriter::BeginTry(const Block& block) {
 
 void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   const size_t mark = BeginTry(tryexpr.block);
+  RefreshLocalMemorySize();
 
   /* exception has been thrown -- do we catch it? */
 
@@ -3594,6 +3614,7 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
 
 void CWriter::Write(const TryTableExpr& try_table_expr) {
   const size_t mark = BeginTry(try_table_expr.block);
+  RefreshLocalMemorySize();
 
   /* exception has been thrown -- do we catch it? */
 
@@ -3748,6 +3769,7 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params - i - 1));
         }
         Write(");", Newline());
+        RefreshLocalMemorySize();
         DropTypes(num_params);
         PushTypes(func.decl.sig.result_types);
         if (num_results > 1) {
@@ -3787,6 +3809,7 @@ void CWriter::Write(const ExprList& exprs) {
         if (IsSingleUnsharedDefault32Memory()) {
           InstallSegueBase(module_->memories[0], false /* save_old_value */);
         }
+        RefreshLocalMemorySize();
         DropTypes(num_params + 1);
         PushTypes(decl.sig.result_types);
         if (num_results > 1) {
@@ -4115,6 +4138,7 @@ void CWriter::Write(const ExprList& exprs) {
         if (IsSingleUnsharedDefault32Memory()) {
           InstallSegueBase(module_->memories[0], false /* save_old_value */);
         }
+        RefreshLocalMemorySize();
         break;
       }
 
@@ -5404,7 +5428,8 @@ void CWriter::Write(const LoadExpr& expr) {
   func = GetMemoryAPIString(*memory, func);
 
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(0, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(0, memory, expr.offset);
   Write(");", Newline());
@@ -5435,7 +5460,7 @@ void CWriter::Write(const StoreExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   func = GetMemoryAPIString(*memory, func);
 
-  Write(func, "(wasm_rt_local_memory_base, ");
+  Write(func, "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(1, memory, expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -5895,7 +5920,7 @@ void CWriter::Write(const SimdLoadLaneExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", func, expr.val,
-        "(wasm_rt_local_memory_base, ");
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(1, memory, expr.offset);
   Write(", ", StackVar(0));
@@ -5919,7 +5944,8 @@ void CWriter::Write(const SimdStoreLaneExpr& expr) {
   // clang-format on
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
 
-  Write(func, expr.val, "(wasm_rt_local_memory_base, ");
+  Write(func, expr.val,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(1, memory, expr.offset);
   Write(", ", StackVar(0));
@@ -5962,7 +5988,8 @@ void CWriter::Write(const LoadSplatExpr& expr) {
   }
   // clang-format on
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(0, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(0, memory, expr.offset);
   Write(");", Newline());
@@ -5985,7 +6012,8 @@ void CWriter::Write(const LoadZeroExpr& expr) {
   // clang-format on
 
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(0, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(0, memory, expr.offset);
   Write(");", Newline());
@@ -6015,7 +6043,8 @@ void CWriter::Write(const AtomicLoadExpr& expr) {
   func = GetMemoryAPIString(*memory, func);
 
   Type result_type = expr.opcode.GetResultType();
-  Write(StackVar(0, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(0, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(0, memory, expr.offset);
   Write(");", Newline());
@@ -6043,7 +6072,7 @@ void CWriter::Write(const AtomicStoreExpr& expr) {
   Memory* memory = module_->memories[module_->GetMemoryIndex(expr.memidx)];
   func = GetMemoryAPIString(*memory, func);
 
-  Write(func, "(wasm_rt_local_memory_base, ");
+  Write(func, "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(1, memory, expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -6106,7 +6135,8 @@ void CWriter::Write(const AtomicRmwExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
 
-  Write(StackVar(1, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(1, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(1, memory, expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -6135,7 +6165,8 @@ void CWriter::Write(const AtomicRmwCmpxchgExpr& expr) {
 
   Type result_type = expr.opcode.GetResultType();
 
-  Write(StackVar(2, result_type), " = ", func, "(wasm_rt_local_memory_base, ");
+  Write(StackVar(2, result_type), " = ", func,
+        "(wasm_rt_local_memory_base, wasm_rt_local_memory_size, ");
   Write(ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ");
   WriteMemoryAddress(2, memory, expr.offset);
   Write(", ", StackVar(1), ", ", StackVar(0), ");", Newline());
