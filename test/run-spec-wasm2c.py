@@ -467,6 +467,8 @@ def Compile(cc, c_filename, out_dir, use_c11, *cflags):
         # When compiling with -O2/-O3, GCC and clang require '-fno-optimize-sibling-calls'
         # and '-frounding-math' to maintain conformance with the spec tests
         # (GCC also requires '-fsignaling-nans')
+        # '-fno-math-errno' is a performance optimization to improve speed of
+        # operations like sqrt
         if use_c11:
             args.append('-std=c11')
         else:
@@ -482,6 +484,7 @@ def Compile(cc, c_filename, out_dir, use_c11, *cflags):
                  '-Wno-pass-failed',
                  '-fno-optimize-sibling-calls',
                  '-frounding-math', '-fsignaling-nans',
+                 '-fno-math-errno',
                  '-D_DEFAULT_SOURCE']
     # Use RunWithArgsForStdout and discard stdout because cl.exe
     # unconditionally prints the name of input files on stdout

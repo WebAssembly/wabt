@@ -701,7 +701,13 @@ class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
   SelectExpr(const Location& loc = Location())
       : ExprMixin<ExprType::Select>(loc) {}
-  TypeVector result_type;
+  // Untyped select is represented by {Type::Void}. An empty result_type
+  // represents an explicit typed select with zero result types and is invalid.
+  TypeVector result_type{Type::Void};
+
+  bool IsUntyped() const {
+    return result_type.size() == 1 && result_type[0] == Type::Void;
+  }
 };
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {

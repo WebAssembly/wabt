@@ -1,0 +1,31 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: --debug
+magic
+version
+;; A valid module whose "name" section carries a single unknown name
+;; subsection.  The subsection type LEB is 0xffffffff, past
+;; NameSectionSubsection::Last.  ReadNameSection must skip it as an unknown
+;; subsection; with --debug the subsection is logged, which used to index
+;; NameSubsectionName off the end (ASan global-buffer-overflow read).
+section("name") {
+  leb_u32(0xffffffff)  ;; subsection type
+  leb_u32(0)           ;; subsection size
+}
+(;; STDERR ;;;
+BeginModule(version: 1)
+  BeginCustomSection('name', size: 11)
+    BeginGenericCustomSection(11)
+      OnGenericCustomSection(name: "name", size: 6)
+    EndGenericCustomSection
+    BeginNamesSection(11)
+    EndNamesSection
+  EndCustomSection
+EndModule
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+name-section-unknown-subsection.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+;;; STDOUT ;;)

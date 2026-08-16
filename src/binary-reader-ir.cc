@@ -1212,7 +1212,9 @@ Result BinaryReaderIR::OnReturnExpr() {
 
 Result BinaryReaderIR::OnSelectExpr(Index result_count, Type* result_types) {
   auto expr_ptr = std::make_unique<SelectExpr>();
-  expr_ptr->result_type.assign(result_types, result_types + result_count);
+  if (result_count != 0) {
+    expr_ptr->result_type.assign(result_types, result_types + result_count);
+  }
   return AppendExpr(std::move(expr_ptr));
 }
 
@@ -1892,6 +1894,11 @@ Result ReadBinaryIr(const char* filename,
                     const ReadBinaryOptions& options,
                     Errors* errors,
                     Module* out_module) {
+  // BinaryReaderIR does not support skipping function bodies; that option is
+  // for readers such as objdump that do not build a module. Skipping the
+  // bodies here leaves each function's label unclosed, because the end marker
+  // that would pop it is never read.
+  assert(!options.skip_function_bodies);
   BinaryReaderIR reader(out_module, filename, errors);
   return ReadBinary(data, &reader, options);
 }

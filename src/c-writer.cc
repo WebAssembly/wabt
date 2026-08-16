@@ -792,6 +792,21 @@ static void NormalizeFloatRadix(char* buffer) {
   }
 }
 
+// 32-bit Floating point in C expects a suffix "f" and requires constants like 1
+// to be written as 1.0f (not 1f)
+static void EnsureFloat32Suffix(char* buf) {
+  if (std::strchr(buf, 'e') != nullptr || std::strchr(buf, 'E') != nullptr ||
+      std::strcmp(buf, "inf") == 0 || std::strcmp(buf, "-inf") == 0 ||
+      std::strcmp(buf, "nan") == 0) {
+    return;
+  }
+
+  if (std::strchr(buf, '.') == nullptr) {
+    std::strcat(buf, ".0");
+  }
+  std::strcat(buf, "f");
+}
+
 // static
 std::string CWriter::Mangle(std::string_view name, bool double_underscores) {
   /*
@@ -1348,6 +1363,7 @@ void CWriter::Write(const Const& const_) {
         char buf[128];
         snprintf(buf, sizeof(buf), "%.9g", Bitcast<float>(f32_bits));
         NormalizeFloatRadix(buf);
+        EnsureFloat32Suffix(buf);
         Writef("%s", buf);
       }
       break;

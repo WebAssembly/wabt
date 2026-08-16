@@ -506,6 +506,14 @@ function(wabt_executable)
   add_dependencies(everything ${EXE_NAME})
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
 
+  if (MSVC)
+    # The wast parser is recursive descent, so nesting depth costs stack, and
+    # real modules nest deeply: a switch lowers to a br_table wrapped in one
+    # block per case. msvc's 1MB default is not enough for that, so ask for
+    # the 8MB Linux and macOS give us.
+    target_link_options(${EXE_NAME} PRIVATE "/STACK:8388608")
+  endif ()
+
   if (EMSCRIPTEN)
     set(EXTRA_LINK_FLAGS
       "${EXTRA_LINK_FLAGS} -sNODERAWFS -Oz -sALLOW_MEMORY_GROWTH"

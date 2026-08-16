@@ -1,0 +1,5 @@
+;;; TOOL: wat2wasm
+;;; STDIN_FILE: test/parse/zero-length.wat
+(;; STDERR ;;;
+out/test/parse/zero-length.wat:1:1: warning: empty module
+;;; STDERR ;;)

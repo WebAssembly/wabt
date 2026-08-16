@@ -1303,6 +1303,12 @@ Result SharedValidator::OnSelect(const Location& loc,
   return result;
 }
 
+Result SharedValidator::OnSelectCondition(const Location& loc) {
+  Result result = CheckInstr(Opcode::Select, loc);
+  result |= typechecker_.OnSelectCondition();
+  return result;
+}
+
 Result SharedValidator::OnSimdLaneOp(const Location& loc,
                                      Opcode opcode,
                                      uint64_t value) {
