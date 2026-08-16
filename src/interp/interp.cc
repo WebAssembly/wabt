@@ -2948,6 +2948,13 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
       break;
     }
   }
+  // table.set stores a reference whose type comes from the table, so opcode.def
+  // leaves that top operand's param type Void. The loop above then stops at the
+  // i32 index below it and undercounts, swapping the operand types so the i32
+  // index is read back as a reference. It always has two operands.
+  if (instr.op == Opcode::TableSet) {
+    num_operands = 2;
+  }
   auto type = index > num_operands
                   ? Type(ValueType::Void)
                   : instr.op.GetParamType(num_operands - index + 1);

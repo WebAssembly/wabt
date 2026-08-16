@@ -1,0 +1,21 @@
+;;; TOOL: run-interp-spec
+;;; ARGS1: --trace
+(module
+  ;; table.set's stored value is a reference whose type is taken from the table,
+  ;; so opcode.def leaves that operand's param type Void. The tracer's operand
+  ;; count heuristic then stops at the i32 index below it and undercounts, which
+  ;; swaps the operand types and reads the i32 index back as a reference.
+  (table 1 funcref)
+  (elem declare func $f)
+  (func $f)
+  (func (export "set")
+    (table.set 0 (i32.const 0) (ref.func $f))))
+(invoke "set")
+(;; STDOUT ;;;
+#0.   16: V:0  | i32.const 0
+#0.   24: V:1  | ref.func $0
+#0.   32: V:2  | table.set $0, 0, funcref:17
+#0.   40: V:0  | return
+set() =>
+2/2 tests passed.
+;;; STDOUT ;;)
