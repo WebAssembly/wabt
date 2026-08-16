@@ -1515,12 +1515,9 @@ Result WastParser::ParseModuleField(Module* module) {
 void WastParser::TruncateResolveLists(size_t ref_types_size,
                                       size_t type_vectors_size,
                                       size_t funcs_size) {
-  resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
-                           resolve_ref_types_.end());
-  resolve_type_vectors_.erase(resolve_type_vectors_.begin() + type_vectors_size,
-                              resolve_type_vectors_.end());
-  resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
-                       resolve_funcs_.end());
+  resolve_ref_types_.resize(ref_types_size);
+  resolve_type_vectors_.resize(type_vectors_size);
+  resolve_funcs_.resize(funcs_size);
 }
 
 Result WastParser::ParseModuleFieldImpl(Module* module) {

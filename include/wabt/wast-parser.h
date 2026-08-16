@@ -56,10 +56,11 @@ class WastParser {
   };
 
   struct ResolveRefType {
+    ResolveRefType() = default;
     ResolveRefType(Type* target_type, Var var)
       : target_type(target_type), var(var) {}
 
-    Type* target_type;
+    Type* target_type = nullptr;
     Var var;
   };
 
@@ -74,18 +75,20 @@ class WastParser {
   typedef std::vector<ReferenceVar> ReferenceVars;
 
   struct ResolveTypeVector {
+    ResolveTypeVector() = default;
     ResolveTypeVector(TypeVector* target_vector)
       : target_vector(target_vector) {}
 
-    TypeVector* target_vector;
+    TypeVector* target_vector = nullptr;
     ReferenceVars vars;
   };
 
   struct ResolveFunc {
+    ResolveFunc() = default;
     ResolveFunc(Func* target_func)
       : target_func(target_func) {}
 
-    Func* target_func;
+    Func* target_func = nullptr;
     TypeVector types;
     ReferenceVars vars;
   };
