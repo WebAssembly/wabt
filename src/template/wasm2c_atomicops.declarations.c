@@ -15,8 +15,9 @@
     result = atomic_load_explicit(                                            \
         (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)),                \
         memory_order_relaxed);                                                \
-    force_read(result);                                                       \
-    return (t3)(t2)result;                                                    \
+    t3 ret = (t3)(t2)result;                                                  \
+    force_read(ret);                                                          \
+    return ret;                                                               \
   }                                                                           \
   DEF_MEM_CHECKS0(name, _shared_, t1, return, t3)
 
@@ -61,8 +62,9 @@ DEFINE_SHARED_STORE(i64_store32_shared, u32, u64)
     t1 result;                                                              \
     wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),          \
                    sizeof(t1));                                             \
-    force_read(result);                                                     \
-    return (t3)(t2)result;                                                  \
+    t3 ret = (t3)(t2)result;                                                \
+    force_read(ret);                                                        \
+    return ret;                                                             \
   }                                                                         \
   DEF_MEM_CHECKS0(name, _, t1, return, t3)                                  \
   static inline t3 name##_shared_unchecked(wasm_rt_shared_memory_t* mem,    \
@@ -71,8 +73,9 @@ DEFINE_SHARED_STORE(i64_store32_shared, u32, u64)
     t1 result;                                                              \
     result =                                                                \
         atomic_load((_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1))); \
-    force_read(result);                                                     \
-    return (t3)(t2)result;                                                  \
+    t3 ret = (t3)(t2)result;                                                \
+    force_read(ret);                                                        \
+    return ret;                                                             \
   }                                                                         \
   DEF_MEM_CHECKS0(name##_shared, _shared_, t1, return, t3)
 
