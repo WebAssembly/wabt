@@ -29,9 +29,11 @@ R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)),   
 )w2c_template"
 R"w2c_template(        memory_order_relaxed);                                                \
 )w2c_template"
-R"w2c_template(    force_read(result);                                                       \
+R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
 )w2c_template"
-R"w2c_template(    return (t3)(t2)result;                                                    \
+R"w2c_template(    force_read(ret);                                                          \
+)w2c_template"
+R"w2c_template(    return ret;                                                               \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"
@@ -117,9 +119,11 @@ R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1))
 )w2c_template"
 R"w2c_template(                   sizeof(t1));                                             \
 )w2c_template"
-R"w2c_template(    force_read(result);                                                     \
+R"w2c_template(    t3 ret = (t3)(t2)result;                                                \
 )w2c_template"
-R"w2c_template(    return (t3)(t2)result;                                                  \
+R"w2c_template(    force_read(ret);                                                        \
+)w2c_template"
+R"w2c_template(    return ret;                                                             \
 )w2c_template"
 R"w2c_template(  }                                                                         \
 )w2c_template"
@@ -137,9 +141,11 @@ R"w2c_template(    result =                                                     
 )w2c_template"
 R"w2c_template(        atomic_load((_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1))); \
 )w2c_template"
-R"w2c_template(    force_read(result);                                                     \
+R"w2c_template(    t3 ret = (t3)(t2)result;                                                \
 )w2c_template"
-R"w2c_template(    return (t3)(t2)result;                                                  \
+R"w2c_template(    force_read(ret);                                                        \
+)w2c_template"
+R"w2c_template(    return ret;                                                             \
 )w2c_template"
 R"w2c_template(  }                                                                         \
 )w2c_template"

@@ -247,14 +247,35 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 // trap checks are applied in the right place, and not optimized away.
 #ifdef __GNUC__
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-// Clang on Mips requires "f" constraints on floats
-// See https://github.com/llvm/llvm-project/issues/64241
-#if defined(__clang__) && \
-    (defined(mips) || defined(__mips__) || defined(__mips))
-#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
-#else
-#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+
+#if defined(__i386__) || defined(__x86_64__)
+#if defined(__SSE__)
+#define FORCE_READ_FLOAT_CONSTRAINT "x"
+#else  // No SSE, old x87
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
 #endif
+#elif (defined(__arm__) || defined(__aarch64__)) && defined(__ARM_FP) && \
+    ((__ARM_FP & 0x4) != 0)
+#ifdef __aarch64__
+#define FORCE_READ_FLOAT_CONSTRAINT "w"
+#else
+#define FORCE_READ_FLOAT_CONSTRAINT "t"
+#endif
+#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
+// Clang before v18 uses hard floats which has a different constraint
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) || \
+    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__s390__) || defined(__s390x__)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#else
+#define FORCE_READ_FLOAT_CONSTRAINT "r"
+#endif
+
+#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var));
 #endif
 
 #else
@@ -339,8 +360,9 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
     t1 result;                                                         \
     wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),     \
                    sizeof(t1));                                        \
-    force_read(result);                                                \
-    return (t3)(t2)result;                                             \
+    t3 ret = (t3)(t2)result;                                           \
+    force_read(ret);                                                   \
+    return ret;                                                        \
   }                                                                    \
   DEF_MEM_CHECKS0(name, _, t1, return, t3)
 

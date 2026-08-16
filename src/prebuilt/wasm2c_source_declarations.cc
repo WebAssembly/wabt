@@ -294,21 +294,61 @@ R"w2c_template(#ifdef __GNUC__
 )w2c_template"
 R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
 )w2c_template"
-R"w2c_template(// Clang on Mips requires "f" constraints on floats
+R"w2c_template(
+#if defined(__i386__) || defined(__x86_64__)
 )w2c_template"
-R"w2c_template(// See https://github.com/llvm/llvm-project/issues/64241
+R"w2c_template(#if defined(__SSE__)
 )w2c_template"
-R"w2c_template(#if defined(__clang__) && \
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "x"
 )w2c_template"
-R"w2c_template(    (defined(mips) || defined(__mips__) || defined(__mips))
+R"w2c_template(#else  // No SSE, old x87
 )w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#elif (defined(__arm__) || defined(__aarch64__)) && defined(__ARM_FP) && \
+)w2c_template"
+R"w2c_template(    ((__ARM_FP & 0x4) != 0)
+)w2c_template"
+R"w2c_template(#ifdef __aarch64__
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "w"
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "t"
 )w2c_template"
 R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
+)w2c_template"
+R"w2c_template(// Clang before v18 uses hard floats which has a different constraint
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) || \
+)w2c_template"
+R"w2c_template(    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif defined(__s390__) || defined(__s390x__)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "r"
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var));
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
@@ -468,9 +508,11 @@ R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1))
 )w2c_template"
 R"w2c_template(                   sizeof(t1));                                        \
 )w2c_template"
-R"w2c_template(    force_read(result);                                                \
+R"w2c_template(    t3 ret = (t3)(t2)result;                                           \
 )w2c_template"
-R"w2c_template(    return (t3)(t2)result;                                             \
+R"w2c_template(    force_read(ret);                                                   \
+)w2c_template"
+R"w2c_template(    return ret;                                                        \
 )w2c_template"
 R"w2c_template(  }                                                                    \
 )w2c_template"
