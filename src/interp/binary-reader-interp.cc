@@ -1812,6 +1812,9 @@ Result ReadBinaryInterp(std::string_view filename,
                         const ReadBinaryOptions& options,
                         Errors* errors,
                         ModuleDesc* out_module) {
+  // BinaryReaderInterp does not support collect-all-errors mode; only readers
+  // such as BinaryReaderIR/objdump may be used with stop_on_first_error=false.
+  assert(options.stop_on_first_error);
   BinaryReaderInterp reader(out_module, filename, errors, options.features);
   return ReadBinary(data, &reader, options);
 }
