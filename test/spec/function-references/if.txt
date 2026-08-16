@@ -49,9 +49,6 @@ out/test/spec/function-references/if.wast:788: assert_malformed passed:
   out/test/spec/function-references/if/if.7.wat:1:47: error: unexpected token $x, expected ).
   ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
                                              ^^
-  out/test/spec/function-references/if/if.7.wat:1:69: error: unexpected token (, expected EOF.
-  ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
-                                                                   ^
 out/test/spec/function-references/if.wast:796: assert_malformed passed:
   out/test/spec/function-references/if/if.8.wat:1:40: error: expected 0 results, got 1
   (type $sig (func))(func (i32.const 1)  (if (type $sig) (result i32) (then (i3...
