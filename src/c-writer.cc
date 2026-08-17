@@ -1859,6 +1859,7 @@ void CWriter::BeginInstance() {
   }
 
   if (Failed(ComputeUniqueImports())) {
+    result_ = Result::Error;
     return;
   }
 
@@ -2133,6 +2134,9 @@ void CWriter::WriteV128Decl() {
 
 void CWriter::WriteModuleInstance() {
   BeginInstance();
+  if (Failed(result_)) {
+    return;
+  }
   WriteGlobals();
   WriteMemories();
   WriteTables();
@@ -6145,6 +6149,9 @@ void CWriter::WriteCHeader() {
   Write(s_header_top);
   Write(Newline());
   WriteModuleInstance();
+  if (Failed(result_)) {
+    return;
+  }
   WriteInitDecl();
   WriteFreeDecl();
   WriteGetFuncTypeDecl();
@@ -6208,9 +6215,10 @@ Result CWriter::WriteModule(const Module& module) {
   WABT_USE(options_);
   module_ = &module;
 
-  CHECK_RESULT(ComputeUniqueImports());
-
   WriteCHeader();
+  if (Failed(result_)) {
+    return result_;
+  }
   WriteCSource();
   return result_;
 }
