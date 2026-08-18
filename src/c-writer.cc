@@ -1811,11 +1811,6 @@ void CWriter::WriteTags() {
 }
 
 Result CWriter::ComputeUniqueImports() {
-  unique_imports_.clear();
-  import_module_set_.clear();
-  import_func_module_set_.clear();
-  import_func_module_map_.clear();
-
   using modname_name_pair = std::pair<std::string, std::string>;
   std::map<modname_name_pair, const Import*> import_map;
   for (const Import* import : module_->imports) {
