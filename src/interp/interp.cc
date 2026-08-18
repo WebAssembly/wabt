@@ -2948,20 +2948,15 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
       break;
     }
   }
-  // table.set stores a reference whose type comes from the table, so opcode.def
-  // leaves that top operand's param type Void. The loop above then stops at the
-  // i32 index below it and undercounts, swapping the operand types so the i32
-  // index is read back as a reference. It always has two operands.
-  if (instr.op == Opcode::TableSet) {
-    num_operands = 2;
-  }
   auto type = index > num_operands
                   ? Type(ValueType::Void)
                   : instr.op.GetParamType(num_operands - index + 1);
-  if (type == ValueType::Void) {
+  if (type == ValueType::Void || type == ValueType::Any) {
     // Void should never be displayed normally; we only expect to see it when
     // the stack may have different a different type. This is likely to occur
-    // with an index; try to see which type we should expect.
+    // with an index; try to see which type we should expect. Any marks an
+    // operand that exists but whose type isn't statically known, e.g.
+    // table.set's value, whose type comes from the table.
     switch (instr.op) {
       case Opcode::GlobalSet: type = GetGlobalType(instr.imm_u32); break;
       case Opcode::LocalSet:
