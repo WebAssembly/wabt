@@ -1439,11 +1439,13 @@ void WatWriter::FlushExprTreeStack() {
 
 void WatWriter::WriteInitExpr(const ExprList& expr) {
   if (!expr.empty()) {
-    WritePuts("(", NextChar::None);
-    WriteExprList(expr);
+    /* Init expressions are always written folded. These positions accept a
+     * single folded expression, so wrapping a sequence of instructions in one
+     * pair of parentheses would produce output that cannot be parsed back. */
+    WriteFoldedExprList(expr);
+    FlushExprTreeStack();
     /* clear the next char, so we don't write a newline after the expr */
-    next_char_ = NextChar::None;
-    WritePuts(")", NextChar::Space);
+    next_char_ = NextChar::Space;
   }
 }
 

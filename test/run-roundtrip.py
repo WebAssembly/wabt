@@ -117,6 +117,7 @@ def main(args):
     parser.add_argument('--enable-annotations', action='store_true')
     parser.add_argument('--enable-code-metadata', action='store_true')
     parser.add_argument('--enable-custom-page-sizes', action='store_true')
+    parser.add_argument('--enable-extended-const', action='store_true')
     # --inline-exports can reorder exports, so skip roundtrip check
     parser.add_argument('--inline-exports', action='store_true',
                         help="write exports inline and skip end-to-end roundtrip check")
@@ -144,6 +145,7 @@ def main(args):
         '--enable-annotations': options.enable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
         '--enable-custom-page-sizes': options.enable_custom_page_sizes,
+        '--enable-extended-const': options.enable_extended_const,
         '--reloc': options.reloc,
         '--no-check': options.no_check,
     })
@@ -167,6 +169,7 @@ def main(args):
         '--enable-annotations': options.enable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
         '--enable-custom-page-sizes': options.enable_custom_page_sizes,
+        '--enable-extended-const': options.enable_extended_const,
         '--inline-exports': options.inline_exports,
         '--inline-imports': options.inline_imports,
         '--no-debug-names': not options.debug_names,
