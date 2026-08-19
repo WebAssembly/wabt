@@ -1,0 +1,14 @@
+;;; TOOL: run-gen-spec-js
+;;; ARGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+(module definition (memory 65536))
+(module (memory 1))
+(;; STDOUT ;;;
+// A deliberately empty file for testing.
+
+// is_definition.txt:3
+definition("\x00\x61\x73\x6d\x01\x00\x00\x00\x05\x05\x01\x00\x80\x80\x04");
+
+// is_definition.txt:4
+let $1 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x05\x03\x01\x00\x01");
+
+;;; STDOUT ;;)
