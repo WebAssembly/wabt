@@ -1,0 +1,30 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-extended-const
+(module
+  (global $g_import (import "foo" "bar") i32)
+  (memory 1)
+  (table 1 funcref)
+  (func)
+  (global (mut i32) (i32.sub (i32.const 44) (i32.const 3)))
+  (global i32 (i32.const 45))
+  (data (i32.add (global.get $g_import) (i32.const 42)) "hello")
+  (elem (i32.mul (i32.const 4) (global.get $g_import)) func 0)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (import "foo" "bar" (global (;0;) i32))
+  (func (;0;) (type 0))
+  (table (;0;) 1 funcref)
+  (memory (;0;) 1)
+  (global (;1;) (mut i32) (i32.sub
+      (i32.const 44)
+      (i32.const 3)))
+  (global (;2;) i32 (i32.const 45))
+  (elem (;0;) (i32.mul
+      (i32.const 4)
+      (global.get 0)) func 0)
+  (data (;0;) (i32.add
+      (global.get 0)
+      (i32.const 42)) "hello"))
+;;; STDOUT ;;)
