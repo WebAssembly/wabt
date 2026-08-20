@@ -1,0 +1,31 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(type $t (func))
+
+;; A block-style instruction whose signature names a reference type registers
+;; a deferred type resolution pointing into the instruction, then fails to
+;; parse. ParseInstrList recovers from the failed instruction, so the enclosing
+;; func still parses and ParseModuleField never sees a failure; the deferred
+;; resolution must not outlive the discarded instruction.
+(func block (result (ref $t)))
+(func loop (result (ref $t)))
+drop )
+
+;; Folded form of the same bug: the failing expression is an operand of an
+;; enclosing folded instruction, so the recovery happens in ParseExprList
+;; rather than ParseInstrList. The if registers a deferred resolution for its
+;; signature, then fails looking for (then ...) and is discarded, while drop
+;; and the enclosing func still parse.
+(func (drop (if (result (ref $t)) nop) (nop)))
+(;; STDERR ;;;
+out/test/parse/bad-ref-type-in-recovered-instr.txt:11:30: error: unexpected token ), expected end.
+(func block (result (ref $t)))
+                             ^
+out/test/parse/bad-ref-type-in-recovered-instr.txt:12:29: error: unexpected token ), expected end.
+(func loop (result (ref $t)))
+                            ^
+out/test/parse/bad-ref-type-in-recovered-instr.txt:20:35: error: unexpected token nop, expected (.
+(func (drop (if (result (ref $t)) nop) (nop)))
+                                  ^^^
+;;; STDERR ;;)
