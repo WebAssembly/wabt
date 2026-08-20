@@ -42,6 +42,11 @@ void Features::UpdateDependencies() {
     reference_types_enabled_ = true;
   }
 
+  // Garbage collector require function references.
+  if (gc_enabled_) {
+    function_references_enabled_ = true;
+  }
+
   // Function references require reference types.
   if (function_references_enabled_) {
     reference_types_enabled_ = true;
