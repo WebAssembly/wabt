@@ -3825,6 +3825,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       auto command = std::make_unique<ModuleCommand>();
       module = &command->module;
       *module = std::move(cast<TextScriptModule>(script_module.get())->module);
+      command->is_definition = script_module->is_definition;
       *out_command = std::move(command);
       break;
     }
@@ -4012,6 +4013,7 @@ Result WastParser::ParseScriptModule(
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Module);
+  bool is_definition = Match(TokenType::Definition);
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -4062,6 +4064,7 @@ Result WastParser::ParseScriptModule(
     }
   }
 
+  (*out_module)->is_definition = is_definition;
   EXPECT(Rpar);
   return Result::Ok;
 }

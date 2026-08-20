@@ -403,13 +403,17 @@ class JSWriter(object):
         return '$%d' % self.module_idx
 
     def _WriteModuleCommand(self, command):
-        self.module_idx += 1
-        idx_name = self._ModuleIdxName()
 
-        self.out_file.write('let %s = instance("%s");\n' %
-                            (idx_name, self._Module(command['filename'])))
-        if 'name' in command:
-            self.out_file.write('let %s = %s;\n' % (command['name'], idx_name))
+        if 'definition' in command:
+            self.out_file.write('definition("%s");\n' %
+                                (self._Module(command['filename'])))
+        else:
+            self.module_idx += 1
+            idx_name = self._ModuleIdxName()
+            self.out_file.write('let %s = instance("%s");\n' %
+                                (idx_name, self._Module(command['filename'])))
+            if 'name' in command:
+                self.out_file.write('let %s = %s;\n' % (command['name'], idx_name))
 
     def _WriteActionCommand(self, command):
         self.out_file.write('%s;\n' % self._Action(command['action']))

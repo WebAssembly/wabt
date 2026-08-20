@@ -1378,6 +1378,8 @@ class ScriptModule {
   ScriptModuleType type() const { return type_; }
   virtual const Location& location() const = 0;
 
+  bool is_definition;
+
  protected:
   explicit ScriptModule(ScriptModuleType type) : type_(type) {}
 
@@ -1506,6 +1508,7 @@ class CommandMixin : public Command {
 class ModuleCommand : public CommandMixin<CommandType::Module> {
  public:
   Module module;
+  bool is_definition;
 };
 
 class ScriptModuleCommand : public CommandMixin<CommandType::ScriptModule> {

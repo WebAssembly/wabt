@@ -140,6 +140,7 @@ class ModuleCommand : public CommandMixin<CommandType::Module> {
   ModuleType module = ModuleType::Binary;
   std::string filename;
   std::string name;
+  bool is_definition;
 };
 
 class Action {
@@ -378,6 +379,7 @@ class JSONParser {
   wabt::Result ParseString(std::string* out_string);
   wabt::Result ParseKeyStringValue(const char* key, std::string* out_string);
   wabt::Result ParseOptNameStringValue(std::string* out_string);
+  wabt::Result ParseOptIsDefinitionValue(bool* out_is_definition);
   wabt::Result ParseLine(uint32_t* out_line_number);
   wabt::Result ParseType(Type* out_type);
   wabt::Result ParseTypeObject(Type* out_type);
@@ -601,6 +603,24 @@ wabt::Result JSONParser::ParseOptNameStringValue(std::string* out_string) {
   if (Match("\"name\"")) {
     EXPECT(":");
     CHECK_RESULT(ParseString(out_string));
+    EXPECT(",");
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseOptIsDefinitionValue(bool* out_is_definition) {
+  if (Match("\"definition\"")) {
+    EXPECT(":");
+    std::string value;
+    CHECK_RESULT(ParseString(&value));
+    if (value == "true") {
+      *out_is_definition = true;
+    } else if (value == "false") {
+      *out_is_definition = false;
+    } else {
+      PrintError("unknown bool value: \"%s\"", value.c_str());
+      return wabt::Result::Error;
+    }
     EXPECT(",");
   }
   return wabt::Result::Ok;
@@ -1054,6 +1074,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
   if (Match("\"module\"")) {
     auto command = std::make_unique<ModuleCommand>();
     EXPECT(",");
+    CHECK_RESULT(ParseOptIsDefinitionValue(&command->is_definition));
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseOptNameStringValue(&command->name));
@@ -1623,6 +1644,14 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     PrintError(command->line, "IR Validator thinks module is invalid: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
+  }
+
+  if (command->is_definition) {
+    if (!command->name.empty()) {
+      PrintError(command->line, "only instantiated modules can have names");
+      return wabt::Result::Error;
+    }
+    return wabt::Result::Ok;
   }
 
   RefVec imports;
