@@ -1,20 +1,23 @@
-#if WASM_RT_MEMCHECK_GUARD_PAGES
-#ifdef __GNUC__
+#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
+    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
+#define SIMD_FORCE_READ(var)
+#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
 #if defined(__x86_64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 #elif defined(__aarch64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
+#elif defined(__riscv)
+#define SIMD_FORCE_READ(var) __asm__("" ::"vr"(var));
 #elif defined(__s390x__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
+#else
+#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
 #endif
+#else
+#error \
+    "Guard page mode for Wasm not supported on this platform because SIMD_FORCE_READ could not be instantiated." \
+   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 #endif
-#endif
-
-#ifndef SIMD_FORCE_READ
-#define SIMD_FORCE_READ(var)
-#endif
-
-// TODO: equivalent constraint for ARM and other architectures
 
 // The below SIMD operations copy to a local variable first as the
 // MEM_ADDR_MEMOP maybe segment pointers if WASM_RT_USE_SEGUE_FOR_THIS_MODULE is

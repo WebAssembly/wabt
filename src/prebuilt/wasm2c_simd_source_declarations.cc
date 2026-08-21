@@ -1,6 +1,10 @@
-const char* s_simd_source_declarations = R"w2c_template(#if WASM_RT_MEMCHECK_GUARD_PAGES
+const char* s_simd_source_declarations = R"w2c_template(#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
 )w2c_template"
-R"w2c_template(#ifdef __GNUC__
+R"w2c_template(    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
+)w2c_template"
+R"w2c_template(#define SIMD_FORCE_READ(var)
+)w2c_template"
+R"w2c_template(#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
 )w2c_template"
 R"w2c_template(#if defined(__x86_64__)
 )w2c_template"
@@ -10,25 +14,29 @@ R"w2c_template(#elif defined(__aarch64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 )w2c_template"
+R"w2c_template(#elif defined(__riscv)
+)w2c_template"
+R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"vr"(var));
+)w2c_template"
 R"w2c_template(#elif defined(__s390x__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
 )w2c_template"
-R"w2c_template(#endif
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#error \
+)w2c_template"
+R"w2c_template(    "Guard page mode for Wasm not supported on this platform because SIMD_FORCE_READ could not be instantiated." \
+)w2c_template"
+R"w2c_template(   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
+)w2c_template"
 R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
-#ifndef SIMD_FORCE_READ
-)w2c_template"
-R"w2c_template(#define SIMD_FORCE_READ(var)
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
-// TODO: equivalent constraint for ARM and other architectures
 )w2c_template"
 R"w2c_template(
 // The below SIMD operations copy to a local variable first as the

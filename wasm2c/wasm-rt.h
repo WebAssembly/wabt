@@ -133,6 +133,17 @@ extern "C" {
 #endif
 
 /**
+ * This macro, if defined, allows the embedder to permit elimination of unused
+ * memory loads. Note, this a non conformant configuration, i.e., this does not
+ * respect Wasm's specification, as Wasm requires all loads (even the eliminated
+ * loads to trap), whereas this configuration could eliminate an out-of-bound
+ * load, and thus allow the Wasm module to not trap. Use with caution.
+ */
+#ifndef WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
+#define WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION 0
+#endif
+
+/**
  * Set the range checking strategy for Wasm memories.
  *
  * GUARD_PAGES:  memory accesses rely on unmapped pages/guard pages to trap
@@ -142,11 +153,15 @@ extern "C" {
  *
  * This defaults to GUARD_PAGES as this is the fastest option, iff the
  * requirements of GUARD_PAGES --- 64-bit platforms, MMAP allocation strategy,
- * no 64-bit memories --- are met. This falls back to BOUNDS otherwise.
+ * no 64-bit memories, and platforms with a supported FORCE_READ_STRATEGY
+ * described below --- are met. This falls back to BOUNDS otherwise.
+ *
+ * FORCE_READ_STRATEGY --- either the compiler should be a gcc/clang-like
+ * compiler or the embedder must permit a non-conforming setting (allow dead
+ * read elimination from linear memory)
  */
-
-/** Check if Guard checks are supported */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && \
+    (WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION || defined(__GNUC__))
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0
