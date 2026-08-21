@@ -256,42 +256,6 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 #if WASM_RT_MEMCHECK_GUARD_PAGES
 #define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
   WASM_RT_CHECK_BASE(mem);
-
-// When using guard pages, reads have to be immediately consumed so that OOB
-// trap checks are applied in the right place, and not optimized away.
-#ifdef __GNUC__
-#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-
-#if defined(__i386__) || defined(__x86_64__)
-#if defined(__SSE__)
-#define FORCE_READ_FLOAT_CONSTRAINT "x"
-#else  // No SSE, old x87
-#define FORCE_READ_FLOAT_CONSTRAINT "f"
-#endif
-#elif (defined(__arm__) || defined(__aarch64__)) && defined(__ARM_FP) && \
-    ((__ARM_FP & 0x4) != 0)
-#ifdef __aarch64__
-#define FORCE_READ_FLOAT_CONSTRAINT "w"
-#else
-#define FORCE_READ_FLOAT_CONSTRAINT "t"
-#endif
-#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
-// Clang before v18 uses hard floats which has a different constraint
-#define FORCE_READ_FLOAT_CONSTRAINT "f"
-#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) || \
-    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
-#define FORCE_READ_FLOAT_CONSTRAINT "f"
-#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
-#define FORCE_READ_FLOAT_CONSTRAINT "f"
-#elif defined(__s390__) || defined(__s390x__)
-#define FORCE_READ_FLOAT_CONSTRAINT "f"
-#else
-#define FORCE_READ_FLOAT_CONSTRAINT "r"
-#endif
-
-#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var));
-#endif
-
 #else
 #if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
 #define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t)     \
@@ -311,12 +275,39 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
   WASM_RT_CHECK_BASE(mem);          \
   RANGE_CHECK(mem, a, sizeof(t));
 
-#ifndef FORCE_READ_INT
+// When using guard pages, reads have to be immediately consumed so that OOB
+// trap checks are applied in the right place, and not optimized away. This is
+// done using FORCE_READ_INT/FORCE_READ_FLOAT
+#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
+    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 #define FORCE_READ_INT(var)
+#define FORCE_READ_FLOAT(var)
+#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+#define FORCE_READ_INT(var) __asm__("" ::"r"(var))
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define FORCE_READ_FLOAT_CONSTRAINT "x"
+#elif defined(__aarch64__) && defined(__ARM_FP) && ((__ARM_FP & 0x4) != 0)
+#define FORCE_READ_FLOAT_CONSTRAINT "w"
+#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
+// Clang before v18 uses hard floats which has a different constraint
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) && \
+    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__s390__) || defined(__s390x__)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#else
+#define FORCE_READ_FLOAT_CONSTRAINT "r"
 #endif
 
-#ifndef FORCE_READ_FLOAT
-#define FORCE_READ_FLOAT(var)
+#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var))
+#else
+#error \
+    "Guard page mode for Wasm not supported on this platform because FORCE_READ_INT/FORCE_READ_FLOAT could not be instantiated." \
+   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 #endif
 
 static inline void load_data(u8* dest, const u8* src, size_t n) {

@@ -311,75 +311,7 @@ R"w2c_template(#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
 )w2c_template"
 R"w2c_template(  WASM_RT_CHECK_BASE(mem);
 )w2c_template"
-R"w2c_template(
-// When using guard pages, reads have to be immediately consumed so that OOB
-)w2c_template"
-R"w2c_template(// trap checks are applied in the right place, and not optimized away.
-)w2c_template"
-R"w2c_template(#ifdef __GNUC__
-)w2c_template"
-R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-)w2c_template"
-R"w2c_template(
-#if defined(__i386__) || defined(__x86_64__)
-)w2c_template"
-R"w2c_template(#if defined(__SSE__)
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "x"
-)w2c_template"
-R"w2c_template(#else  // No SSE, old x87
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(#elif (defined(__arm__) || defined(__aarch64__)) && defined(__ARM_FP) && \
-)w2c_template"
-R"w2c_template(    ((__ARM_FP & 0x4) != 0)
-)w2c_template"
-R"w2c_template(#ifdef __aarch64__
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "w"
-)w2c_template"
 R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "t"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
-)w2c_template"
-R"w2c_template(// Clang before v18 uses hard floats which has a different constraint
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
-)w2c_template"
-R"w2c_template(#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) || \
-)w2c_template"
-R"w2c_template(    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
-)w2c_template"
-R"w2c_template(#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
-)w2c_template"
-R"w2c_template(#elif defined(__s390__) || defined(__s390x__)
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
-)w2c_template"
-R"w2c_template(#else
-)w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "r"
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
-#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var));
-)w2c_template"
-R"w2c_template(#endif
-)w2c_template"
-R"w2c_template(
-#else
 )w2c_template"
 R"w2c_template(#if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
 )w2c_template"
@@ -415,16 +347,69 @@ R"w2c_template(  WASM_RT_CHECK_BASE(mem);          \
 R"w2c_template(  RANGE_CHECK(mem, a, sizeof(t));
 )w2c_template"
 R"w2c_template(
-#ifndef FORCE_READ_INT
+// When using guard pages, reads have to be immediately consumed so that OOB
+)w2c_template"
+R"w2c_template(// trap checks are applied in the right place, and not optimized away. This is
+)w2c_template"
+R"w2c_template(// done using FORCE_READ_INT/FORCE_READ_FLOAT
+)w2c_template"
+R"w2c_template(#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
+)w2c_template"
+R"w2c_template(    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 )w2c_template"
 R"w2c_template(#define FORCE_READ_INT(var)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT(var)
+)w2c_template"
+R"w2c_template(#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+)w2c_template"
+R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var))
+)w2c_template"
+R"w2c_template(
+#if defined(__x86_64__) || defined(_M_X64)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "x"
+)w2c_template"
+R"w2c_template(#elif defined(__aarch64__) && defined(__ARM_FP) && ((__ARM_FP & 0x4) != 0)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "w"
+)w2c_template"
+R"w2c_template(#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
+)w2c_template"
+R"w2c_template(// Clang before v18 uses hard floats which has a different constraint
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) && \
+)w2c_template"
+R"w2c_template(    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#elif defined(__s390__) || defined(__s390x__)
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "f"
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define FORCE_READ_FLOAT_CONSTRAINT "r"
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
-#ifndef FORCE_READ_FLOAT
+#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var))
 )w2c_template"
-R"w2c_template(#define FORCE_READ_FLOAT(var)
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#error \
+)w2c_template"
+R"w2c_template(    "Guard page mode for Wasm not supported on this platform because FORCE_READ_INT/FORCE_READ_FLOAT could not be instantiated." \
+)w2c_template"
+R"w2c_template(   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
