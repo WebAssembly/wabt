@@ -24,51 +24,30 @@ out/test/spec/memory64/call_indirect.wast:679: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.2.wat:1:122: error: unexpected token "param", expected an expr.
   ...indirect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const ...
                                         ^^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.2.wat:1:166: error: unexpected token ), expected EOF.
-  ...irect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:691: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.3.wat:1:109: error: unexpected token "type", expected an expr.
   ... i32)  (call_indirect (param i32) (type $sig) (result i32)    (i32.const 0...
                                         ^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.3.wat:1:166: error: unexpected token ), expected EOF.
-  ...irect (param i32) (type $sig) (result i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:703: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.4.wat:1:122: error: unexpected token "type", expected an expr.
   ...indirect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const ...
                                         ^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.4.wat:1:166: error: unexpected token ), expected EOF.
-  ...irect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:715: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.5.wat:1:110: error: unexpected token "type", expected an expr.
   ...i32)  (call_indirect (result i32) (type $sig) (param i32)    (i32.const 0)...
                                         ^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.5.wat:1:166: error: unexpected token ), expected EOF.
-  ...irect (result i32) (type $sig) (param i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:727: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.6.wat:1:110: error: unexpected token "param", expected an expr.
   ...i32)  (call_indirect (result i32) (param i32) (type $sig)    (i32.const 0)...
                                         ^^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.6.wat:1:166: error: unexpected token ), expected EOF.
-  ...irect (result i32) (param i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:739: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.7.wat:1:67: error: unexpected token "param", expected an expr.
   ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
                                           ^^^^^
-  out/test/spec/memory64/call_indirect/call_indirect.7.wat:1:106: error: unexpected token ), expected EOF.
-  ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:749: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.8.wat:1:46: error: unexpected token $x, expected ).
   ...e 0 funcref)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
                                              ^^
-  out/test/spec/memory64/call_indirect/call_indirect.8.wat:1:82: error: unexpected token ), expected EOF.
-  ...e 0 funcref)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
-                                                                                 ^
 out/test/spec/memory64/call_indirect.wast:756: assert_malformed passed:
   out/test/spec/memory64/call_indirect/call_indirect.9.wat:1:57: error: expected 0 results, got 1
   ...0 funcref)(func (result i32)  (call_indirect (type $sig) (result i32) (i32...

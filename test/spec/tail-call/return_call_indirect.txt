@@ -14,51 +14,30 @@ out/test/spec/tail-call/return_call_indirect.wast:301: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.1.wat:1:129: error: unexpected token "param", expected an expr.
   ...indirect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const ...
                                         ^^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.1.wat:1:173: error: unexpected token ), expected EOF.
-  ...irect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:313: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.2.wat:1:116: error: unexpected token "type", expected an expr.
   ...(return_call_indirect (param i32) (type $sig) (result i32)    (i32.const 0...
                                         ^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.2.wat:1:173: error: unexpected token ), expected EOF.
-  ...irect (param i32) (type $sig) (result i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:325: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.3.wat:1:129: error: unexpected token "type", expected an expr.
   ...indirect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const ...
                                         ^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.3.wat:1:173: error: unexpected token ), expected EOF.
-  ...irect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:337: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.4.wat:1:117: error: unexpected token "type", expected an expr.
   ...return_call_indirect (result i32) (type $sig) (param i32)    (i32.const 0)...
                                         ^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.4.wat:1:173: error: unexpected token ), expected EOF.
-  ...irect (result i32) (type $sig) (param i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:349: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.5.wat:1:117: error: unexpected token "param", expected an expr.
   ...return_call_indirect (result i32) (param i32) (type $sig)    (i32.const 0)...
                                         ^^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.5.wat:1:173: error: unexpected token ), expected EOF.
-  ...irect (result i32) (param i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:361: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.6.wat:1:74: error: unexpected token "param", expected an expr.
   ...return_call_indirect (result i32) (param i32)    (i32.const 0) (i32.const ...
                                         ^^^^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.6.wat:1:118: error: unexpected token ), expected EOF.
-  ...urn_call_indirect (result i32) (param i32)    (i32.const 0) (i32.const 0)  ))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:373: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.7.wat:1:53: error: unexpected token $x, expected ).
   ...cref)(func (return_call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
                                              ^^
-  out/test/spec/tail-call/return_call_indirect/return_call_indirect.7.wat:1:89: error: unexpected token ), expected EOF.
-  ...cref)(func (return_call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
-                                                                                 ^
 out/test/spec/tail-call/return_call_indirect.wast:380: assert_malformed passed:
   out/test/spec/tail-call/return_call_indirect/return_call_indirect.8.wat:1:57: error: expected 0 results, got 1
   ...ncref)(func (result i32)  (return_call_indirect (type $sig) (result i32) (...

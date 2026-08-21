@@ -41,9 +41,6 @@ out/test/spec/simd_align.wast:105: assert_malformed passed:
   out/test/spec/simd_align/simd_align.56.wat:1:35: error: unexpected token align=-1, expected ).
   (memory 1) (func (drop (v128.load align=-1 (i32.const 0))))
                                     ^^^^^^^^
-  out/test/spec/simd_align/simd_align.56.wat:1:59: error: unexpected token ), expected EOF.
-  (memory 1) (func (drop (v128.load align=-1 (i32.const 0))))
-                                                            ^
 out/test/spec/simd_align.wast:111: assert_malformed passed:
   out/test/spec/simd_align/simd_align.57.wat:1:35: error: alignment must be power-of-two
   (memory 1) (func (drop (v128.load align=0 (i32.const 0))))
@@ -56,9 +53,6 @@ out/test/spec/simd_align.wast:123: assert_malformed passed:
   out/test/spec/simd_align/simd_align.59.wat:1:30: error: unexpected token align=-1, expected ).
   (memory 1) (func (v128.store align=-1 (i32.const 0) (v128.const i32x4 0 0 0 0)))
                                ^^^^^^^^
-  out/test/spec/simd_align/simd_align.59.wat:1:80: error: unexpected token ), expected EOF.
-  (memory 1) (func (v128.store align=-1 (i32.const 0) (v128.const i32x4 0 0 0 0)))
-                                                                                 ^
 out/test/spec/simd_align.wast:129: assert_malformed passed:
   out/test/spec/simd_align/simd_align.60.wat:1:30: error: alignment must be power-of-two
   (memory 0) (func (v128.store align=0 (i32.const 0) (v128.const i32x4 0 0 0 0)))
@@ -71,9 +65,6 @@ out/test/spec/simd_align.wast:141: assert_malformed passed:
   out/test/spec/simd_align/simd_align.62.wat:1:48: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load8x8_s align=-1 (i32.const 0)))
                                                  ^^^^^^^^
-  out/test/spec/simd_align/simd_align.62.wat:1:71: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load8x8_s align=-1 (i32.const 0)))
-                                                                        ^
 out/test/spec/simd_align.wast:147: assert_malformed passed:
   out/test/spec/simd_align/simd_align.63.wat:1:48: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load8x8_s align=0 (i32.const 0)))
@@ -86,9 +77,6 @@ out/test/spec/simd_align.wast:159: assert_malformed passed:
   out/test/spec/simd_align/simd_align.65.wat:1:48: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load8x8_u align=-1 (i32.const 0)))
                                                  ^^^^^^^^
-  out/test/spec/simd_align/simd_align.65.wat:1:71: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load8x8_u align=-1 (i32.const 0)))
-                                                                        ^
 out/test/spec/simd_align.wast:165: assert_malformed passed:
   out/test/spec/simd_align/simd_align.66.wat:1:48: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load8x8_u align=0 (i32.const 0)))
@@ -101,9 +89,6 @@ out/test/spec/simd_align.wast:177: assert_malformed passed:
   out/test/spec/simd_align/simd_align.68.wat:1:49: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load16x4_s align=-1 (i32.const 0)))
                                                   ^^^^^^^^
-  out/test/spec/simd_align/simd_align.68.wat:1:72: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load16x4_s align=-1 (i32.const 0)))
-                                                                         ^
 out/test/spec/simd_align.wast:183: assert_malformed passed:
   out/test/spec/simd_align/simd_align.69.wat:1:49: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load16x4_s align=0 (i32.const 0)))
@@ -116,9 +101,6 @@ out/test/spec/simd_align.wast:195: assert_malformed passed:
   out/test/spec/simd_align/simd_align.71.wat:1:49: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load16x4_u align=-1 (i32.const 0)))
                                                   ^^^^^^^^
-  out/test/spec/simd_align/simd_align.71.wat:1:72: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load16x4_u align=-1 (i32.const 0)))
-                                                                         ^
 out/test/spec/simd_align.wast:201: assert_malformed passed:
   out/test/spec/simd_align/simd_align.72.wat:1:49: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load16x4_u align=0 (i32.const 0)))
@@ -131,9 +113,6 @@ out/test/spec/simd_align.wast:213: assert_malformed passed:
   out/test/spec/simd_align/simd_align.74.wat:1:49: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load32x2_s align=-1 (i32.const 0)))
                                                   ^^^^^^^^
-  out/test/spec/simd_align/simd_align.74.wat:1:72: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load32x2_s align=-1 (i32.const 0)))
-                                                                         ^
 out/test/spec/simd_align.wast:219: assert_malformed passed:
   out/test/spec/simd_align/simd_align.75.wat:1:49: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load32x2_s align=0 (i32.const 0)))
@@ -146,9 +125,6 @@ out/test/spec/simd_align.wast:231: assert_malformed passed:
   out/test/spec/simd_align/simd_align.77.wat:1:49: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load32x2_u align=-1 (i32.const 0)))
                                                   ^^^^^^^^
-  out/test/spec/simd_align/simd_align.77.wat:1:72: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load32x2_u align=-1 (i32.const 0)))
-                                                                         ^
 out/test/spec/simd_align.wast:237: assert_malformed passed:
   out/test/spec/simd_align/simd_align.78.wat:1:49: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load32x2_u align=0 (i32.const 0)))
@@ -161,9 +137,6 @@ out/test/spec/simd_align.wast:249: assert_malformed passed:
   out/test/spec/simd_align/simd_align.80.wat:1:50: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load8_splat align=-1 (i32.const 0)))
                                                    ^^^^^^^^
-  out/test/spec/simd_align/simd_align.80.wat:1:73: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load8_splat align=-1 (i32.const 0)))
-                                                                          ^
 out/test/spec/simd_align.wast:255: assert_malformed passed:
   out/test/spec/simd_align/simd_align.81.wat:1:50: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load8_splat align=0 (i32.const 0)))
@@ -172,9 +145,6 @@ out/test/spec/simd_align.wast:261: assert_malformed passed:
   out/test/spec/simd_align/simd_align.82.wat:1:51: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load16_splat align=-1 (i32.const 0)))
                                                     ^^^^^^^^
-  out/test/spec/simd_align/simd_align.82.wat:1:74: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load16_splat align=-1 (i32.const 0)))
-                                                                           ^
 out/test/spec/simd_align.wast:267: assert_malformed passed:
   out/test/spec/simd_align/simd_align.83.wat:1:51: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load16_splat align=0 (i32.const 0)))
@@ -183,9 +153,6 @@ out/test/spec/simd_align.wast:273: assert_malformed passed:
   out/test/spec/simd_align/simd_align.84.wat:1:51: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load32_splat align=-1 (i32.const 0)))
                                                     ^^^^^^^^
-  out/test/spec/simd_align/simd_align.84.wat:1:74: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load32_splat align=-1 (i32.const 0)))
-                                                                           ^
 out/test/spec/simd_align.wast:279: assert_malformed passed:
   out/test/spec/simd_align/simd_align.85.wat:1:51: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load32_splat align=0 (i32.const 0)))
@@ -198,9 +165,6 @@ out/test/spec/simd_align.wast:291: assert_malformed passed:
   out/test/spec/simd_align/simd_align.87.wat:1:51: error: unexpected token align=-1, expected ).
   (memory 1) (func (result v128) (v128.load64_splat align=-1 (i32.const 0)))
                                                     ^^^^^^^^
-  out/test/spec/simd_align/simd_align.87.wat:1:74: error: unexpected token ), expected EOF.
-  (memory 1) (func (result v128) (v128.load64_splat align=-1 (i32.const 0)))
-                                                                           ^
 out/test/spec/simd_align.wast:297: assert_malformed passed:
   out/test/spec/simd_align/simd_align.88.wat:1:51: error: alignment must be power-of-two
   (memory 1) (func (result v128) (v128.load64_splat align=0 (i32.const 0)))

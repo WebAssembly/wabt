@@ -2282,6 +2282,11 @@ Result WastParser::ParseResultList(TypeVector* result_types,
 
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
+  // Keep going after a bad instruction so the rest of the errors get reported,
+  // but remember that one was dropped. Returning Ok here would tell the caller
+  // the field parsed cleanly when part of it was thrown away, and anything the
+  // discarded expressions registered for later would outlive them.
+  Result result = Result::Ok;
   ExprList new_exprs;
   while (true) {
     auto pair = PeekPair();
@@ -2289,19 +2294,21 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
       if (Succeeded(ParseInstr(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        result = Result::Error;
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
       if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        result = Result::Error;
         CHECK_RESULT(Synchronize(IsLparAnn));
       }
     } else {
       break;
     }
   }
-  return Result::Ok;
+  return result;
 }
 
 Result WastParser::ParseTerminatingInstrList(ExprList* exprs) {
@@ -3433,15 +3440,17 @@ Result WastParser::ParseBlock(Block* block) {
 
 Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
+  Result result = Result::Ok;
   ExprList new_exprs;
   while (PeekMatchExpr()) {
     if (Succeeded(ParseExpr(&new_exprs))) {
       exprs->splice(exprs->end(), new_exprs);
     } else {
+      result = Result::Error;
       CHECK_RESULT(Synchronize(IsExpr));
     }
   }
-  return Result::Ok;
+  return result;
 }
 
 Result WastParser::ParseExpr(ExprList* exprs) {
