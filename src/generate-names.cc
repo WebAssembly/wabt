@@ -179,6 +179,12 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
                                         Index index,
                                         std::string* str) {
   if (!HasName(*str)) {
+    if (!HasName(name)) {
+      // An empty import or export name would produce a bare "$", which is not
+      // a valid identifier. Leave the name unset; the index-based pass that
+      // runs afterwards will give it a usable one.
+      return;
+    }
     unsigned disambiguator = 0;
     while (true) {
       GenerateName(name, kInvalidIndex, disambiguator, str);
