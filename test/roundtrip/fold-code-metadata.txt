@@ -1,0 +1,28 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-annotations --enable-code-metadata
+(module
+  ;; The annotation decorates i32.add. Folding must not move it onto another
+  ;; instruction, and must not fold the operands into i32.add either, since a
+  ;; folded expression expands to its operands first.
+  (func $f (param i32) (result i32)
+    i32.const 1234
+    local.get 0
+    (@metadata.code.test "aa\01a") i32.add
+    return)
+
+  ;; An annotation on an instruction that takes no operands.
+  (func $g
+    (@metadata.code.test "b") nop))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result i32)))
+  (type (;1;) (func))
+  (func (;0;) (type 0) (param i32) (result i32)
+    (i32.const 1234)
+    (local.get 0)
+    (@metadata.code.test "aa\01a") (i32.add)
+    (return))
+  (func (;1;) (type 1)
+    (@metadata.code.test "b") (nop))
+  (@custom "metadata.code.test" "\02\00\01\06\04aa\01a\01\01\01\01b"))
+;;; STDOUT ;;)
