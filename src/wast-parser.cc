@@ -2280,6 +2280,23 @@ Result WastParser::ParseResultList(TypeVector* result_types,
   return ParseUnboundValueTypeList(TokenType::Result, result_types, type_vars);
 }
 
+void WastParser::AppendAnnotatedInstr(ExprList* exprs,
+                                      ExprList* annotation,
+                                      ExprList* annotated) {
+  // A code metadata annotation decorates the operator of the instruction that
+  // follows it. A folded expression expands to its operands before that
+  // operator, so appending the annotation first would attach it to the first
+  // operand instead; it goes between the two.
+  if (annotated->empty()) {
+    exprs->splice(exprs->end(), *annotation);
+    return;
+  }
+  std::unique_ptr<Expr> op = annotated->extract_back();
+  exprs->splice(exprs->end(), *annotated);
+  exprs->splice(exprs->end(), *annotation);
+  exprs->push_back(std::move(op));
+}
+
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
   // Keep going after a bad instruction so the rest of the errors get reported,
@@ -2298,11 +2315,22 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
-      if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
-        exprs->splice(exprs->end(), new_exprs);
-      } else {
+      ExprList annotation;
+      if (Failed(ParseCodeMetadataAnnotation(&annotation))) {
         result = Result::Error;
         CHECK_RESULT(Synchronize(IsLparAnn));
+        continue;
+      }
+      ExprList annotated;
+      if (IsInstr(PeekPair()) && Succeeded(ParseInstr(&annotated))) {
+        AppendAnnotatedInstr(exprs, &annotation, &annotated);
+      } else {
+        // Nothing follows it to decorate; keep it rather than lose it.
+        exprs->splice(exprs->end(), annotation);
+        if (IsInstr(PeekPair())) {
+          result = Result::Error;
+          CHECK_RESULT(Synchronize(IsInstr));
+        }
       }
     } else {
       break;
@@ -3442,7 +3470,34 @@ Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
   Result result = Result::Ok;
   ExprList new_exprs;
-  while (PeekMatchExpr()) {
+  while (true) {
+    if (IsLparAnn(PeekPair())) {
+      // A code metadata annotation here decorates the operator of the
+      // expression that follows it, not the first instruction that expression
+      // expands to, so it is emitted after that expression's operands and
+      // immediately before its operator.
+      ExprList annotation;
+      if (Failed(ParseCodeMetadataAnnotation(&annotation))) {
+        result = Result::Error;
+        CHECK_RESULT(Synchronize(IsLparAnn));
+        continue;
+      }
+      ExprList annotated;
+      if (!PeekMatchExpr() || Failed(ParseExpr(&annotated))) {
+        // Nothing to decorate; keep the annotation so it is not silently lost.
+        exprs->splice(exprs->end(), annotation);
+        if (PeekMatchExpr()) {
+          result = Result::Error;
+          CHECK_RESULT(Synchronize(IsExpr));
+        }
+        continue;
+      }
+      AppendAnnotatedInstr(exprs, &annotation, &annotated);
+      continue;
+    }
+    if (!PeekMatchExpr()) {
+      break;
+    }
     if (Succeeded(ParseExpr(&new_exprs))) {
       exprs->splice(exprs->end(), new_exprs);
     } else {
