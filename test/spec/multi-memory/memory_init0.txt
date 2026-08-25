@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_init0.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 init(i32:0, i32:1, i32:2) =>
 init(i32:65532, i32:0, i32:4) =>

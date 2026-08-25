@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-memory64
+;;; ARGS: --stdout
 (module
   (table i64 0 0xffff_ffff_ffff_ffff funcref)
   (table i64 0xffff_ffff_ffff_ffff 0xffff_ffff_ffff_ffff funcref)

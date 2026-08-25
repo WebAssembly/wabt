@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/table_copy_mixed.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/table_copy_mixed.wast:20: assert_invalid passed:
   out/test/spec/memory64/table_copy_mixed/table_copy_mixed.1.wasm:000003e: error: type mismatch in table.copy, expected [i32, i64, i32] but got [i32, i64, i64]

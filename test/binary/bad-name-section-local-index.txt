@@ -30,5 +30,6 @@ section("name") {
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (param i32)))
-  (func (;0;) (type 0) (param i32)))
+  (func (;0;) (type 0) (param i32))
+  (@custom "name" "\02\08\01\00\01\05\03BAD"))
 ;;; STDOUT ;;)

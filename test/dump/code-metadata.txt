@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS0: --enable-code-metadata
 ;;; ARGS1: --headers --details
 (module
   (func $f (param i32) (result i32)

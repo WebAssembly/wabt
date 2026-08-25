@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/function-references/return_call_indirect.wast
-;;; ARGS*: --enable-function-references --enable-tail-call
+;;; ARGS*: --enable-function-references
 (;; STDOUT ;;;
 out/test/spec/function-references/return_call_indirect.wast:234: assert_trap passed: indirect call signature mismatch
 out/test/spec/function-references/return_call_indirect.wast:235: assert_trap passed: indirect call signature mismatch

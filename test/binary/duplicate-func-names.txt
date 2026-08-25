@@ -22,5 +22,6 @@ section("name") {
   (type (;0;) (func))
   (func $F1 (type 0))
   (func $F1.1 (type 0))
-  (func $F1.2 (type 0)))
+  (func $F1.2 (type 0))
+  (@custom "name" "\01\0d\03\00\02F1\01\02F1\02\02F1"))
 ;;; STDOUT ;;)

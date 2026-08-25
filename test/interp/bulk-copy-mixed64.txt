@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-memory64 --enable-multi-memory
 (module
   (memory $m32 1 1)
   (memory $m64 i64 1 1)

@@ -46,21 +46,21 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 
 | Proposal   | flag | default | binary | text | validate | interpret | wasm2c |
 | --------------------- | --------------------------- | - | - | - | - | - | - |
-| [exception handling][]| `--enable-exceptions`       |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [exception handling][]| `--disable-exceptions`      | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [mutable globals][]   | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--disable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][]    | `--disable-sign-extension`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [simd][]              | `--disable-simd`            | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [threads][]           | `--enable-threads`          |   | ✓ | ✓ | ✓ | ✓ |   |
 | [multi-value][]       | `--disable-multi-value`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [tail-call][]         | `--enable-tail-call`        |   | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][]         | `--disable-tail-call`       | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [bulk memory][]       | `--disable-bulk-memory`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [reference types][]   | `--disable-reference-types` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [annotations][]       | `--enable-annotations`      |   |   | ✓ |   |   |   |
-| [memory64][]          | `--enable-memory64`         |   | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [multi-memory][]      | `--enable-multi-memory`     |   | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [extended-const][]    | `--enable-extended-const`   |   | ✓ | ✓ | ✓ | ✓ | ✓ |
-| [relaxed-simd][]      | `--enable-relaxed-simd`     |   | ✓ | ✓ | ✓ | ✓ |   |
+| [annotations][]       | `--disable-annotations`     | ✓ |   | ✓ |   |   |   |
+| [memory64][]          | `--disable-memory64`        | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [multi-memory][]      | `--disable-multi-memory`    | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [extended-const][]    | `--disable-extended-const`  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| [relaxed-simd][]      | `--disable-relaxed-simd`    | ✓ | ✓ | ✓ | ✓ | ✓ |   |
 | [custom-page-sizes][] | `--enable-custom-page-sizes`|   | ✓ | ✓ | ✓ | ✓ | ✓ |
 | [compact-imports][]   | `--enable-compact-imports`  |   | ✓ |   | ✓ |   |   |
 | [function-references][] | `--enable-function-references` |   | ✓ | ✓ | ✓ | ✓ |   |

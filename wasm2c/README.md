@@ -433,8 +433,8 @@ called `wasm_rt_init`). An example can be found in
 ### Runtime support for exception handling
 
 Several additional symbols must be defined if wasm2c is being run with support
-for exceptions (`--enable-exceptions`). These are defined in
-`wasm-rt-exceptions.h`. These symbols are:
+for exceptions (Use `--disable-exceptions` if you want to avoid these). These
+are defined in `wasm-rt-exceptions.h`. These symbols are:
 
 ```c
 void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);

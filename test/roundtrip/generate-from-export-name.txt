@@ -33,5 +33,6 @@
   (export "my_table" (table $my_table))
   (export "my_memory" (memory $my_memory))
   (export "my_global" (global $my_global))
-  (export "foo" (func $foo_2)))
+  (export "foo" (func $foo_2))
+  (@custom "name" "\01\0d\02\01\03foo\02\05foo_1\02\09\04\00\00\01\00\02\00\03\00"))
 ;;; STDOUT ;;)

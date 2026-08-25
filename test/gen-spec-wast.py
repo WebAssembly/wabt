@@ -241,14 +241,14 @@ def main(args):
     parser.add_argument('-p', '--print-cmd',
                         help='print the commands that are run.',
                         action='store_true')
-    parser.add_argument('--enable-exceptions', action='store_true')
-    parser.add_argument('--enable-saturating-float-to-int', action='store_true')
+    parser.add_argument('--disable-exceptions', action='store_true')
+    parser.add_argument('--disable-saturating-float-to-int', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
-    parser.add_argument('--enable-sign-extension', action='store_true')
-    parser.add_argument('--enable-multi-value', action='store_true')
-    parser.add_argument('--enable-tail-call', action='store_true')
+    parser.add_argument('--disable-sign-extension', action='store_true')
+    parser.add_argument('--disable-multi-value', action='store_true')
+    parser.add_argument('--disable-tail-call', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
-    parser.add_argument('--enable-memory64', action='store_true')
+    parser.add_argument('--disable-memory64', action='store_true')
     options = parser.parse_args(args)
 
     wast2json = Executable(
@@ -256,15 +256,15 @@ def main(args):
         error_cmdline=options.error_cmdline)
     wast2json.verbose = options.print_cmd
     wast2json.AppendOptionalArgs({
-        '--enable-exceptions': options.enable_exceptions,
-        '--enable-multi-value': options.enable_multi_value,
-        '--enable-saturating-float-to-int':
-            options.enable_saturating_float_to_int,
-        '--enable-sign-extension': options.enable_sign_extension,
+        '--disable-exceptions': options.disable_exceptions,
+        '--disable-multi-value': options.disable_multi_value,
+        '--disable-saturating-float-to-int':
+            options.disable_saturating_float_to_int,
+        '--disable-sign-extension': options.disable_sign_extension,
         '--enable-threads': options.enable_threads,
-        '--enable-tail-call': options.enable_tail_call,
+        '--disable-tail-call': options.disable_tail_call,
         '--disable-reference-types': options.disable_reference_types,
-        '--enable-memory64': options.enable_memory64,
+        '--disable-memory64': options.disable_memory64,
     })
 
     json_filename = options.file

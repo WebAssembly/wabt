@@ -1,5 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
+;;; ARGS*: --disable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/memory.wast:10: assert_invalid passed:
   out/test/spec/memory/memory.6.wasm:000000f: error: only one memory block allowed

@@ -4,5 +4,6 @@
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (param i32 i32)))
-  (func (;0;) (type 0) (param i32) (param $b i32)))
+  (func (;0;) (type 0) (param i32) (param $b i32))
+  (@custom "name" "\02\06\01\00\01\01\01b"))
 ;;; STDOUT ;;)

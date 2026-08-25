@@ -1,4 +1,5 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --disable-tail-call
 ;;; ERROR: 1
 
 (module
@@ -7,10 +8,10 @@
   (func i32.const 0 return_call_indirect)
 )
 (;; STDERR ;;;
-out/test/parse/expr/tail-call-disabled.txt:6:9: error: opcode not allowed: return_call
+out/test/parse/expr/tail-call-disabled.txt:7:9: error: opcode not allowed: return_call
   (func return_call 0)
         ^^^^^^^^^^^
-out/test/parse/expr/tail-call-disabled.txt:7:21: error: opcode not allowed: return_call_indirect
+out/test/parse/expr/tail-call-disabled.txt:8:21: error: opcode not allowed: return_call_indirect
   (func i32.const 0 return_call_indirect)
                     ^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

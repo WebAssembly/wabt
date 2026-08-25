@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/binary0.wast
-;;; ARGS*: --enable-multi-memory
+;;; ARGS*: --disable-memory64
 (;; STDOUT ;;;
 out/test/spec/multi-memory/binary0.wast:48: assert_malformed passed:
   000000e: error: unable to read u32 leb128: memory initial page count

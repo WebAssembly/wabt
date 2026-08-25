@@ -21,5 +21,6 @@
   (func $f0_1 (type $t0))
   (func $f0 (type $t0))
   (func $f2 (type $t0)
-    (local $l0_1 i32) (local $l0 i32)))
+    (local $l0_1 i32) (local $l0 i32))
+  (@custom "name" "\01\05\01\01\02f0\02\0b\03\00\00\01\00\02\01\01\02l0"))
 ;;; STDOUT ;;)

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/extended-const/data.wast
-;;; ARGS*: --enable-extended-const
 (;; STDOUT ;;;
 out/test/spec/extended-const/data.wast:85: assert_invalid passed:
   out/test/spec/extended-const/data/data.9.wasm:000001b: error: initializer expression can only reference an imported global

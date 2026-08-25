@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-function-references --enable-tail-call
+;;; ARGS*: --enable-function-references
 ;;; ARGS1: --trace
 (module
   ;; call_ref/return_call_ref carry no istream immediate, so Istream::Read has to

@@ -104,20 +104,22 @@ def main(args):
     parser.add_argument('--generate-names', action='store_true',
                         help="write debug names and skip end-to-end roundtrip check")
     parser.add_argument('--fold-exprs', action='store_true')
-    parser.add_argument('--enable-exceptions', action='store_true')
-    parser.add_argument('--enable-saturating-float-to-int', action='store_true')
+    parser.add_argument('--disable-exceptions', action='store_true')
+    parser.add_argument('--disable-saturating-float-to-int', action='store_true')
     parser.add_argument('--enable-function-references', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
-    parser.add_argument('--enable-sign-extension', action='store_true')
-    parser.add_argument('--enable-multi-value', action='store_true')
-    parser.add_argument('--enable-tail-call', action='store_true')
+    parser.add_argument('--disable-sign-extension', action='store_true')
+    parser.add_argument('--disable-multi-value', action='store_true')
+    parser.add_argument('--disable-tail-call', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
-    parser.add_argument('--enable-memory64', action='store_true')
-    parser.add_argument('--enable-multi-memory', action='store_true')
-    parser.add_argument('--enable-annotations', action='store_true')
+    parser.add_argument('--disable-memory64', action='store_true')
+    parser.add_argument('--disable-multi-memory', action='store_true')
+    parser.add_argument('--disable-annotations', action='store_true')
     parser.add_argument('--enable-code-metadata', action='store_true')
     parser.add_argument('--enable-custom-page-sizes', action='store_true')
-    parser.add_argument('--enable-extended-const', action='store_true')
+    parser.add_argument('--disable-extended-const', action='store_true')
+    parser.add_argument('--disable-relaxed-simd', action='store_true')
+    parser.add_argument('--enable-gc', action='store_true')
     # --inline-exports can reorder exports, so skip roundtrip check
     parser.add_argument('--inline-exports', action='store_true',
                         help="write exports inline and skip end-to-end roundtrip check")
@@ -131,21 +133,23 @@ def main(args):
         error_cmdline=options.error_cmdline)
     wat2wasm.AppendOptionalArgs({
         '--debug-names': options.debug_names,
-        '--enable-exceptions': options.enable_exceptions,
-        '--enable-multi-value': options.enable_multi_value,
-        '--enable-saturating-float-to-int':
-            options.enable_saturating_float_to_int,
-        '--enable-sign-extension': options.enable_sign_extension,
+        '--disable-exceptions': options.disable_exceptions,
+        '--disable-multi-value': options.disable_multi_value,
+        '--disable-saturating-float-to-int':
+            options.disable_saturating_float_to_int,
+        '--disable-sign-extension': options.disable_sign_extension,
         '--enable-function-references': options.enable_function_references,
         '--enable-threads': options.enable_threads,
-        '--enable-tail-call': options.enable_tail_call,
+        '--disable-tail-call': options.disable_tail_call,
         '--disable-reference-types': options.disable_reference_types,
-        '--enable-memory64': options.enable_memory64,
-        '--enable-multi-memory': options.enable_multi_memory,
-        '--enable-annotations': options.enable_annotations,
+        '--disable-memory64': options.disable_memory64,
+        '--disable-multi-memory': options.disable_multi_memory,
+        '--disable-annotations': options.disable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
         '--enable-custom-page-sizes': options.enable_custom_page_sizes,
-        '--enable-extended-const': options.enable_extended_const,
+        '--disable-extended-const': options.disable_extended_const,
+        '--disable-relaxed-simd': options.disable_relaxed_simd,
+        '--enable-gc': options.enable_gc,
         '--reloc': options.reloc,
         '--no-check': options.no_check,
     })
@@ -155,21 +159,23 @@ def main(args):
         error_cmdline=options.error_cmdline)
     wasm2wat.AppendOptionalArgs({
         '--fold-exprs': options.fold_exprs,
-        '--enable-exceptions': options.enable_exceptions,
-        '--enable-multi-value': options.enable_multi_value,
-        '--enable-saturating-float-to-int':
-            options.enable_saturating_float_to_int,
-        '--enable-sign-extension': options.enable_sign_extension,
-        '--enable-tail-call': options.enable_tail_call,
+        '--disable-exceptions': options.disable_exceptions,
+        '--disable-multi-value': options.disable_multi_value,
+        '--disable-saturating-float-to-int':
+            options.disable_saturating_float_to_int,
+        '--disable-sign-extension': options.disable_sign_extension,
+        '--disable-tail-call': options.disable_tail_call,
         '--enable-function-references': options.enable_function_references,
         '--disable-reference-types': options.disable_reference_types,
         '--enable-threads': options.enable_threads,
-        '--enable-memory64': options.enable_memory64,
-        '--enable-multi-memory': options.enable_multi_memory,
-        '--enable-annotations': options.enable_annotations,
+        '--disable-memory64': options.disable_memory64,
+        '--disable-multi-memory': options.disable_multi_memory,
+        '--disable-annotations': options.disable_annotations,
         '--enable-code-metadata': options.enable_code_metadata,
         '--enable-custom-page-sizes': options.enable_custom_page_sizes,
-        '--enable-extended-const': options.enable_extended_const,
+        '--disable-extended-const': options.disable_extended_const,
+        '--disable-relaxed-simd': options.disable_relaxed_simd,
+        '--enable-gc': options.enable_gc,
         '--inline-exports': options.inline_exports,
         '--inline-imports': options.inline_imports,
         '--no-debug-names': not options.debug_names,

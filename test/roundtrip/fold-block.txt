@@ -101,5 +101,6 @@
           (br 0 (;@1;)
             (i32.const 2)))
         (else
-          (i32.const 3))))))
+          (i32.const 3)))))
+  (@custom "name" "\01c\07\00\0afold-block\01\13fold-block-br-value\02\09fold-loop\03\0cfold-loop-br\04\07fold-if\05\0cfold-if-else\06\0ffold-if-else-br\02\0f\07\00\00\01\00\02\00\03\00\04\00\05\00\06\00"))
 ;;; STDOUT ;;)

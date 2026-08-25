@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-annotations
 (module
   (@custom "custom" "contents")
   (@custom "custom2" (after code) "stuff"))

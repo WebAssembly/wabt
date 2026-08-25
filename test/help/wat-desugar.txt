@@ -22,7 +22,7 @@ options:
   -f, --fold-exprs                             Write folded expressions where possible
       --inline-exports                         Write all exports inline
       --inline-imports                         Write all imports inline
-      --enable-exceptions                      Enable Experimental exception handling
+      --disable-exceptions                     Disable Experimental exception handling
       --disable-mutable-globals                Disable Import/export mutable globals
       --disable-saturating-float-to-int        Disable Saturating float-to-int operators
       --disable-sign-extension                 Disable Sign-extension operators
@@ -30,16 +30,16 @@ options:
       --enable-threads                         Enable Threading support
       --enable-function-references             Enable Typed function references
       --disable-multi-value                    Disable Multi-value
-      --enable-tail-call                       Enable Tail-call support
+      --disable-tail-call                      Disable Tail-call support
       --disable-bulk-memory                    Disable Bulk-memory operations
       --disable-reference-types                Disable Reference types (externref)
-      --enable-annotations                     Enable Custom annotation syntax
+      --disable-annotations                    Disable Custom annotation syntax
       --enable-code-metadata                   Enable Code metadata
       --enable-gc                              Enable Garbage collection
-      --enable-memory64                        Enable 64-bit memory
-      --enable-multi-memory                    Enable Multi-memory
-      --enable-extended-const                  Enable Extended constant expressions
-      --enable-relaxed-simd                    Enable Relaxed SIMD
+      --disable-memory64                       Disable 64-bit memory
+      --disable-multi-memory                   Disable Multi-memory
+      --disable-extended-const                 Disable Extended constant expressions
+      --disable-relaxed-simd                   Disable Relaxed SIMD
       --enable-custom-page-sizes               Enable Custom page sizes
       --enable-compact-imports                 Enable Compact import section
       --enable-wide-arithmetic                 Enable Wide arithmetic

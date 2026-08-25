@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_copy0.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 copy(i32:10, i32:0, i32:4) =>
 copy(i32:8, i32:10, i32:4) =>

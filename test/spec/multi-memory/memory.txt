@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/memory.wast:17: assert_invalid passed:
   out/test/spec/multi-memory/memory/memory.9.wasm:000000c: error: memory variable out of range: 0 (max 0)

@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-custom-page-sizes --enable-memory64
+;;; ARGS*: --enable-custom-page-sizes
 
 ;; Page size of zero is malformed
 (assert_malformed

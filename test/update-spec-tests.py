@@ -97,26 +97,17 @@ def main(args):
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
     flags = {
-        'multi-memory': '--enable-multi-memory',
-        'exception-handling': '--enable-exceptions',
-        'extended-const': '--enable-extended-const',
-        'tail-call': '--enable-tail-call',
-        'relaxed-simd': '--enable-relaxed-simd',
         'custom-page-sizes': '--enable-custom-page-sizes',
         'function-references': '--enable-function-references',
     }
 
-    old_proposal_flags = {
-        'memory64': '--enable-memory64',
-    }
-
-    unimplemented = set([
+    unimplemented = {
         'gc',
         'threads',
         'annotations',
         'wide-arithmetic',
         'wasm-3.0',
-    ])
+    }
 
     # sanity check to verify that all flags are valid
     for proposal in flags:
@@ -129,8 +120,9 @@ def main(args):
     for proposal in proposals:
         ProcessProposalDir(proposal, flags.get(proposal))
 
-    for proposal in old_proposal_flags:
-        ProcessProposalDir(proposal, old_proposal_flags.get(proposal), True)
+    old_proposals = [e.name for e in os.scandir(OLD_PROPOSALS_DIR) if e.is_dir()]
+    for proposal in old_proposals:
+        ProcessProposalDir(proposal, flags.get(proposal), True)
 
     return 0
 

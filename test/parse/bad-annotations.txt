@@ -1,4 +1,5 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --disable-annotations
 ;;; ERROR: 1
 (module
   (func (@name "some func") (result i32)
@@ -8,13 +9,13 @@
   (@custom (@nested section))
   (@custom (section) (@with "other") nested-subsections))
 (;; STDERR ;;;
-out/test/parse/bad-annotations.txt:4:9: error: annotations not enabled: name
+out/test/parse/bad-annotations.txt:5:9: error: annotations not enabled: name
   (func (@name "some func") (result i32)
         ^^^^^^
-out/test/parse/bad-annotations.txt:4:9: error: unexpected token Invalid, expected ).
+out/test/parse/bad-annotations.txt:5:9: error: unexpected token Invalid, expected ).
   (func (@name "some func") (result i32)
         ^^^^^^
-out/test/parse/bad-annotations.txt:7:3: error: annotations not enabled: custom
+out/test/parse/bad-annotations.txt:8:3: error: annotations not enabled: custom
   (@custom section)
   ^^^^^^^^
 ;;; STDERR ;;)

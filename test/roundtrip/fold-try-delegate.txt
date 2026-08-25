@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+;;; ARGS: --stdout --fold-exprs --debug-names
 (module
   (func (result i32)
     try (result i32)
@@ -24,5 +24,6 @@
           (delegate 1))
         (i32.const 7))
       (catch_all
-        (i32.const 8)))))
+        (i32.const 8))))
+  (@custom "name" "\02\03\01\00\00"))
 ;;; STDOUT ;;)
