@@ -1,5 +1,4 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --enable-memory64
 ;; memory64 table.wast from last commit before wasm-3.0 merge
 
 (module (table 0 funcref))

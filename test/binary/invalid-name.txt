@@ -21,5 +21,6 @@ section("name") {
 (module
   (type (;0;) (func (result i32)))
   (func $hi_hello_hey (type 0) (result i32)
-    i32.const 42))
+    i32.const 42)
+  (@custom "name" "\01\0f\01\00\0chi hello hey"))
 ;;; STDOUT ;;)

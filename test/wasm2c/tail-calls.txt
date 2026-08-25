@@ -1,6 +1,5 @@
 ;;; TOOL: run-wasm2c
 ;;; ARGS0: --debug-names
-;;; ARGS*: --enable-tail-call
 (type $i32_f32 (func (param i32 f32)))
 (import "spectest" "print_i32_f32" (func $print_i32_f32 (type $i32_f32)))
 (table $tab funcref (elem $print_i32_f32))

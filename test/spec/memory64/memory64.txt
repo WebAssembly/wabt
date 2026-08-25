@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/memory64.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/memory64.wast:16: assert_invalid passed:
   out/test/spec/memory64/memory64/memory64.7.wasm:000000c: error: memory variable out of range: 0 (max 0)

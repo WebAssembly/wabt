@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --inline-import --enable-exceptions
+;;; ARGS: --stdout --inline-import
 (module
   (import "mod" "e1" (tag (param i32 f32)))
 )

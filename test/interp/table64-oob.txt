@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-memory64
 (module
   (table $t i64 10 funcref)
 

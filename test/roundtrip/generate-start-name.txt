@@ -7,5 +7,6 @@
 (module
   (type $t0 (func))
   (func $f0 (type $t0))
-  (start $f0))
+  (start $f0)
+  (@custom "name" "\02\03\01\00\00"))
 ;;; STDOUT ;;)

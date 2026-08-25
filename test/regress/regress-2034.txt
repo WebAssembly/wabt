@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS: --debug-names --enable-exceptions
+;;; ARGS: --debug-names
 (module
  (func $foo)
  (export "func" (func $foo))

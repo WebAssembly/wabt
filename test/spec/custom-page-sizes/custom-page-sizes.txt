@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-custom-page-sizes --enable-multi-memory
+;;; ARGS*: --enable-custom-page-sizes
 ;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/custom-page-sizes.wast
 (;; STDOUT ;;;
 out/test/spec/custom-page-sizes/custom-page-sizes.wast:27: assert_trap passed: out of bounds memory access: access at 0+1 >= max value 0

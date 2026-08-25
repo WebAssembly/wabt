@@ -1,10 +1,11 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS*: --enable-multi-memory --debug-names --stdout
+;;; ARGS*: --debug-names --stdout
 (memory 0)
 (memory $k (data))
 (;; STDOUT ;;;
 (module
   (memory (;0;) 0)
   (memory $k 0 0)
-  (data (;0;) (memory $k) (i32.const 0) ""))
+  (data (;0;) (memory $k) (i32.const 0) "")
+  (@custom "name" "\02\01\00\06\04\01\01\01k"))
 ;;; STDOUT ;;)

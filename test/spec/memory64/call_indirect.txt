@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/call_indirect.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/call_indirect.wast:508: assert_trap passed: indirect call signature mismatch
 out/test/spec/memory64/call_indirect.wast:509: assert_trap passed: indirect call signature mismatch

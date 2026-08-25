@@ -109,5 +109,7 @@ section("linking") {
   (export "G0_EXPORT" (global $G0_SYM))
   (export "G1_EXPORT" (global $G1_EXPORT))
   (data $D0_SYM (i32.const 0) "foo")
-  (data $D1_SYM (i32.const 10) "bar"))
+  (data $D1_SYM (i32.const 10) "bar")
+  (@custom "name" "\00\03\02M0\01\0c\02\00\02F0\01\05F1_NS\02\07\01\00\01\00\02L0")
+  (@custom "linking" "\02\087\05\00\01\01\06F1_SYM\00\01\02\06F2_SYM\02\01\00\06G0_SYM\01\04\06D0_SYM\00\00\01\01\04\06D1_SYM\01\00\01"))
 ;;; STDOUT ;;)

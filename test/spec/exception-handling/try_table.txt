@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/try_table.wast
-;;; ARGS*: --enable-exceptions --enable-tail-call
 (;; STDOUT ;;;
 out/test/spec/exception-handling/try_table.wast:261: assert_trap passed: unreachable executed
 out/test/spec/exception-handling/try_table.wast:264: assert_trap passed: integer divide by zero

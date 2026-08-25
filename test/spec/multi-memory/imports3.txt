@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/imports3.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/imports3.wast:20: assert_unlinkable passed:
   error: expected import "test.func-i32" to have kind memory, not func

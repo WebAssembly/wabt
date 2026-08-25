@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS:
+;;; ARGS: --disable-exceptions
 ;;; ERROR: 1
 (module (func (export "foo")))
 (assert_exception (invoke "foo"))

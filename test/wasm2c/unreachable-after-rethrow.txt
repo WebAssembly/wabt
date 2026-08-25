@@ -1,5 +1,4 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --enable-exceptions
 (module
   (memory 1)
   (func (export "test")

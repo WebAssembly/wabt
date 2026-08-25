@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/memory_copy.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 test() =>
 test() =>

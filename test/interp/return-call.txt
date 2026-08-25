@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-tail-call
 (module
   (func (export "fac10") (result i32)
     i32.const 10

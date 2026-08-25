@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --inline-export --enable-exceptions
+;;; ARGS: --stdout --inline-export
 (module
   (tag $foo (param i32))
   (export "foo" (tag $foo)))

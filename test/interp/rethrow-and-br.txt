@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-exceptions --enable-tail-call
 (module
   (tag $e1)
   (tag $e2)

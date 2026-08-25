@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --enable-extended-const
+;;; ARGS: --stdout
 (module
   (global $g_import (import "foo" "bar") i32)
   (memory 1)

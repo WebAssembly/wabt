@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/align.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/align.wast:28: assert_malformed passed:
   out/test/spec/multi-memory/align/align.23.wat:1:45: error: alignment must be power-of-two

@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
 ;;; ERROR: 1
 (module
   ;; flat
@@ -22,10 +21,10 @@
       (catch_all
         (nop))))
 (;; STDERR ;;;
-out/test/parse/expr/bad-try-multiple-catch.txt:11:5: error: multiple catch_all clauses not allowed
+out/test/parse/expr/bad-try-multiple-catch.txt:10:5: error: multiple catch_all clauses not allowed
     catch_all
     ^^^^^^^^^
-out/test/parse/expr/bad-try-multiple-catch.txt:22:8: error: multiple catch_all clauses not allowed
+out/test/parse/expr/bad-try-multiple-catch.txt:21:8: error: multiple catch_all clauses not allowed
       (catch_all
        ^^^^^^^^^
 ;;; STDERR ;;)

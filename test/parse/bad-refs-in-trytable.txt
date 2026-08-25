@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-function-references --enable-exceptions
+;;; ARGS: --enable-function-references
 ;;; ERROR: 1
 (module
   (func (param (ref func))

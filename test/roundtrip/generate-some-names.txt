@@ -54,5 +54,6 @@
   (table $T0 1 1 funcref)
   (export "baz" (func $import))
   (export "quux" (func $func0))
-  (elem $e0 (i32.const 0) func $import))
+  (elem $e0 (i32.const 0) func $import)
+  (@custom "name" "\01\10\02\00\06import\01\05func0\02\17\03\00\00\01\00\02\02\01\06param1\03\06local1"))
 ;;; STDOUT ;;)

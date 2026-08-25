@@ -31,5 +31,6 @@ section("name") {
   (type (;0;) (func (result i32)))
   (func (;0;) (type 0) (result i32)
     (local i32)
-    local.get 0))
+    local.get 0)
+  (@custom "name" "\01\06\01\00\03$F0\02\08\01\00\01\00\03$L0"))
 ;;; STDOUT ;;)

@@ -1,5 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
+;;; ARGS*: --disable-memory64
 (;; STDOUT ;;;
 out/test/spec/address.wast:192: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
 out/test/spec/address.wast:194: assert_trap passed: out of bounds memory access: access at 4294967296+1 >= max value 65536

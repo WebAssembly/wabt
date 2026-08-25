@@ -1,6 +1,4 @@
 ;;; TOOL: run-gen-wasm-bad
-;;; ARGS1: --enable-multi-memory
-;;; ARGS2: --enable-multi-memory
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }

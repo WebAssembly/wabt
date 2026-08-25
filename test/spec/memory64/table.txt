@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-memory64
 ;; memory64 table.wast from last commit before wasm-3.0 merge
 
 (module (table 0 funcref))
@@ -77,48 +76,48 @@
   "(import \"\" \"\" (table $foo 1 funcref))")
   "duplicate table")
 (;; STDOUT ;;;
-out/test/spec/memory64/table.txt:17: assert_invalid passed:
+out/test/spec/memory64/table.txt:16: assert_invalid passed:
   out/test/spec/memory64/table/table.9.wasm:000000f: error: max elems (0) must be >= initial elems (1)
   000000f: error: BeginTable callback failed
-out/test/spec/memory64/table.txt:21: assert_invalid passed:
+out/test/spec/memory64/table.txt:20: assert_invalid passed:
   out/test/spec/memory64/table/table.10.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
   0000013: error: BeginTable callback failed
-out/test/spec/memory64/table.txt:26: assert_invalid passed:
+out/test/spec/memory64/table.txt:25: assert_invalid passed:
   out/test/spec/memory64/table/table.11.wat:1:8: error: invalid int "0x1_0000_0000"
   (table 0x1_0000_0000 funcref)
          ^^^^^^^^^^^^^
-out/test/spec/memory64/table.txt:30: assert_invalid passed:
+out/test/spec/memory64/table.txt:29: assert_invalid passed:
   out/test/spec/memory64/table/table.12.wat:1:8: error: invalid int "0x1_0000_0000"
   (table 0x1_0000_0000 0x1_0000_0000 funcref)
          ^^^^^^^^^^^^^
   out/test/spec/memory64/table/table.12.wat:1:22: error: invalid int "0x1_0000_0000"
   (table 0x1_0000_0000 0x1_0000_0000 funcref)
                        ^^^^^^^^^^^^^
-out/test/spec/memory64/table.txt:34: assert_invalid passed:
+out/test/spec/memory64/table.txt:33: assert_invalid passed:
   out/test/spec/memory64/table/table.13.wat:1:10: error: invalid int "0x1_0000_0000"
   (table 0 0x1_0000_0000 funcref)
            ^^^^^^^^^^^^^
-out/test/spec/memory64/table.txt:52: assert_invalid passed:
+out/test/spec/memory64/table.txt:51: assert_invalid passed:
   out/test/spec/memory64/table/table.23.wasm:000000f: error: max elems (0) must be >= initial elems (1)
   000000f: error: BeginTable callback failed
-out/test/spec/memory64/table.txt:56: assert_invalid passed:
+out/test/spec/memory64/table.txt:55: assert_invalid passed:
   out/test/spec/memory64/table/table.24.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
   0000013: error: BeginTable callback failed
-out/test/spec/memory64/table.txt:62: assert_invalid passed:
+out/test/spec/memory64/table.txt:61: assert_invalid passed:
   out/test/spec/memory64/table/table.25.wasm:000000c: error: table variable out of range: 0 (max 0)
   000000c: error: BeginElemSegment callback failed
-out/test/spec/memory64/table.txt:63: assert_invalid passed:
+out/test/spec/memory64/table.txt:62: assert_invalid passed:
   out/test/spec/memory64/table/table.26.wasm:0000016: error: table variable out of range: 0 (max 0)
   0000016: error: BeginElemSegment callback failed
-out/test/spec/memory64/table.txt:67: assert_malformed passed:
+out/test/spec/memory64/table.txt:66: assert_malformed passed:
   out/test/spec/memory64/table/table.27.wat:1:24: error: redefinition of table "$foo"
   (table $foo 1 funcref)(table $foo 1 funcref)
                          ^^^^^
-out/test/spec/memory64/table.txt:71: assert_malformed passed:
+out/test/spec/memory64/table.txt:70: assert_malformed passed:
   out/test/spec/memory64/table/table.28.wat:1:39: error: redefinition of table "$foo"
   (import "" "" (table $foo 1 funcref))(table $foo 1 funcref)
                                         ^^^^^
-out/test/spec/memory64/table.txt:75: assert_malformed passed:
+out/test/spec/memory64/table.txt:74: assert_malformed passed:
   out/test/spec/memory64/table/table.29.wat:1:39: error: redefinition of table "$foo"
   (import "" "" (table $foo 1 funcref))(import "" "" (table $foo 1 funcref))
                                         ^^^^^^

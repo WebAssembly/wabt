@@ -18,5 +18,6 @@
   (type $t2 (func (param (ref 0) (ref 1) (ref 1))))
   (type (;3;) (func (param (ref 0) (ref 0))))
   (func $f1 (type 3) (param (ref 0) (ref 0))
-    (local (ref 0) (ref 0) (ref 1) (ref 1))))
+    (local (ref 0) (ref 0) (ref 1) (ref 1)))
+  (@custom "name" "\01\05\01\00\02f1\02\03\01\00\00\04\0d\03\00\02t0\01\02t1\02\02t2"))
 ;;; STDOUT ;;)

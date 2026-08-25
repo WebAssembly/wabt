@@ -1,6 +1,4 @@
 ;;; TOOL: run-gen-wasm-bad
-;;; ARGS1: --enable-exceptions
-;;; ARGS2: --enable-exceptions
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }

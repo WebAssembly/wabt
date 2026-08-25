@@ -71,8 +71,8 @@ out/test/spec/function-references/elem.wast:877: assert_invalid passed:
   out/test/spec/function-references/elem/elem.94.wasm:0000023: error: invalid initializer: instruction not valid in initializer expression: call
   0000023: error: OnCallExpr callback failed
 out/test/spec/function-references/elem.wast:886: assert_invalid passed:
-  out/test/spec/function-references/elem/elem.95.wasm:000001b: error: invalid initializer: instruction not valid in initializer expression: i32.add
-  000001b: error: OnBinaryExpr callback failed
+  out/test/spec/function-references/elem/elem.95.wasm:000001b: error: type mismatch in initializer expression, expected [funcref] but got [i32]
+  000001c: error: EndElemExpr callback failed
 out/test/spec/function-references/elem.wast:945: assert_trap passed: uninitialized table element
 out/test/spec/function-references/elem.wast:978: assert_invalid passed:
   out/test/spec/function-references/elem/elem.101.wasm:000001f: error: type mismatch at elem segment. got (ref func), expected externref

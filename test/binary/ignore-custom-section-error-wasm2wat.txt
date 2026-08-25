@@ -27,5 +27,6 @@ section(CODE) {
 (module
   (type (;0;) (func))
   (func (;0;) (type 0)
-    return))
+    return)
+  (@custom "linking" "\02\02\03\04\05\06\07"))
 ;;; STDOUT ;;)

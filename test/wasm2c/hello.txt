@@ -62,9 +62,11 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 /* import: 'wasi_snapshot_preview1' 'fd_write' */
 u32 w2c_wasi__snapshot__preview1_fd_write(struct w2c_wasi__snapshot__preview1*, u32, u32, u32, u32);
+void wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 /* import: 'wasi_snapshot_preview1' 'proc_exit' */
 void w2c_wasi__snapshot__preview1_proc_exit(struct w2c_wasi__snapshot__preview1*, u32);
+void wasm_tailcall_w2c_wasi__snapshot__preview1_proc_exit(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next);
 
 /* export: 'memory' */
 wasm_rt_memory_t* w2c_test_memory(w2c_test* instance);
@@ -926,6 +928,16 @@ DEFINE_TABLE_FILL(externref)
 
 static void w2c_test_0x5Fstart_0(w2c_test*);
 
+#ifndef wasm_multi_iiii
+#define wasm_multi_iiii wasm_multi_iiii
+struct wasm_multi_iiii {
+  u32 i0;
+  u32 i1;
+  u32 i2;
+  u32 i3;
+};
+#endif  /* wasm_multi_iiii */
+
 FUNC_TYPE_T(w2c_test_t0) = "\xf6\x98\x1b\xc6\x10\xda\xb7\xb2\x63\x37\xcd\xdc\x72\xca\xe9\x50\x00\x13\xba\x10\x6c\xde\x87\x27\x10\xf8\x86\x2f\xe3\xdb\x94\xe4";
 FUNC_TYPE_T(w2c_test_t1) = "\x89\x3a\x3d\x2c\x8f\x4d\x7f\x6d\x6c\x9d\x62\x67\x29\xaf\x3d\x44\x39\x8e\xc3\xf3\xe8\x51\xc1\x99\xb9\xdd\x9f\xd5\x3d\x1f\xd3\xe4";
 FUNC_TYPE_T(w2c_test_t2) = "\x36\xa9\xe7\xf1\xc9\x5b\x82\xff\xb9\x97\x43\xe0\xc5\xc4\xce\x95\xd8\x3c\x9a\x43\x0a\xac\x59\xf8\x4e\xf3\xcb\xfa\xb6\x14\x50\x68";
@@ -948,7 +960,7 @@ static void init_data_instances(w2c_test *instance) {
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)wrap_w2c_wasi__snapshot__preview1_fd_write, {NULL}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
+  {RefFunc, w2c_test_t0, (wasm_rt_function_ptr_t)wrap_w2c_wasi__snapshot__preview1_fd_write, {wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write}, offsetof(w2c_test, w2c_wasi__snapshot__preview1_instance)},
 };
 
 static void init_tables(w2c_test* instance) {
@@ -976,6 +988,25 @@ void w2c_test_0x5Fstart(w2c_test* instance) {
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE && !WASM_RT_SEGUE_FREE_SEGMENT
   wasm_rt_segue_write_base(segue_saved_base);
 #endif
+}
+
+/* handler for missing tail-call on import: 'wasi_snapshot_preview1' 'fd_write' */
+WEAK_FUNC_DECL(wasm_tailcall_w2c_wasi__snapshot__preview1_fd_write, wasm_fallback_test_w2c_wasi__snapshot__preview1_fd_write)
+{
+  next->fn = NULL;
+  struct wasm_multi_iiii params;
+  wasm_rt_memcpy(&params, tail_call_stack, sizeof(params));
+  u32 result = w2c_wasi__snapshot__preview1_fd_write(*instance_ptr, params.i0, params.i1, params.i2, params.i3);
+  wasm_rt_memcpy(tail_call_stack, &result, sizeof(result));
+}
+
+/* handler for missing tail-call on import: 'wasi_snapshot_preview1' 'proc_exit' */
+WEAK_FUNC_DECL(wasm_tailcall_w2c_wasi__snapshot__preview1_proc_exit, wasm_fallback_test_w2c_wasi__snapshot__preview1_proc_exit)
+{
+  next->fn = NULL;
+  u32 params;
+  wasm_rt_memcpy(&params, tail_call_stack, sizeof(params));
+  w2c_wasi__snapshot__preview1_proc_exit(*instance_ptr, params);
 }
 
 static void init_instance_import(w2c_test* instance, struct w2c_wasi__snapshot__preview1* w2c_wasi__snapshot__preview1_instance) {

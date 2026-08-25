@@ -1,5 +1,4 @@
 ;;; TOOL: wast2json
-;;; ARGS: --enable-exceptions
 (module
   (tag $t)
   (func $foo (throw $t))

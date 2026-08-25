@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
 (module
   (type $t (func (param f64)))
   (tag)

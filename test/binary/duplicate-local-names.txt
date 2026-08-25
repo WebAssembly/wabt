@@ -22,5 +22,6 @@ section("name") {
 (module
   (type (;0;) (func))
   (func (;0;) (type 0)
-    (local $L i32) (local $L.1 i32)))
+    (local $L i32) (local $L.1 i32))
+  (@custom "name" "\02\09\01\00\02\00\01L\01\01L"))
 ;;; STDOUT ;;)

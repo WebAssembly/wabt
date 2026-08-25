@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-tail-call
 ;;; ARGS1: --host-print
 (module
   (import "host" "print" (func $imported (param i32) (result i32)))

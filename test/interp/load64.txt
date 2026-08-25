@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS: --enable-memory64
 (module
   (memory i64 1)
   (data (i64.const 0) "\ff\ff\ff\ff")

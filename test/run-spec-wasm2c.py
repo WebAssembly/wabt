@@ -548,12 +548,12 @@ def main(args):
                         help='print the commands that are run.',
                         action='store_true')
     parser.add_argument('file', help='wast file.')
-    parser.add_argument('--enable-exceptions', action='store_true')
-    parser.add_argument('--enable-multi-memory', action='store_true')
-    parser.add_argument('--enable-memory64', action='store_true')
-    parser.add_argument('--enable-extended-const', action='store_true')
+    parser.add_argument('--disable-exceptions', action='store_true')
+    parser.add_argument('--disable-multi-memory', action='store_true')
+    parser.add_argument('--disable-memory64', action='store_true')
+    parser.add_argument('--disable-extended-const', action='store_true')
     parser.add_argument('--enable-threads', action='store_true')
-    parser.add_argument('--enable-tail-call', action='store_true')
+    parser.add_argument('--disable-tail-call', action='store_true')
     parser.add_argument('--enable-custom-page-sizes', action='store_true')
     parser.add_argument('--disable-bulk-memory', action='store_true')
     parser.add_argument('--disable-reference-types', action='store_true')
@@ -571,13 +571,13 @@ def main(args):
         wast2json.verbose = options.print_cmd
         wast2json.AppendOptionalArgs({
             '-v': options.verbose,
-            '--enable-exceptions': options.enable_exceptions,
-            '--enable-memory64': options.enable_memory64,
-            '--enable-extended-const': options.enable_extended_const,
+            '--disable-exceptions': options.disable_exceptions,
+            '--disable-memory64': options.disable_memory64,
+            '--disable-extended-const': options.disable_extended_const,
             '--enable-threads': options.enable_threads,
-            '--enable-tail-call': options.enable_tail_call,
+            '--disable-tail-call': options.disable_tail_call,
             '--enable-custom-page-sizes': options.enable_custom_page_sizes,
-            '--enable-multi-memory': options.enable_multi_memory,
+            '--disable-multi-memory': options.disable_multi_memory,
             '--disable-bulk-memory': options.disable_bulk_memory,
             '--disable-reference-types': options.disable_reference_types,
             '--debug-names': options.debug_names})
@@ -591,13 +591,13 @@ def main(args):
             error_cmdline=options.error_cmdline)
         wasm2c.verbose = options.print_cmd
         wasm2c.AppendOptionalArgs({
-            '--enable-exceptions': options.enable_exceptions,
-            '--enable-memory64': options.enable_memory64,
-            '--enable-extended-const': options.enable_extended_const,
+            '--disable-exceptions': options.disable_exceptions,
+            '--disable-memory64': options.disable_memory64,
+            '--disable-extended-const': options.disable_extended_const,
             '--enable-threads': options.enable_threads,
-            '--enable-tail-call': options.enable_tail_call,
+            '--disable-tail-call': options.disable_tail_call,
             '--enable-custom-page-sizes': options.enable_custom_page_sizes,
-            '--enable-multi-memory': options.enable_multi_memory})
+            '--disable-multi-memory': options.disable_multi_memory})
 
         options.cflags += shlex.split(os.environ.get('WASM2C_CFLAGS', ''))
         cc = utils.Executable(options.cc, *options.cflags, forward_stderr=True,
@@ -617,7 +617,7 @@ def main(args):
 
         o_filenames = []
         cflags = ['-I%s' % options.wasmrt_dir, '-I%s' % options.simde_dir]
-        if options.enable_memory64:
+        if not options.disable_memory64:
             if IS_WINDOWS:
                 sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
                 return SKIPPED
