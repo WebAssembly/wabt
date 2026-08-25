@@ -1211,9 +1211,11 @@ Result WastParser::ParseLimitsIndex(Limits* out_limits) {
 Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
 
-  CHECK_RESULT(ParseNat(&out_limits->initial, out_limits->is_64));
+  CHECK_RESULT(
+      ParseNat(&out_limits->initial, options_->features.memory64_enabled()));
   if (PeekMatch(TokenType::Nat)) {
-    CHECK_RESULT(ParseNat(&out_limits->max, out_limits->is_64));
+    CHECK_RESULT(
+        ParseNat(&out_limits->max, options_->features.memory64_enabled()));
     out_limits->has_max = true;
   } else {
     out_limits->has_max = false;

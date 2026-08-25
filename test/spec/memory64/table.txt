@@ -83,20 +83,20 @@ out/test/spec/memory64/table.txt:20: assert_invalid passed:
   out/test/spec/memory64/table/table.10.wasm:0000013: error: max elems (0) must be >= initial elems (4294967295)
   0000013: error: BeginTable callback failed
 out/test/spec/memory64/table.txt:25: assert_invalid passed:
-  out/test/spec/memory64/table/table.11.wat:1:8: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/table/table.11.wat:1:2: error: initial elems (4294967296) must be <= (4294967295)
   (table 0x1_0000_0000 funcref)
-         ^^^^^^^^^^^^^
+   ^^^^^
 out/test/spec/memory64/table.txt:29: assert_invalid passed:
-  out/test/spec/memory64/table/table.12.wat:1:8: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/table/table.12.wat:1:2: error: initial elems (4294967296) must be <= (4294967295)
   (table 0x1_0000_0000 0x1_0000_0000 funcref)
-         ^^^^^^^^^^^^^
-  out/test/spec/memory64/table/table.12.wat:1:22: error: invalid int "0x1_0000_0000"
+   ^^^^^
+  out/test/spec/memory64/table/table.12.wat:1:2: error: max elems (4294967296) must be <= (4294967295)
   (table 0x1_0000_0000 0x1_0000_0000 funcref)
-                       ^^^^^^^^^^^^^
+   ^^^^^
 out/test/spec/memory64/table.txt:33: assert_invalid passed:
-  out/test/spec/memory64/table/table.13.wat:1:10: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/table/table.13.wat:1:2: error: max elems (4294967296) must be <= (4294967295)
   (table 0 0x1_0000_0000 funcref)
-           ^^^^^^^^^^^^^
+   ^^^^^
 out/test/spec/memory64/table.txt:51: assert_invalid passed:
   out/test/spec/memory64/table/table.23.wasm:000000f: error: max elems (0) must be >= initial elems (1)
   000000f: error: BeginTable callback failed

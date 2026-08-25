@@ -1,0 +1,10 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --no-check
+(module
+  (memory 0x1_0000_0000)
+  (table 0x1_0000_0000 funcref))
+(;; STDOUT ;;;
+(module
+  (table (;0;) 4294967296 funcref)
+  (memory (;0;) 4294967296))
+;;; STDOUT ;;)

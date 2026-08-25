@@ -50,20 +50,20 @@ out/test/spec/memory64/memory.wast:72: assert_invalid passed:
   out/test/spec/memory64/memory/memory.24.wasm:0000012: error: max pages (4294967295) must be <= (65536)
   0000012: error: OnMemory callback failed
 out/test/spec/memory64/memory.wast:77: assert_invalid passed:
-  out/test/spec/memory64/memory/memory.25.wat:1:9: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/memory/memory.25.wat:1:2: error: initial pages (4294967296) must be <= (65536)
   (memory 0x1_0000_0000)
-          ^^^^^^^^^^^^^
+   ^^^^^^
 out/test/spec/memory64/memory.wast:81: assert_invalid passed:
-  out/test/spec/memory64/memory/memory.26.wat:1:9: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/memory/memory.26.wat:1:2: error: initial pages (4294967296) must be <= (65536)
   (memory 0x1_0000_0000 0x1_0000_0000)
-          ^^^^^^^^^^^^^
-  out/test/spec/memory64/memory/memory.26.wat:1:23: error: invalid int "0x1_0000_0000"
+   ^^^^^^
+  out/test/spec/memory64/memory/memory.26.wat:1:2: error: max pages (4294967296) must be <= (65536)
   (memory 0x1_0000_0000 0x1_0000_0000)
-                        ^^^^^^^^^^^^^
+   ^^^^^^
 out/test/spec/memory64/memory.wast:85: assert_invalid passed:
-  out/test/spec/memory64/memory/memory.27.wat:1:11: error: invalid int "0x1_0000_0000"
+  out/test/spec/memory64/memory/memory.27.wat:1:2: error: max pages (4294967296) must be <= (65536)
   (memory 0 0x1_0000_0000)
-            ^^^^^^^^^^^^^
+   ^^^^^^
 out/test/spec/memory64/memory.wast:228: assert_malformed passed:
   out/test/spec/memory64/memory/memory.29.wat:1:17: error: redefinition of memory "$foo"
   (memory $foo 1)(memory $foo 1)

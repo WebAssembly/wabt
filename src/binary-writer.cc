@@ -78,8 +78,8 @@ uint32_t ComputeLimitsFlags(const Limits* limits) {
   return flags;
 }
 
-void WriteLimitsData(Stream* stream, const Limits* limits) {
-  if (limits->is_64) {
+void WriteLimitsData(Stream* stream, const Limits* limits, bool is_64) {
+  if (is_64) {
     WriteU64Leb128(stream, limits->initial, "limits: initial");
     if (limits->has_max) {
       WriteU64Leb128(stream, limits->max, "limits: max");
@@ -1238,7 +1238,8 @@ void BinaryWriter::WriteTable(const Table* table) {
   }
   WriteType(stream_, table->elem_type);
   WriteLimitsFlags(stream_, ComputeLimitsFlags(&table->elem_limits));
-  WriteLimitsData(stream_, &table->elem_limits);
+  WriteLimitsData(stream_, &table->elem_limits,
+                  options_.features.memory64_enabled());
 
   if (!table->init_expr.empty()) {
     WriteInitExpr(table->init_expr);
@@ -1250,7 +1251,8 @@ void BinaryWriter::WriteMemory(const Memory* memory) {
   const bool custom_page_size = memory->page_size != WABT_DEFAULT_PAGE_SIZE;
   flags |= custom_page_size ? WABT_BINARY_LIMITS_HAS_CUSTOM_PAGE_SIZE_FLAG : 0;
   WriteLimitsFlags(stream_, flags);
-  WriteLimitsData(stream_, &memory->page_limits);
+  WriteLimitsData(stream_, &memory->page_limits,
+                  options_.features.memory64_enabled());
   if (custom_page_size) {
     WriteU32Leb128(stream_, log2_u32(memory->page_size), "memory page size");
   }
