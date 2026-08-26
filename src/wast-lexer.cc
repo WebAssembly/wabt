@@ -77,7 +77,14 @@ Token WastLexer::GetToken() {
           }
           return BareToken(TokenType::Eof);
         } else if (MatchString("(@")) {
-          GetIdChars();
+          assert(token_start_ + 2 == cursor_);
+          if (PeekChar() == '"') {
+            return GetStringToken(TokenType::LparAnn);
+          }
+
+          while (IsIdChar(PeekChar())) {
+            ReadChar();
+          }
           // offset=2 to skip the "(@" prefix
           return TextToken(TokenType::LparAnn, 2);
         } else {
@@ -98,8 +105,7 @@ Token WastLexer::GetToken() {
           return BareToken(TokenType::Eof);
         } else {
           ReadChar();
-          ERROR("unexpected char");
-          continue;
+          return TextToken(TokenType::Reserved);
         }
         break;
 
@@ -142,6 +148,14 @@ Token WastLexer::GetToken() {
         }
         break;
 
+      case ',':
+      case '[':
+      case ']':
+      case '{':
+      case '}':
+        ReadChar();
+        return TextToken(TokenType::Reserved);
+
       case '0':
         return MatchString("0x") ? GetHexNumberToken(TokenType::Nat)
                                  : GetNumberToken(TokenType::Nat);
@@ -176,16 +190,19 @@ Token WastLexer::GetToken() {
       case 'o':
         return GetNameEqNumToken("offset=", TokenType::OffsetEqNat);
 
-      default:
-        if (IsKeyword(PeekChar())) {
+      default: {
+        int c = PeekChar();
+
+        if (IsKeyword(c)) {
           return GetKeywordToken();
-        } else if (IsIdChar(PeekChar())) {
+        } else if (IsIdChar(c)) {
           return GetReservedToken();
         } else {
           ReadChar();
           ERROR("unexpected char");
           continue;
         }
+      }
     }
   }
 }
@@ -331,7 +348,8 @@ Token WastLexer::GetStringToken(TokenType token_type) {
   while (in_string) {
     switch (ReadChar()) {
       case kEof:
-        return BareToken(TokenType::Eof);
+        token_start_ = saved_token_start;
+        return Token(GetLocation(), TokenType::Invalid);
 
       case '\n':
         token_start_ = cursor_ - 1;
@@ -443,7 +461,8 @@ Token WastLexer::GetStringToken(TokenType token_type) {
     return Token(GetLocation(), TokenType::Invalid);
   }
 
-  return TextToken(token_type);
+  // Ignore the "(@" prefix for annotations.
+  return TextToken(token_type, token_type == TokenType::LparAnn ? 2 : 0);
 }
 
 // static
