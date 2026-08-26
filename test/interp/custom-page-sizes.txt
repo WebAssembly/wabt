@@ -44,7 +44,7 @@
 ;; or invalid (for other pagesizes).
 
 ;; i32 (pagesize 1)
-(assert_malformed
+(assert_invalid
   (module quote "(memory 0x1_0000_0000 (pagesize 1))")
   "constant out of range")
 
@@ -105,10 +105,10 @@ out/test/interp/custom-page-sizes.txt:29: assert_unlinkable passed:
   error: invalid import "test.unknown"
 out/test/interp/custom-page-sizes.txt:36: assert_unlinkable passed:
   error: invalid import "test.unknown"
-out/test/interp/custom-page-sizes.txt:48: assert_malformed passed:
-  out/test/interp/custom-page-sizes/custom-page-sizes.5.wat:1:9: error: invalid int "0x1_0000_0000"
+out/test/interp/custom-page-sizes.txt:48: assert_invalid passed:
+  out/test/interp/custom-page-sizes/custom-page-sizes.5.wat:1:2: error: initial pages (4294967296) must be <= (4294967295)
   (memory 0x1_0000_0000 (pagesize 1))
-          ^^^^^^^^^^^^^
+   ^^^^^^
 out/test/interp/custom-page-sizes.txt:53: assert_malformed passed:
   out/test/interp/custom-page-sizes/custom-page-sizes.6.wat:1:13: error: invalid int "0x1_0000_0000_0000_0000"
   (memory i64 0x1_0000_0000_0000_0000 (pagesize 1))
