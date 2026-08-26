@@ -3,6 +3,8 @@
 (module
    (func (@hello "this is a test"
 (;; STDERR ;;;
-out/test/regress/unterminated-annotation2.txt:5:1: error: unterminated annotation
+out/test/regress/unterminated-annotation2.txt:4:10: error: unterminated annotation
+   (func (@hello "this is a test"
+         ^^^^^^^
 out/test/regress/unterminated-annotation2.txt:5:1: error: unexpected token EOF, expected ).
 ;;; STDERR ;;)
