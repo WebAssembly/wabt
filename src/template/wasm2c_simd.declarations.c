@@ -19,56 +19,70 @@
    "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 #endif
 
+#if WABT_BIG_ENDIAN
+static inline v128 WASM_ADJUST_ENDIAN_v128(v128 value) {
+  u64 input[2];
+  u64 output[2];
+  wasm_rt_memcpy(input, &value, sizeof(input));
+  output[0] = htole64(input[1]);
+  output[1] = htole64(input[0]);
+  wasm_rt_memcpy(&value, output, sizeof(value));
+  return value;
+}
+#else
+#define WASM_ADJUST_ENDIAN_v128(value) (value)
+#endif
+
 // The below SIMD operations copy to a local variable first as the
 // MEM_ADDR_MEMOP maybe segment pointers if WASM_RT_USE_SEGUE_FOR_THIS_MODULE is
 // defined and regular pointers otherwse. memcpy into the local works correctly
 // in both cases.
-#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                              \
-  static inline v128 name##_unchecked(                                    \
-      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
-      u64 addr) {                                                         \
-    t simd_mem_value;                                                     \
-    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
-                   sizeof(t));                                            \
-    v128 result = func(&simd_mem_value);                                  \
-    SIMD_FORCE_READ(result);                                              \
-    return result;                                                        \
-  }                                                                       \
+#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                               \
+  static inline v128 name##_unchecked(                                     \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
+      u64 addr) {                                                          \
+    t simd_mem_value;                                                      \
+    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr), sizeof(t)); \
+    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
+    v128 result = func(&simd_mem_value);                                   \
+    SIMD_FORCE_READ(result);                                               \
+    return result;                                                         \
+  }                                                                        \
   DEF_MEM_CHECKS0(name, _, t, return, v128);
 
-#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                        \
-  static inline v128 name##_unchecked(                                    \
-      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
-      u64 addr, v128 vec) {                                               \
-    t simd_mem_value;                                                     \
-    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
-                   sizeof(t));                                            \
-    v128 result = func(&simd_mem_value, vec, lane);                       \
-    SIMD_FORCE_READ(result);                                              \
-    return result;                                                        \
-  }                                                                       \
+#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                         \
+  static inline v128 name##_unchecked(                                     \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
+      u64 addr, v128 vec) {                                                \
+    t simd_mem_value;                                                      \
+    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr), sizeof(t)); \
+    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
+    v128 result = func(&simd_mem_value, vec, lane);                        \
+    SIMD_FORCE_READ(result);                                               \
+    return result;                                                         \
+  }                                                                        \
   DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
 
-#define DEFINE_SIMD_STORE(name, t)                                        \
-  static inline void name##_unchecked(                                    \
-      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
-      u64 addr, v128 value) {                                             \
-    t simd_mem_value;                                                     \
-    simde_wasm_v128_store(&simd_mem_value, value);                        \
-    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
-                   sizeof(t));                                            \
-  }                                                                       \
+#define DEFINE_SIMD_STORE(name, t)                                         \
+  static inline void name##_unchecked(                                     \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
+      u64 addr, v128 value) {                                              \
+    t simd_mem_value;                                                      \
+    simde_wasm_v128_store(&simd_mem_value, value);                         \
+    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &simd_mem_value, sizeof(t)); \
+  }                                                                        \
   DEF_MEM_CHECKS1(name, _, t, , void, v128);
 
-#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                       \
-  static inline void name##_unchecked(                                    \
-      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
-      u64 addr, v128 value) {                                             \
-    t simd_mem_value;                                                     \
-    func(&simd_mem_value, value, lane);                                   \
-    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
-                   sizeof(t));                                            \
-  }                                                                       \
+#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                        \
+  static inline void name##_unchecked(                                     \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
+      u64 addr, v128 value) {                                              \
+    t simd_mem_value;                                                      \
+    func(&simd_mem_value, value, lane);                                    \
+    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &simd_mem_value, sizeof(t)); \
+  }                                                                        \
   DEF_MEM_CHECKS1(name, _, t, , void, v128);
 
 // clang-format off
