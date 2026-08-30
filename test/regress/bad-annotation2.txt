@@ -4,9 +4,13 @@
 (module (memory $mem 1)
    (@_memory" (memory $mem))
 (;; STDERR ;;;
+out/test/regress/bad-annotation2.txt:5:4: error: annotations not enabled: _memory
+   (@_memory" (memory $mem))
+   ^^^^^^^^^
 out/test/regress/bad-annotation2.txt:5:29: error: newline in string
    (@_memory" (memory $mem))
                             ^
-out/test/regress/bad-annotation2.txt:6:1: error: annotations not enabled: 
-out/test/regress/bad-annotation2.txt:6:1: error: unexpected token Invalid, expected ).
+out/test/regress/bad-annotation2.txt:5:4: error: unexpected token Invalid, expected ).
+   (@_memory" (memory $mem))
+   ^^^^^^^^^
 ;;; STDERR ;;)

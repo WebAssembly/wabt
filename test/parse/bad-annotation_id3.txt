@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (@"\c2\80" (;
+    %multi line comment%
+  ;)  ;; %single line comment%
+  )
+  (@"\80"))
+(;; STDERR ;;;
+out/test/parse/bad-annotation_id3.txt:8:3: error: quoted annotation id has an invalid utf-8 encoding
+  (@"\80"))
+  ^^^^^^^
+;;; STDERR ;;)
