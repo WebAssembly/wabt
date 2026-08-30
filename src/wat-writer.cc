@@ -852,8 +852,11 @@ Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Space);
+  // The text format names the memory before the data segment, which is the
+  // opposite of the operand order used by the binary encoding. table.init has
+  // the same shape; ParseMemoryInstrVar() is the parser side of this.
   writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Space);
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
