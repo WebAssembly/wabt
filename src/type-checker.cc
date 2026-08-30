@@ -772,7 +772,12 @@ Result TypeChecker::OnDelegate(Index depth) {
   Result result = Result::Ok;
   Label* label;
   // Delegate starts counting after the current try, as the delegate
-  // instruction is not actually in the try block.
+  // instruction is not actually in the try block. depth + 1 wraps to 0 when
+  // depth is kInvalidIndex, which would slip past the bounds check in GetLabel.
+  if (depth == kInvalidIndex) {
+    PrintError("invalid depth: %" PRIindex, depth);
+    return Result::Error;
+  }
   CHECK_RESULT(GetLabel(depth + 1, &label));
 
   Label* try_label;
