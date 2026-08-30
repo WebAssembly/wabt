@@ -242,6 +242,9 @@ class WastParser {
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
   Result ParseCodeMetadataAnnotation(ExprList*);
+  void AppendAnnotatedInstr(ExprList* exprs,
+                            ExprList* annotation,
+                            ExprList* annotated);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
   Result ParseF32(Const*, ConstType type);
   Result ParseF64(Const*, ConstType type);
