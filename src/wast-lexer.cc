@@ -190,6 +190,32 @@ Token WastLexer::GetToken() {
   }
 }
 
+bool WastLexer::IsComponent() {
+  int line = line_;
+  const char* line_start = line_start_;
+  const char* token_start = token_start_;
+  const char* cursor = cursor_;
+  Errors* errors = errors_;
+
+  Errors discarded_errors;
+  errors_ = &discarded_errors;
+
+  bool result = false;
+
+  Token token = GetToken();
+  if (token.token_type() == TokenType::Lpar) {
+    token = GetToken();
+    result = token.token_type() == TokenType::Component;
+  }
+
+  line_ = line;
+  line_start_ = line_start;
+  token_start_ = token_start;
+  cursor_ = cursor;
+  errors_ = errors;
+  return result;
+}
+
 Location WastLexer::GetLocation() {
   auto column = [this](const char* p) {
     return std::max(1, static_cast<int>(p - line_start_ + 1));

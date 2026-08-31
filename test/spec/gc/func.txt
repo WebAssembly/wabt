@@ -1,0 +1,257 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/func.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/func.wast:436: assert_invalid passed:
+  out/test/spec/gc/func/func.2.wasm:000001a: error: function type variable out of range: 2 (max 2)
+  000001a: error: OnFunction callback failed
+out/test/spec/gc/func.wast:448: assert_malformed passed:
+  out/test/spec/gc/func/func.3.wat:1:123: error: invalid func type index 2
+  ...lt f64) (f64.const 1))(type $t (func (param i32)))(func (type 2) (param i32))
+                                                        ^^^^
+out/test/spec/gc/func.wast:560: assert_malformed passed:
+  out/test/spec/gc/func/func.6.wat:1:76: error: unexpected token "param", expected an instr.
+  ... i32) (result i32)))(func (type $sig) (result i32) (param i32) (i32.const 0))
+                                                         ^^^^^
+out/test/spec/gc/func.wast:567: assert_malformed passed:
+  out/test/spec/gc/func/func.7.wat:1:63: error: unexpected token "type", expected an instr.
+  ... i32) (result i32)))(func (param i32) (type $sig) (result i32) (i32.const 0))
+                                            ^^^^
+out/test/spec/gc/func.wast:574: assert_malformed passed:
+  out/test/spec/gc/func/func.8.wat:1:76: error: unexpected token "type", expected an instr.
+  ... i32) (result i32)))(func (param i32) (result i32) (type $sig) (i32.const 0))
+                                                         ^^^^
+out/test/spec/gc/func.wast:581: assert_malformed passed:
+  out/test/spec/gc/func/func.9.wat:1:64: error: unexpected token "type", expected an instr.
+  ... i32) (result i32)))(func (result i32) (type $sig) (param i32) (i32.const 0))
+                                             ^^^^
+out/test/spec/gc/func.wast:588: assert_malformed passed:
+  out/test/spec/gc/func/func.10.wat:1:64: error: unexpected token "param", expected an instr.
+  ... i32) (result i32)))(func (result i32) (param i32) (type $sig) (i32.const 0))
+                                             ^^^^^
+  out/test/spec/gc/func/func.10.wat:1:85: error: unexpected token ), expected (.
+  ... i32) (result i32)))(func (result i32) (param i32) (type $sig) (i32.const 0))
+                                                                  ^
+out/test/spec/gc/func.wast:595: assert_malformed passed:
+  out/test/spec/gc/func/func.11.wat:1:21: error: unexpected token "param", expected an instr.
+  (func (result i32) (param i32) (i32.const 0))
+                      ^^^^^
+out/test/spec/gc/func.wast:602: assert_malformed passed:
+  out/test/spec/gc/func/func.12.wat:1:20: error: expected 0 results, got 1
+  (type $sig (func))(func (type $sig) (result i32) (i32.const 0))
+                     ^^^^
+out/test/spec/gc/func.wast:609: assert_malformed passed:
+  out/test/spec/gc/func/func.13.wat:1:45: error: expected 1 arguments, got 0
+  ...g (func (param i32) (result i32)))(func (type $sig) (result i32) (i32.cons...
+                                        ^^^^
+out/test/spec/gc/func.wast:616: assert_malformed passed:
+  out/test/spec/gc/func/func.14.wat:1:45: error: expected 1 results, got 0
+  ...g (func (param i32) (result i32)))(func (type $sig) (param i32) (i32.const...
+                                        ^^^^
+out/test/spec/gc/func.wast:623: assert_malformed passed:
+  out/test/spec/gc/func/func.15.wat:1:49: error: expected 2 arguments, got 1
+  ...unc (param i32 i32) (result i32)))(func (type $sig) (param i32) (result i3...
+                                        ^^^^
+out/test/spec/gc/func.wast:631: assert_invalid passed:
+  out/test/spec/gc/func/func.16.wasm:000000c: error: function type variable out of range: 4 (max 0)
+  000000c: error: OnFunction callback failed
+out/test/spec/gc/func.wast:635: assert_invalid passed:
+  out/test/spec/gc/func/func.17.wasm:0000013: error: function type variable out of range: 4 (max 1)
+  0000013: error: OnFunction callback failed
+out/test/spec/gc/func.wast:647: assert_invalid passed:
+  out/test/spec/gc/func/func.18.wasm:000001d: error: type mismatch in implicit return, expected [i64] but got [i32]
+  000001d: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:651: assert_invalid passed:
+  out/test/spec/gc/func/func.19.wasm:000001c: error: type mismatch in i32.eqz, expected [i32] but got [f32]
+  000001c: error: OnConvertExpr callback failed
+out/test/spec/gc/func.wast:655: assert_invalid passed:
+  out/test/spec/gc/func/func.20.wasm:000001e: error: type mismatch in f64.neg, expected [f64] but got [i64]
+  000001e: error: OnUnaryExpr callback failed
+out/test/spec/gc/func.wast:660: assert_invalid passed:
+  out/test/spec/gc/func/func.21.wasm:000001c: error: uninitialized local reference
+  000001c: error: OnLocalGetExpr callback failed
+out/test/spec/gc/func.wast:671: assert_invalid passed:
+  out/test/spec/gc/func/func.22.wasm:000001c: error: type mismatch in implicit return, expected [i64] but got [i32]
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:675: assert_invalid passed:
+  out/test/spec/gc/func/func.23.wasm:000001b: error: type mismatch in i32.eqz, expected [i32] but got [f32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/gc/func.wast:679: assert_invalid passed:
+  out/test/spec/gc/func/func.24.wasm:000001c: error: type mismatch in f64.neg, expected [f64] but got [i64]
+  000001c: error: OnUnaryExpr callback failed
+out/test/spec/gc/func.wast:687: assert_invalid passed:
+  out/test/spec/gc/func/func.25.wasm:0000019: error: type mismatch in implicit return, expected [i32] but got []
+  0000019: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:691: assert_invalid passed:
+  out/test/spec/gc/func/func.26.wasm:0000019: error: type mismatch in implicit return, expected [i64] but got []
+  0000019: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:695: assert_invalid passed:
+  out/test/spec/gc/func/func.27.wasm:0000019: error: type mismatch in implicit return, expected [f32] but got []
+  0000019: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:699: assert_invalid passed:
+  out/test/spec/gc/func/func.28.wasm:0000019: error: type mismatch in implicit return, expected [f64] but got []
+  0000019: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:703: assert_invalid passed:
+  out/test/spec/gc/func/func.29.wasm:000001a: error: type mismatch in implicit return, expected [f64, i32] but got []
+  000001a: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:708: assert_invalid passed:
+  out/test/spec/gc/func/func.30.wasm:000001a: error: type mismatch in implicit return, expected [i32] but got []
+  000001a: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:714: assert_invalid passed:
+  out/test/spec/gc/func/func.31.wasm:000001b: error: type mismatch in implicit return, expected [i32, i32] but got []
+  000001b: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:720: assert_invalid passed:
+  out/test/spec/gc/func/func.32.wasm:000001a: error: type mismatch at end of function, expected [] but got [i32]
+  000001a: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:726: assert_invalid passed:
+  out/test/spec/gc/func/func.33.wasm:000001c: error: type mismatch at end of function, expected [] but got [i32, i64]
+  000001c: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:732: assert_invalid passed:
+  out/test/spec/gc/func/func.34.wasm:000001e: error: type mismatch in implicit return, expected [i32] but got [f32]
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:738: assert_invalid passed:
+  out/test/spec/gc/func/func.35.wasm:000001f: error: type mismatch in implicit return, expected [f32, f32] but got [f32]
+  000001f: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:744: assert_invalid passed:
+  out/test/spec/gc/func/func.36.wasm:0000023: error: type mismatch at end of function, expected [] but got [f32]
+  0000023: error: EndFunctionBody callback failed
+out/test/spec/gc/func.wast:751: assert_invalid passed:
+  out/test/spec/gc/func/func.37.wasm:0000019: error: type mismatch in return, expected [i32] but got []
+  0000019: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:757: assert_invalid passed:
+  out/test/spec/gc/func/func.38.wasm:000001a: error: type mismatch in return, expected [i32, i32] but got []
+  000001a: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:763: assert_invalid passed:
+  out/test/spec/gc/func/func.39.wasm:000001a: error: type mismatch in return, expected [i32] but got []
+  000001a: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:769: assert_invalid passed:
+  out/test/spec/gc/func/func.40.wasm:000001b: error: type mismatch in return, expected [i32, i64] but got []
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:775: assert_invalid passed:
+  out/test/spec/gc/func/func.41.wasm:000001b: error: type mismatch in return, expected [i32] but got [i64]
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:781: assert_invalid passed:
+  out/test/spec/gc/func/func.42.wasm:000001c: error: type mismatch in return, expected [i64, i64] but got [i64]
+  000001c: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:788: assert_invalid passed:
+  out/test/spec/gc/func/func.43.wasm:0000019: error: type mismatch in return, expected [i32] but got []
+  0000019: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:794: assert_invalid passed:
+  out/test/spec/gc/func/func.44.wasm:000001a: error: type mismatch in return, expected [i32, i32] but got []
+  000001a: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:800: assert_invalid passed:
+  out/test/spec/gc/func/func.45.wasm:000001c: error: type mismatch in return, expected [i32, i32] but got [i32]
+  000001c: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:806: assert_invalid passed:
+  out/test/spec/gc/func/func.46.wasm:000001a: error: type mismatch in return, expected [i32] but got []
+  000001a: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:812: assert_invalid passed:
+  out/test/spec/gc/func/func.47.wasm:000001b: error: type mismatch in return, expected [i32, i32] but got []
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:818: assert_invalid passed:
+  out/test/spec/gc/func/func.48.wasm:000001b: error: type mismatch in return, expected [i32] but got [i64]
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:824: assert_invalid passed:
+  out/test/spec/gc/func/func.49.wasm:000001c: error: type mismatch in return, expected [i32, i32] but got [i64]
+  000001c: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:830: assert_invalid passed:
+  out/test/spec/gc/func/func.50.wasm:000001b: error: type mismatch in return, expected [i32] but got [i64]
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:836: assert_invalid passed:
+  out/test/spec/gc/func/func.51.wasm:000001c: error: type mismatch in return, expected [i32, i32] but got [i32]
+  000001c: error: OnReturnExpr callback failed
+out/test/spec/gc/func.wast:843: assert_invalid passed:
+  out/test/spec/gc/func/func.52.wasm:000001a: error: type mismatch in br, expected [i32] but got []
+  000001a: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:849: assert_invalid passed:
+  out/test/spec/gc/func/func.53.wasm:000001b: error: type mismatch in br, expected [i32, i32] but got []
+  000001b: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:855: assert_invalid passed:
+  out/test/spec/gc/func/func.54.wasm:000001f: error: type mismatch in br, expected [i32] but got [f32]
+  000001f: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:861: assert_invalid passed:
+  out/test/spec/gc/func/func.55.wasm:000001d: error: type mismatch in br, expected [i32, i32] but got [i32]
+  000001d: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:867: assert_invalid passed:
+  out/test/spec/gc/func/func.56.wasm:000001a: error: type mismatch in br, expected [i32] but got []
+  000001a: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:873: assert_invalid passed:
+  out/test/spec/gc/func/func.57.wasm:000001b: error: type mismatch in br, expected [i32, i32] but got []
+  000001b: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:879: assert_invalid passed:
+  out/test/spec/gc/func/func.58.wasm:000001c: error: type mismatch in br, expected [i32] but got [i64]
+  000001c: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:885: assert_invalid passed:
+  out/test/spec/gc/func/func.59.wasm:000001d: error: type mismatch in br, expected [i32, i32] but got [i32]
+  000001d: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:891: assert_invalid passed:
+  out/test/spec/gc/func/func.60.wasm:000001c: error: type mismatch in br, expected [i32] but got [i64]
+  000001c: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:898: assert_invalid passed:
+  out/test/spec/gc/func/func.61.wasm:000001c: error: type mismatch in br, expected [i32] but got []
+  000001c: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:904: assert_invalid passed:
+  out/test/spec/gc/func/func.62.wasm:000001d: error: type mismatch in br, expected [i32, i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:910: assert_invalid passed:
+  out/test/spec/gc/func/func.63.wasm:000001d: error: type mismatch in br, expected [i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:916: assert_invalid passed:
+  out/test/spec/gc/func/func.64.wasm:000001e: error: type mismatch in br, expected [i32, i32] but got []
+  000001e: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:922: assert_invalid passed:
+  out/test/spec/gc/func/func.65.wasm:000001e: error: type mismatch in br, expected [i32] but got [i64]
+  000001e: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:928: assert_invalid passed:
+  out/test/spec/gc/func/func.66.wasm:000001f: error: type mismatch in br, expected [i32, i32] but got [i32]
+  000001f: error: OnBrExpr callback failed
+out/test/spec/gc/func.wast:938: assert_malformed passed:
+  out/test/spec/gc/func/func.67.wat:1:14: error: unexpected token "local", expected an instr.
+  (func (nop) (local i32))
+               ^^^^^
+out/test/spec/gc/func.wast:942: assert_malformed passed:
+  out/test/spec/gc/func/func.68.wat:1:14: error: unexpected token "param", expected an instr.
+  (func (nop) (param i32))
+               ^^^^^
+out/test/spec/gc/func.wast:946: assert_malformed passed:
+  out/test/spec/gc/func/func.69.wat:1:14: error: unexpected token "result", expected an instr.
+  (func (nop) (result i32))
+               ^^^^^^
+out/test/spec/gc/func.wast:950: assert_malformed passed:
+  out/test/spec/gc/func/func.70.wat:1:20: error: unexpected token "param", expected an instr.
+  (func (local i32) (param i32))
+                     ^^^^^
+out/test/spec/gc/func.wast:954: assert_malformed passed:
+  out/test/spec/gc/func/func.71.wat:1:20: error: unexpected token "result", expected an instr.
+  (func (local i32) (result i32) (local.get 0))
+                     ^^^^^^
+out/test/spec/gc/func.wast:958: assert_malformed passed:
+  out/test/spec/gc/func/func.72.wat:1:21: error: unexpected token "param", expected an instr.
+  (func (result i32) (param i32) (local.get 0))
+                      ^^^^^
+out/test/spec/gc/func.wast:965: assert_malformed passed:
+  out/test/spec/gc/func/func.73.wat:1:13: error: redefinition of function "$foo"
+  (func $foo)(func $foo)
+              ^^^^
+out/test/spec/gc/func.wast:969: assert_malformed passed:
+  out/test/spec/gc/func/func.74.wat:1:28: error: redefinition of function "$foo"
+  (import "" "" (func $foo))(func $foo)
+                             ^^^^
+out/test/spec/gc/func.wast:973: assert_malformed passed:
+  out/test/spec/gc/func/func.75.wat:1:28: error: redefinition of function "$foo"
+  (import "" "" (func $foo))(import "" "" (func $foo))
+                             ^^^^^^
+out/test/spec/gc/func.wast:978: assert_malformed passed:
+  out/test/spec/gc/func/func.76.wat:1:31: error: redefinition of parameter "$foo"
+  (func (param $foo i32) (param $foo i32))
+                                ^^^^
+out/test/spec/gc/func.wast:982: assert_malformed passed:
+  out/test/spec/gc/func/func.77.wat:1:31: error: redefinition of parameter "$foo"
+  (func (param $foo i32) (local $foo i32))
+                                ^^^^
+out/test/spec/gc/func.wast:986: assert_malformed passed:
+  out/test/spec/gc/func/func.78.wat:1:31: error: redefinition of local "$foo"
+  (func (local $foo i32) (local $foo i32))
+                                ^^^^
+175/175 tests passed.
+;;; STDOUT ;;)
