@@ -1236,10 +1236,17 @@ Result BinaryReaderInterp::OnCallRefExpr(Type sig_type) {
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
-  // Validation below rejects an invalid index before cleanup is emitted.
-  Index param_count = func_index < func_types_.size()
-                          ? func_types_[func_index].params.size()
-                          : 0;
+  // Don't use OnReturnCall to check the index here: it consumes the call
+  // operands from the type stack. That will cause drop/keep counts to be
+  // incorrect.
+  if (func_index >= func_types_.size()) {
+    validator_.PrintError(GetLocation(),
+                          "function variable out of range: %" PRIindex
+                          " (max %" PRIindex ")",
+                          func_index, static_cast<Index>(func_types_.size()));
+    return Result::Error;
+  }
+  Index param_count = func_types_[func_index].params.size();
 
   Index drop_count, keep_count, catch_drop_count;
   // Validation consumes the tail-call operands, so compute cleanup first.
@@ -1247,6 +1254,8 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
       GetReturnCallDropKeepCount(param_count, 0, &drop_count, &keep_count));
   CHECK_RESULT(
       validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
+  // The validator must be run after we get the drop/keep counts, since it
+  // will change the type stack.
   CHECK_RESULT(
       validator_.OnReturnCall(GetLocation(), Var(func_index, GetLocation())));
   istream_.EmitDropKeep(drop_count, keep_count);
@@ -1268,10 +1277,18 @@ Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
-  // Validation below rejects an invalid index before cleanup is emitted.
-  Index param_count = sig_index < module_.func_types.size()
-                          ? module_.func_types[sig_index].params.size()
-                          : 0;
+  // Don't use OnReturnCallIndirect to check the index here: it consumes the
+  // call operands from the type stack. That will cause drop/keep counts to be
+  // incorrect.
+  if (sig_index >= module_.func_types.size()) {
+    validator_.PrintError(GetLocation(),
+                          "function type variable out of range: %" PRIindex
+                          " (max %" PRIindex ")",
+                          sig_index,
+                          static_cast<Index>(module_.func_types.size()));
+    return Result::Error;
+  }
+  Index param_count = module_.func_types[sig_index].params.size();
 
   Index drop_count, keep_count, catch_drop_count;
   // +1 to include the index of the function.
@@ -1280,6 +1297,8 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
       GetReturnCallDropKeepCount(param_count, +1, &drop_count, &keep_count));
   CHECK_RESULT(
       validator_.GetCatchCount(label_stack_.size() - 1, &catch_drop_count));
+  // The validator must be run after we get the drop/keep counts, since it
+  // will change the type stack.
   CHECK_RESULT(validator_.OnReturnCallIndirect(
       GetLocation(), Var(sig_index, GetLocation()),
       Var(table_index, GetLocation())));
