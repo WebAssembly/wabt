@@ -383,6 +383,7 @@ class JSWriter:
         command_funcs = {
             'module': self._WriteModuleCommand,
             'action': self._WriteActionCommand,
+            'instance': self._WriteInstanceCommand,
             'register': self._WriteRegisterCommand,
             'assert_malformed': self._WriteAssertModuleCommand,
             'assert_invalid': self._WriteAssertModuleCommand,
@@ -406,6 +407,8 @@ class JSWriter:
     def _WriteModuleCommand(self, command):
         module = self._Module(command['filename'])
         if 'definition' in command:
+            if 'name' in command:
+                self.out_file.write(f"let {command['name']} = ")
             self.out_file.write(f'definition("{module}");\n')
         else:
             self.module_idx += 1
@@ -417,6 +420,12 @@ class JSWriter:
     def _WriteActionCommand(self, command):
         action = self._Action(command['action'])
         self.out_file.write(f'{action};\n')
+
+    def _WriteInstanceCommand(self, command):
+        self.module_idx += 1
+        idx_name = self._ModuleIdxName()
+        self.out_file.write(f'let {idx_name} = instance_from({command["definition"]});\n')
+        self.out_file.write(f"let {command['instance']} = {idx_name};")
 
     def _WriteRegisterCommand(self, command):
         name = command.get('name', self._ModuleIdxName())

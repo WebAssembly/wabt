@@ -298,6 +298,7 @@ class WastParser {
   Result ParseOutputCommand(CommandPtr*);
 
   Result ParseAction(ActionPtr*);
+  Result ParseScriptModuleNoLpar(std::unique_ptr<ScriptModule>*);
   Result ParseScriptModule(std::unique_ptr<ScriptModule>*);
 
   template <typename T>
