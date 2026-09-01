@@ -1236,10 +1236,10 @@ Result BinaryReaderInterp::OnCallRefExpr(Type sig_type) {
 }
 
 Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
-  // Do not unconditionally call OnReturnCall here: it consumes the call operands
-  // from the type stack, which would make subsequent drop/keep count calculations
-  // incorrect. We only call it here to report a standard validation error and bail
-  // out when the function index is out of bounds.
+  // Do not unconditionally call OnReturnCall here: it consumes the call
+  // operands from the type stack, which would make subsequent drop/keep count
+  // calculations incorrect. We only call it here to report a standard
+  // validation error and bail out when the function index is out of bounds.
   if (func_index >= func_types_.size()) {
     return validator_.OnReturnCall(GetLocation(),
                                    Var(func_index, GetLocation()));
@@ -1276,12 +1276,13 @@ Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index,
                                                     Index table_index) {
   // Do not unconditionally call OnReturnCallIndirect here: it consumes the call
   // operands from the type stack, which would make subsequent drop/keep count
-  // calculations incorrect. We only call it here to report a standard validation
-  // error and bail out when the function type index is out of bounds.
+  // calculations incorrect. We only call it here to report a standard
+  // validation error and bail out when the function type index is out of
+  // bounds.
   if (sig_index >= module_.func_types.size()) {
-    return validator_.OnReturnCallIndirect(
-        GetLocation(), Var(sig_index, GetLocation()),
-        Var(table_index, GetLocation()));
+    return validator_.OnReturnCallIndirect(GetLocation(),
+                                           Var(sig_index, GetLocation()),
+                                           Var(table_index, GetLocation()));
   }
   FuncType& func_type = module_.func_types[sig_index];
 
