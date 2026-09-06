@@ -49,14 +49,14 @@ IS_WINDOWS = sys.platform == 'win32'
 
 
 def run_test(test_exe):
-    print('Running.. %s' % test_exe)
+    print(f'Running.. {test_exe}')
     proc = subprocess.Popen([test_exe], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, _ = proc.communicate()
     if proc.returncode == 0:
         return 0
-    print("Failed with returncode=%d" % proc.returncode)
+    print(f'Failed with returncode={proc.returncode}')
     print(stdout)
-    print('FAIL(%d): %s' % (proc.returncode, test_exe))
+    print(f'FAIL({proc.returncode}): {test_exe}')
     return 1
 
 
@@ -72,10 +72,10 @@ def check_for_missing(upstream_examples):
     all_examples = set(ALL_EXAMPLES)
     unexpected = upstream_examples - all_examples
     if unexpected:
-        error('Unexpected examples found: %s' % str(unexpected))
+        error(f'Unexpected examples found: {unexpected!s}')
     missing = all_examples - upstream_examples
     if missing:
-        error('Missing example binaries not found: %s' % str(missing))
+        error(f'Missing example binaries not found: {missing!s}')
 
 
 def main(args):
@@ -106,14 +106,14 @@ def main(args):
             f += '.exe'
         exe = os.path.join(options.bindir, 'wasm-c-api-' + f)
         if not os.path.exists(exe):
-            error('test executable not found: %s' % exe)
+            error(f'test executable not found: {exe}')
 
         count += 1
         if run_test(exe) != 0:
             fail_count += 1
 
     if fail_count:
-        print('[%d/%d] c-api examples failed' % (fail_count, count))
+        print(f'[{fail_count}/{count}] c-api examples failed')
         return 1
     return 0
 

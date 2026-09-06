@@ -19,7 +19,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: install tools
       run: |
-        pip3 install flake8==7.3.0 ruff==0.15.7
+        pip3 install -r requirements-dev.txt
         sudo apt-get install clang-format
     - run: flake8
     - run: ruff check

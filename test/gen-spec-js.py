@@ -26,8 +26,8 @@ import struct
 import sys
 
 import find_exe
-from utils import ChangeDir, ChangeExt, Error, Executable
 import utils
+from utils import ChangeDir, ChangeExt, Error, Executable
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -67,19 +67,19 @@ def NaNF32ToString(f32_bits):
     result += 'nan'
     sig = f32_bits & F32_SIG_MASK
     if sig != F32_QUIET_NAN_TAG:
-        result += ':0x%x' % sig
+        result += f':0x{sig:x}'
     return result
 
 
 def F32ToWasm(f32_bits):
     if IsNaNF32(f32_bits):
-        return 'f32.const %s' % NaNF32ToString(f32_bits)
+        return f'f32.const {NaNF32ToString(f32_bits)}'
     elif f32_bits == F32_INF:
         return 'f32.const infinity'
     elif f32_bits == F32_NEG_INF:
         return 'f32.const -infinity'
     else:
-        return 'f32.const %s' % float.hex(ReinterpretF32(f32_bits))
+        return f'f32.const {float.hex(ReinterpretF32(f32_bits))}'
 
 
 def F32ToJS(f32_bits):
@@ -89,7 +89,7 @@ def F32ToJS(f32_bits):
     elif f32_bits == F32_NEG_INF:
         return '-Infinity'
     else:
-        return 'f32(%s)' % ReinterpretF32(f32_bits)
+        return f'f32({ReinterpretF32(f32_bits)})'
 
 
 def IsNaNF64(f64_bits):
@@ -105,19 +105,19 @@ def NaNF64ToString(f64_bits):
     result += 'nan'
     sig = f64_bits & F64_SIG_MASK
     if sig != F64_QUIET_NAN_TAG:
-        result += ':0x%x' % sig
+        result += f':0x{sig:x}'
     return result
 
 
 def F64ToWasm(f64_bits):
     if IsNaNF64(f64_bits):
-        return 'f64.const %s' % NaNF64ToString(f64_bits)
+        return f'f64.const {NaNF64ToString(f64_bits)}'
     elif f64_bits == F64_INF:
         return 'f64.const infinity'
     elif f64_bits == F64_NEG_INF:
         return 'f64.const -infinity'
     else:
-        return 'f64.const %s' % float.hex(ReinterpretF64(f64_bits))
+        return f'f64.const {float.hex(ReinterpretF64(f64_bits))}'
 
 
 def F64ToJS(f64_bits):
@@ -141,7 +141,7 @@ def UnescapeWasmString(s):
         if c == '\\':
             x = s[i + 1:i + 3]
             if len(x) != 2:
-                raise Error('String with invalid escape: \"%s\"' % s)
+                raise Error(f'String with invalid escape: \"{s}\"')
             result += chr(int(x, 16))
             i += 3
         else:
@@ -156,7 +156,7 @@ def EscapeJSString(s):
         if 32 <= ord(c) < 127 and c not in '"\\':
             result += c
         else:
-            result += '\\x%02x' % ord(c)
+            result += f'\\x{ord(c):02x}'
     return result
 
 
@@ -215,7 +215,7 @@ def CollectInvalidModuleCommands(commands):
     return modules
 
 
-class ModuleExtender(object):
+class ModuleExtender:
 
     def __init__(self, wat2wasm, wasm2wat, temp_dir):
         self.wat2wasm = wat2wasm
@@ -243,9 +243,9 @@ class ModuleExtender(object):
 
     def _Command(self, index, command):
         command_type = command['type']
-        new_field = 'assert_%d' % index
+        new_field = f'assert_{index}'
         if command_type == 'assert_return':
-            self.lines.append('(func (export "%s")' % new_field)
+            self.lines.append(f'(func (export "{new_field}")')
             self.lines.append('block')
             self._Action(command['action'])
             for expected in command['expected']:
@@ -261,11 +261,11 @@ class ModuleExtender(object):
                 self.lines.extend(['i32.eqz', 'br_if 0'])
             self.lines.extend(['return', 'end', 'unreachable', ')'])
         elif command_type in ('assert_trap', 'assert_exhaustion'):
-            self.lines.append('(func (export "%s")' % new_field)
+            self.lines.append(f'(func (export "{new_field}")')
             self._Action(command['action'])
             self.lines.extend(['br 0', ')'])
         else:
-            raise Error('Unexpected command: %s' % command_type)
+            raise Error(f'Unexpected command: {command_type}')
 
         # Update command to point to the new exported function.
         command['action']['field'] = new_field
@@ -284,11 +284,11 @@ class ModuleExtender(object):
         if action['type'] == 'invoke':
             for arg in action['args']:
                 self._Constant(arg)
-            self.lines.append('call %s' % export[1])
+            self.lines.append(f'call {export[1]}')
         elif action['type'] == 'get':
-            self.lines.append('global.get %s' % export[1])
+            self.lines.append(f'global.get {export[1]}')
         else:
-            raise Error('Unexpected action: %s' % action['type'])
+            raise Error(f"Unexpected action: {action['type']}")
 
     def _Reinterpret(self, type_):
         self.lines.extend({
@@ -331,9 +331,9 @@ class ModuleExtender(object):
     def _QuietNan(self, type_):
         assert type_ in ('f32', 'f64')
         if type_ == 'f32':
-            line = 'i32.const 0x%x' % F32_QUIET_NAN
+            line = f'i32.const 0x{F32_QUIET_NAN:x}'
         else:
-            line = 'i64.const 0x%x' % F64_QUIET_NAN
+            line = f'i64.const 0x{F64_QUIET_NAN:x}'
         self.lines.append(line)
 
     def _Constant(self, const):
@@ -342,9 +342,9 @@ class ModuleExtender(object):
         value = const['value']
         assert value not in ('nan:canonical', 'nan:arithmetic')
         if type_ == 'i32':
-            inst = 'i32.const %s' % value
+            inst = f'i32.const {value}'
         elif type_ == 'i64':
-            inst = 'i64.const %s' % value
+            inst = f'i64.const {value}'
         elif type_ == 'f32':
             inst = F32ToWasm(int(value))
         elif type_ == 'f64':
@@ -362,7 +362,7 @@ class ModuleExtender(object):
         return wasm_path
 
 
-class JSWriter(object):
+class JSWriter:
 
     def __init__(self, base_dir, spec_json, out_file):
         self.base_dir = base_dir
@@ -376,7 +376,8 @@ class JSWriter(object):
             self._WriteCommand(command)
 
     def _WriteFileAndLine(self, command):
-        self.out_file.write('// %s:%d\n' % (self.source_filename, command['line']))
+        line_number = command['line']
+        self.out_file.write(f'// {self.source_filename}:{line_number}\n')
 
     def _WriteCommand(self, command):
         command_funcs = {
@@ -394,61 +395,60 @@ class JSWriter(object):
 
         func = command_funcs.get(command['type'])
         if func is None:
-            raise Error('Unexpected type: %s' % command['type'])
+            raise Error(f"Unexpected type: {command['type']}")
         self._WriteFileAndLine(command)
         func(command)
         self.out_file.write('\n')
 
     def _ModuleIdxName(self):
-        return '$%d' % self.module_idx
+        return f'${self.module_idx}'
 
     def _WriteModuleCommand(self, command):
-
+        module = self._Module(command['filename'])
         if 'definition' in command:
-            self.out_file.write('definition("%s");\n' %
-                                (self._Module(command['filename'])))
+            self.out_file.write(f'definition("{module}");\n')
         else:
             self.module_idx += 1
             idx_name = self._ModuleIdxName()
-            self.out_file.write('let %s = instance("%s");\n' %
-                                (idx_name, self._Module(command['filename'])))
+            self.out_file.write(f'let {idx_name} = instance("{module}");\n')
             if 'name' in command:
-                self.out_file.write('let %s = %s;\n' % (command['name'], idx_name))
+                self.out_file.write(f"let {command['name']} = {idx_name};\n")
 
     def _WriteActionCommand(self, command):
-        self.out_file.write('%s;\n' % self._Action(command['action']))
+        action = self._Action(command['action'])
+        self.out_file.write(f'{action};\n')
 
     def _WriteRegisterCommand(self, command):
-        self.out_file.write('register("%s", %s)\n' % (
-            command['as'], command.get('name', self._ModuleIdxName())))
+        name = command.get('name', self._ModuleIdxName())
+        self.out_file.write(f"register(\"{command['as']}\", {name})\n")
 
     def _WriteAssertModuleCommand(self, command):
         # Don't bother writing out text modules; they can't be parsed by JS.
         if command['module_type'] == 'binary':
-            self.out_file.write('%s("%s");\n' % (command['type'],
-                                self._Module(command['filename'])))
+            module = self._Module(command['filename'])
+            self.out_file.write(f'{command["type"]}("{module}");\n')
 
     def _WriteAssertReturnCommand(self, command):
         expected = command['expected']
         if len(expected) == 1:
-            self.out_file.write('assert_return(() => %s, %s);\n' %
-                                (self._Action(command['action']),
-                                 self._ConstantList(expected)))
+            action = self._Action(command['action'])
+            constants = self._ConstantList(expected)
+            self.out_file.write(f'assert_return(() => {action}, {constants});\n')
         elif len(expected) == 0:
             self._WriteAssertActionCommand(command)
         else:
-            raise Error('Unexpected result with multiple values: %s' % expected)
+            raise Error(f'Unexpected result with multiple values: {expected}')
 
     def _WriteAssertActionCommand(self, command):
-        self.out_file.write('%s(() => %s);\n' % (command['type'],
-                            self._Action(command['action'])))
+        action = self._Action(command['action'])
+        self.out_file.write(f'{command["type"]}(() => {action});\n')
 
     def _Module(self, filename):
         with open(os.path.join(self.base_dir, filename), 'rb') as wasm_file:
-            return ''.join('\\x%02x' % c for c in bytearray(wasm_file.read()))
+            return ''.join(f'\\x{c:02x}' for c in bytearray(wasm_file.read()))
 
     def _Constant(self, const):
-        assert IsValidJSConstant(const), 'Invalid JS const: %s' % const
+        assert IsValidJSConstant(const), f'Invalid JS const: {const}'
         type_ = const['type']
         value = const['value']
         if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
@@ -470,12 +470,12 @@ class JSWriter(object):
         module = action.get('module', self._ModuleIdxName())
         field = EscapeJSString(action['field'])
         if type_ == 'invoke':
-            args = '[%s]' % self._ConstantList(action.get('args', []))
-            return 'call(%s, "%s", %s)' % (module, field, args)
+            args = f"[{self._ConstantList(action.get('args', []))}]"
+            return f'call({module}, "{field}", {args})'
         elif type_ == 'get':
-            return 'get(%s, "%s")' % (module, field)
+            return f'get({module}, "{field}")'
         else:
-            raise Error('Unexpected action type: %s' % type_)
+            raise Error(f'Unexpected action type: {type_}')
 
 
 def main(args):
@@ -534,14 +534,10 @@ def main(args):
         JSWriter(json_dir, spec_json, output).Write()
 
     if options.output:
-        out_file = open(options.output, 'w')
+        with open(options.output, 'w') as out_file:
+            out_file.write(output.getvalue())
     else:
-        out_file = sys.stdout
-
-    try:
-        out_file.write(output.getvalue())
-    finally:
-        out_file.close()
+        sys.stdout.write(output.getvalue())
 
     return 0
 
