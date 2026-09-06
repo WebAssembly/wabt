@@ -48,20 +48,14 @@ jobs:
     - name: install ninja (win)
       run: choco install ninja
       if: matrix.os == 'windows-latest'
-    - name: mkdir
-      run: mkdir -p out
+    - uses: ilammy/msvc-dev-cmd@v1
+      if: matrix.os == 'windows-latest'
     - name: tool versions
       run: |
         cmake --version
         ninja --version
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
-      if: matrix.os != 'windows-latest'
-    - name: cmake (windows)
-      run: cmake .. -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
-      if: matrix.os == 'windows-latest'
+      run: cmake -S . -B out -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
     - name: build
       run: cmake --build out
     - name: check if generated files are up-to-date

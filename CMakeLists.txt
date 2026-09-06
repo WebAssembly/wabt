@@ -650,7 +650,11 @@ endif ()
 
 if (BUILD_TESTS)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -g -O0")
+    if (COMPILER_IS_MSVC)
+      set(WASM2C_CFLAGS "${WASM2C_CFLAGS} /Zi /Od /FS")
+    else ()
+      set(WASM2C_CFLAGS "${WASM2C_CFLAGS} -g -O0")
+    endif ()
   endif ()
 
   if (WABT_BIG_ENDIAN)
