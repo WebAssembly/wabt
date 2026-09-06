@@ -668,8 +668,8 @@ if (BUILD_TESTS)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
 
-  # Python 3.5 is the version shipped in Ubuntu Xenial
-  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
+  # Python 3.8 is the version shipped in Ubuntu Focal
+  find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
 
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)

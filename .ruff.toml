@@ -1,1 +1,3 @@
+target-version = "py38"
+
 extend-exclude = ["out", "third_party"]
