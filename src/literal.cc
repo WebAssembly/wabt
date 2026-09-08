@@ -63,7 +63,13 @@ struct FloatTraitsBase<float> {
   using Uint = uint32_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 23;
-  static constexpr float kHugeVal = HUGE_VALF;
+  // Not HUGE_VALF: AIX defines it as a cast that can't be constexpr, in
+  // violation of the standard. Here we use numeric_limits to do the same
+  // thing that HUGE_VALF is supposed to do to get the same value.
+  static constexpr float kHugeVal = std::numeric_limits<float>::has_infinity
+                                        ? std::numeric_limits<float>::infinity()
+                                        : std::numeric_limits<float>::max();
+
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
   static float Strto(const char* s, char** endptr) {
@@ -76,7 +82,11 @@ struct FloatTraitsBase<double> {
   using Uint = uint64_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 52;
-  static constexpr float kHugeVal = HUGE_VAL;
+  // See FloatTraitsBase<float>::kHugeVal.
+  static constexpr double kHugeVal =
+      std::numeric_limits<double>::has_infinity
+          ? std::numeric_limits<double>::infinity()
+          : std::numeric_limits<double>::max();
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
