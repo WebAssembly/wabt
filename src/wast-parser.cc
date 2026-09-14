@@ -945,22 +945,43 @@ Result WastParser::ParseRefDeclaration(Var* out_type) {
   EXPECT(Lpar);
   EXPECT(Ref);
 
-  Type::Enum opt_type = Type::Reference;
-
-  if (options_->features.function_references_enabled()) {
-    opt_type = Type::Ref;
-
-    if (Match(TokenType::Null)) {
-      opt_type = Type::RefNull;
-    }
+  bool saw_null = false;
+  if (options_->features.function_references_enabled() ||
+      options_->features.exceptions_enabled()) {
+    saw_null = Match(TokenType::Null);
   }
 
-  if (PeekMatch(TokenType::Func) || PeekMatch(TokenType::Extern)) {
-    TokenType token = Consume().token_type();
-    out_type->set_opt_type(token == TokenType::Func ? Type::FuncRef
-                                                    : Type::ExternRef);
-    out_type->set_index(opt_type == Type::Ref ? Type::ReferenceNonNull
-                                              : Type::ReferenceOrNull);
+  Type::Enum opt_type = Type::Reference;
+  if (options_->features.function_references_enabled()) {
+    opt_type = saw_null ? Type::RefNull : Type::Ref;
+  } else if (saw_null) {
+    opt_type = Type::RefNull;
+  }
+
+  if (PeekMatch(TokenType::Func) || PeekMatch(TokenType::Extern) ||
+      PeekMatch(TokenType::Exn)) {
+    Token token = Consume();
+    TokenType token_type = token.token_type();
+    Type::Enum ref_enum = Type::FuncRef;
+    if (token_type == TokenType::Extern) {
+      ref_enum = Type::ExternRef;
+    } else if (token_type == TokenType::Exn) {
+      ref_enum = Type::ExnRef;
+    }
+
+    if (ref_enum == Type::ExnRef && !options_->features.exceptions_enabled()) {
+      Error(token.loc, "value type not allowed: %s",
+            Type(ref_enum).GetName().c_str());
+      return Result::Error;
+    }
+
+    out_type->set_opt_type(ref_enum);
+    // (ref exn) is non-null even without function-references; (ref func) /
+    // (ref extern) only become non-null when that proposal is enabled.
+    bool non_null =
+        (ref_enum == Type::ExnRef) ? !saw_null : (opt_type == Type::Ref);
+    out_type->set_index(non_null ? Type::ReferenceNonNull
+                                 : Type::ReferenceOrNull);
   } else {
     CHECK_RESULT(ParseVar(out_type));
     out_type->set_opt_type(opt_type);

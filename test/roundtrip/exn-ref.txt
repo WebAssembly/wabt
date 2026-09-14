@@ -1,0 +1,24 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-exceptions
+(module
+  (func $nonnull (param (ref exn))
+    (throw_ref (local.get 0)))
+  (func $nullable (param (ref null exn))
+    (throw_ref (local.get 0)))
+  (func $abbrev (param exnref)
+    (throw_ref (local.get 0)))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param (ref exn))))
+  (type (;1;) (func (param exnref)))
+  (func (;0;) (type 0) (param (ref exn))
+    local.get 0
+    throw_ref)
+  (func (;1;) (type 1) (param exnref)
+    local.get 0
+    throw_ref)
+  (func (;2;) (type 1) (param exnref)
+    local.get 0
+    throw_ref))
+;;; STDOUT ;;)

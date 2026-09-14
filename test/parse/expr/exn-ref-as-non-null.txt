@@ -1,0 +1,6 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions --enable-function-references
+(module
+  (func (result (ref exn))
+    (ref.as_non_null (ref.null exn)))
+)

@@ -60,7 +60,7 @@ class Type {
     I32U = 7,  // Not actually specified, but used internally with load/store
   };
 
-  // Used by FuncRef / ExternRef
+  // Used by FuncRef / ExternRef / ExnRef
   enum GenericReferenceType : uint32_t {
     ReferenceOrNull = 0,
     ReferenceNonNull = 1,
@@ -105,14 +105,18 @@ class Type {
   }
 
   bool IsNullableRef() const {
-    return enum_ == Type::Reference || enum_ == Type::ExnRef ||
+    return enum_ == Type::Reference ||
            enum_ == Type::RefNull ||
-           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef) && type_index_ == ReferenceOrNull);
+           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
+             enum_ == Type::ExnRef) &&
+            type_index_ == ReferenceOrNull);
   }
 
   bool IsNonNullableRef() const {
     return enum_ == Type::Ref ||
-           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef) && type_index_ != ReferenceOrNull);
+           ((enum_ == Type::ExternRef || enum_ == Type::FuncRef ||
+             enum_ == Type::ExnRef) &&
+            type_index_ != ReferenceOrNull);
   }
 
   bool IsReferenceWithIndex() const { return EnumIsReferenceWithIndex(enum_); }
@@ -135,7 +139,8 @@ class Type {
       case Type::V128:      return "v128";
       case Type::I8:        return "i8";
       case Type::I16:       return "i16";
-      case Type::ExnRef:    return "exnref";
+      case Type::ExnRef:
+        return type_index_ == ReferenceOrNull ? "exnref" : "(ref exn)";
       case Type::Func:      return "func";
       case Type::Void:      return "void";
       case Type::Any:       return "any";
@@ -218,7 +223,8 @@ class Type {
   }
 
   static bool EnumIsNonTypedRef(Enum value) {
-    return value == Type::ExternRef || value == Type::FuncRef;
+    return value == Type::ExternRef || value == Type::FuncRef ||
+           value == Type::ExnRef;
   }
 
  private:
