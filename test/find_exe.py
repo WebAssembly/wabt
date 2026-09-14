@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -50,15 +49,14 @@ def FindExeWithFallback(name, default_exe_list, override_exe=None):
             result += '.exe'
         if os.path.exists(result):
             return os.path.abspath(result)
-        raise Error('%s executable not found.\nsearch path: %s\n' % (name, result))
+        raise Error(f'{name} executable not found.\nsearch path: {result}\n')
 
     for result in default_exe_list:
         if os.path.exists(result):
             return os.path.abspath(result)
 
-    raise Error('%s executable not found.\n%s\n' %
-                (name, '\n'.join('search path: %s' % path
-                 for path in default_exe_list)))
+    paths = '\n'.join(f'search path: {path}' for path in default_exe_list)
+    raise Error(f'{name} executable not found.\n{paths}\n')
 
 
 def FindExecutable(basename, override=None):
