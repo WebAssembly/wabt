@@ -921,6 +921,8 @@ def main(args):
                         default=GetDefaultJobCount())
     parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                         help='per test timeout in seconds')
+    parser.add_argument('--skip-slow', help='don\'t run tests marked as slow.',
+                        action='store_true')
     parser.add_argument('--no-roundtrip',
                         help='don\'t run roundtrip.py on all tests',
                         action='store_false', default=True, dest='roundtrip')
@@ -974,7 +976,7 @@ def main(args):
     infos = GetAllTestInfo(test_names, status)
     infos_to_run = []
     for info in infos:
-        if info.skip:
+        if info.skip or (options.skip_slow and info.slow):
             status.Skipped(info)
             continue
         infos_to_run.append(info)

@@ -110,7 +110,9 @@ The currently supported list of keys:
 - `STDIN`: name of a file to be read and used stdin of the executable
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
-- `SLOW`: if defined, this test's timeout is increased (currently by 3x).
+- `SLOW`: if defined, this test's timeout is increased (currently by 3x). Tests
+  with this directive can be skipped by passing `--skip-slow` to the test
+  runner.
 - `SKIP`: if defined, this test is not run. You can use the value as a comment.
 - `TODO`,`NOTE`: useful place to put additional info about the test.
 
