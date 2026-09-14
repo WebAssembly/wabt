@@ -16,15 +16,15 @@
 #
 
 import argparse
-import json
 import io
+import json
 import os
 import struct
 import sys
 
 import find_exe
-from utils import ChangeDir, Error, Executable
 import utils
+from utils import ChangeDir, Error, Executable
 
 F32_INF = 0x7f800000
 F32_NEG_INF = 0xff800000
@@ -50,7 +50,7 @@ def EscapeWasmString(s):
         elif 32 <= c < 127:
             result += chr(c)
         else:
-            result += '\\%02x' % c
+            result += f'\\{c:02x}'
     return result
 
 
@@ -67,19 +67,19 @@ def NaNF32ToString(f32_bits):
     result += 'nan'
     sig = f32_bits & F32_SIG_MASK
     if sig != F32_QUIET_NAN_TAG:
-        result += ':0x%x' % sig
+        result += f':0x{sig:x}'
     return result
 
 
 def F32ToWasm(f32_bits):
     if IsNaNF32(f32_bits):
-        return 'f32.const %s' % NaNF32ToString(f32_bits)
+        return f'f32.const {NaNF32ToString(f32_bits)}'
     elif f32_bits == F32_INF:
         return 'f32.const infinity'
     elif f32_bits == F32_NEG_INF:
         return 'f32.const -infinity'
     else:
-        return 'f32.const %s' % float.hex(ReinterpretF32(f32_bits))
+        return f'f32.const {float.hex(ReinterpretF32(f32_bits))}'
 
 
 def IsNaNF64(f64_bits):
@@ -95,22 +95,22 @@ def NaNF64ToString(f64_bits):
     result += 'nan'
     sig = f64_bits & F64_SIG_MASK
     if sig != F64_QUIET_NAN_TAG:
-        result += ':0x%x' % sig
+        result += f':0x{sig:x}'
     return result
 
 
 def F64ToWasm(f64_bits):
     if IsNaNF64(f64_bits):
-        return 'f64.const %s' % NaNF64ToString(f64_bits)
+        return f'f64.const {NaNF64ToString(f64_bits)}'
     elif f64_bits == F64_INF:
         return 'f64.const infinity'
     elif f64_bits == F64_NEG_INF:
         return 'f64.const -infinity'
     else:
-        return 'f64.const %s' % float.hex(ReinterpretF64(f64_bits))
+        return f'f64.const {float.hex(ReinterpretF64(f64_bits))}'
 
 
-class WastWriter(object):
+class WastWriter:
 
     def __init__(self, base_dir, spec_json, out_file):
         self.base_dir = base_dir
@@ -124,7 +124,8 @@ class WastWriter(object):
             self._WriteCommand(command)
 
     def _WriteFileAndLine(self, command):
-        self.out_file.write(';; %s:%d\n' % (self.source_filename, command['line']))
+        line_number = command['line']
+        self.out_file.write(f';; {self.source_filename}:{line_number}\n')
 
     def _WriteCommand(self, command):
         command_funcs = {
@@ -143,48 +144,55 @@ class WastWriter(object):
 
         func = command_funcs.get(command['type'])
         if func is None:
-            raise Error('Unexpected type: %s' % command['type'])
+            raise Error(f"Unexpected type: {command['type']}")
         self._WriteFileAndLine(command)
         func(command)
         self.out_file.write('\n')
 
     def _WriteModuleCommand(self, command):
-        self.out_file.write('(module %s binary \"%s\")\n' % (
-            command.get('name', ''), self._Binary(command['filename'])))
+        name = command.get('name', '')
+        binary = self._Binary(command['filename'])
+        self.out_file.write(f'(module {name} binary "{binary}")\n')
 
     def _WriteActionCommand(self, command):
-        self.out_file.write('(action %s)\n' % self._Action(command['action']))
+        action = self._Action(command['action'])
+        self.out_file.write(f'(action {action})\n')
 
     def _WriteRegisterCommand(self, command):
-        self.out_file.write('(register "%s" %s)\n' % (
-            command['as'], command.get('name', '')))
+        name = command.get('name', '')
+        as_name = command['as']
+        self.out_file.write(f'(register "{as_name}" {name})\n')
 
     def _WriteAssertModuleCommand(self, command):
+        cmd_type = command['type']
+        cmd_text = command['text']
         if command['module_type'] == 'binary':
-            self.out_file.write('(%s (module binary "%s") "%s")\n' % (
-                command['type'], self._Binary(command['filename']), command['text']))
+            binary = self._Binary(command['filename'])
+            self.out_file.write(f'({cmd_type} (module binary "{binary}") "{cmd_text}")\n')
         elif command['module_type'] == 'text':
-            self.out_file.write('(%s (module quote "%s") "%s")\n' % (
-                command['type'], self._Text(command['filename']), command['text']))
+            text = self._Text(command['filename'])
+            self.out_file.write(f'({cmd_type} (module quote "{text}") "{cmd_text}")\n')
         else:
-            raise Error('Unknown module type: %s' % command['module_type'])
+            module_type = command['module_type']
+            raise Error(f'Unknown module type: {module_type}')
 
     def _WriteAssertReturnCommand(self, command):
         expected = command['expected']
-        self.out_file.write('(assert_return %s%s)\n' % (
-            self._Action(command['action']), self._ConstantList(expected)))
+        action = self._Action(command['action'])
+        constants = self._ConstantList(expected)
+        self.out_file.write(f'(assert_return {action}{constants})\n')
 
     def _WriteAssertActionCommand(self, command):
-        self.out_file.write('(%s %s)\n' % (
-            command['type'], self._Action(command['action'])))
+        action = self._Action(command['action'])
+        self.out_file.write(f'({command["type"]} {action})\n')
 
     def _Binary(self, filename):
         with open(os.path.join(self.base_dir, filename), 'rb') as wasm_file:
-            return ''.join('\\%02x' % c for c in wasm_file.read())
+            return ''.join(f'\\{c:02x}' for c in wasm_file.read())
 
     def _Text(self, filename):
         with open(os.path.join(self.base_dir, filename), 'rb') as wasm_file:
-            return '%s' % EscapeWasmString(wasm_file.read())
+            return EscapeWasmString(wasm_file.read())
 
     def _Constant(self, const):
         type_ = const['type']
@@ -192,23 +200,23 @@ class WastWriter(object):
         if type_ in ('f32', 'f64') and value in ('nan:canonical', 'nan:arithmetic'):
             return value
         if type_ == 'i32':
-            return 'i32.const %s' % value
+            return f'i32.const {value}'
         elif type_ == 'i64':
-            return 'i64.const %s' % value
+            return f'i64.const {value}'
         elif type_ == 'f32':
             return F32ToWasm(int(value))
         elif type_ == 'f64':
             return F64ToWasm(int(value))
         elif type_ == 'externref':
-            return 'ref.extern %s' % value
+            return f'ref.extern {value}'
         elif type_ == 'funcref':
-            return 'ref.func %s' % value
+            return f'ref.func {value}'
         else:
-            raise Error('Unknown type: %s' % type_)
+            raise Error(f'Unknown type: {type_}')
 
     def _ConstantList(self, consts):
         if consts:
-            return ' ' + (' '.join('(%s)' % self._Constant(const) for const in consts))
+            return ' ' + (' '.join(f'({self._Constant(const)})' for const in consts))
         return ''
 
     def _Action(self, action):
@@ -217,11 +225,11 @@ class WastWriter(object):
         field = action['field']
         if type_ == 'invoke':
             args = self._ConstantList(action.get('args', []))
-            return '(invoke %s "%s"%s)' % (module, field, args)
+            return f'(invoke {module} "{field}"{args})'
         elif type_ == 'get':
-            return '(get %s "%s")' % (module, field)
+            return f'(get {module} "{field}")'
         else:
-            raise Error('Unexpected action type: %s' % type_)
+            raise Error(f'Unexpected action type: {type_}')
 
 
 def main(args):
@@ -284,14 +292,10 @@ def main(args):
         WastWriter(json_dir, spec_json, output).Write()
 
     if options.output:
-        out_file = open(options.output, 'w')
+        with open(options.output, 'w') as out_file:
+            out_file.write(output.getvalue())
     else:
-        out_file = sys.stdout
-
-    try:
-        out_file.write(output.getvalue())
-    finally:
-        out_file.close()
+        sys.stdout.write(output.getvalue())
 
     return 0
 

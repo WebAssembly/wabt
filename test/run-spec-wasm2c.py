@@ -21,10 +21,10 @@ import json
 import os
 import platform
 import re
-import struct
-import sys
 import shlex
+import struct
 import subprocess
+import sys
 
 import find_exe
 import utils
@@ -53,13 +53,13 @@ def F32ToC(f32_bits):
         # NaN or infinity
         if f32_bits & F32_SIG_MASK:
             # NaN
-            return '%smake_nan_f32(0x%06x)' % (sign, f32_bits & F32_SIG_MASK)
+            return f'{sign}make_nan_f32(0x{f32_bits & F32_SIG_MASK:06x})'
         else:
-            return '%sINFINITY' % sign
+            return f'{sign}INFINITY'
     elif f32_bits == F32_SIGN_BIT:
         return '-0.f'
     else:
-        s = '%.9g' % ReinterpretF32(f32_bits)
+        s = f'{ReinterpretF32(f32_bits):.9g}'
         if '.' not in s:
             s += '.'
         return s + 'f'
@@ -79,13 +79,13 @@ def F64ToC(f64_bits):
         # NaN or infinity
         if f64_bits & F64_SIG_MASK:
             # NaN
-            return '%smake_nan_f64(0x%06x)' % (sign, f64_bits & F64_SIG_MASK)
+            return f'{sign}make_nan_f64(0x{f64_bits & F64_SIG_MASK:06x})'
         else:
-            return '%sINFINITY' % sign
+            return f'{sign}INFINITY'
     elif f64_bits == F64_SIGN_BIT:
         return '-0.0'
     else:
-        return '%#.17g' % ReinterpretF64(f64_bits)
+        return f'{ReinterpretF64(f64_bits):#.17g}'
 
 
 def MangleType(t):
@@ -122,7 +122,7 @@ def IsModuleCommand(command):
             command['type'] == 'assert_uninstantiable')
 
 
-class CWriter(object):
+class CWriter:
 
     def __init__(self, spec_json, prefix, out_file, out_dir):
         self.source_filename = os.path.basename(spec_json['source_filename'])
@@ -148,11 +148,11 @@ class CWriter(object):
             self._WriteCommand(command)
             if i % MAX_COMMANDS_PER_FUNCTION == MAX_COMMANDS_PER_FUNCTION - 1:
                 test_function_num += 1
-                self.out_file.write('\n}\n\nvoid run_spec_tests_%d(void) {\n\n' % test_function_num)
+                self.out_file.write(f'\n}}\n\nvoid run_spec_tests_{test_function_num}(void) {{\n\n')
 
         self.out_file.write('\n}\n\nvoid run_spec_tests(void) {\n\n')
         for i in range(test_function_num + 1):
-            self.out_file.write('run_spec_tests_%d();\n' % i)
+            self.out_file.write(f'run_spec_tests_{i}();\n')
         self._WriteModuleCleanUps()
         self.out_file.write('\n}\n')
 
@@ -214,9 +214,9 @@ class CWriter(object):
         if uninstantiable:
             self.out_file.write('ASSERT_TRAP(')
 
-        self.out_file.write('wasm2c_%s_instantiate(&%s_instance' % (self.GetModulePrefix(), self.GetModulePrefix()))
+        self.out_file.write(f'wasm2c_{self.GetModulePrefix()}_instantiate(&{self.GetModulePrefix()}_instance')
         for imported_module in sorted(imported_modules):
-            self.out_file.write(', &%s_instance' % imported_module)
+            self.out_file.write(f', &{imported_module}_instance')
         self.out_file.write(')')
 
         if uninstantiable:
@@ -235,14 +235,13 @@ class CWriter(object):
             self.commands.insert(0, dummy_command)
 
     def _WriteFileAndLine(self, command):
-        self.out_file.write('#line {line:d} "{name:s}"\n'.format(name=self.source_filename, line=command['line']))
+        line = command['line']
+        self.out_file.write(f'#line {line} "{self.source_filename}"\n')
 
     def _WriteIncludes(self):
-        idx = 0
         for filename in self.GetModuleFilenames():
             header = os.path.splitext(filename)[0] + '.h'
-            self.out_file.write("#include \"%s\"\n" % header)
-            idx += 1
+            self.out_file.write(f"#include \"{header}\"\n")
 
     def _WriteCommand(self, command):
         command_funcs = {
@@ -269,19 +268,19 @@ class CWriter(object):
         idx = 0
         for command in self.commands:
             if IsModuleCommand(command):
-                self.out_file.write('w2c_%s %s;\n' % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
+                self.out_file.write(f'w2c_{self.GetModulePrefix(idx)} {self.GetModuleInstanceName(idx)};\n')
                 idx += 1
 
     def _WriteModuleCleanUps(self):
         for idx in range(self.module_idx):
-            self.out_file.write("wasm2c_%s_free(&%s);\n" % (self.GetModulePrefix(idx), self.GetModuleInstanceName(idx)))
+            self.out_file.write(f"wasm2c_{self.GetModulePrefix(idx)}_free(&{self.GetModuleInstanceName(idx)});\n")
 
     def _WriteAssertUninstantiableCommand(self, command):
         self.module_idx += 1
         self._WriteModuleInitCall(command, True)
 
     def _WriteActionCommand(self, command):
-        self.out_file.write('%s;\n' % self._Action(command))
+        self.out_file.write(f'{self._Action(command)};\n')
 
     def _WriteAssertReturnCommand(self, command):
         expected = command['expected']
@@ -291,29 +290,29 @@ class CWriter(object):
             if type_ == 'v128':
                 lane_type = expected[0]['lane_type']
                 lane_count = len(expected[0]['value'])
+                fmt_expected = " ".join("MULTI_" + ("str" if val in ('nan:canonical', 'nan:arithmetic') else lane_type) for val in value)
+                fmt_got = " ".join("MULTI_" + lane_type for _ in value)
+                action = self._Action(command)
+                compare = self._SIMDCompareVector(expected[0])
+                constants = self._SIMDConstantList(expected[0])
+                found = self._SIMDFoundList(lane_type, lane_count)
                 # type, fmt_expected, fmt_got, f, compare, expected, found
-                self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, %s, (%s), (%s));\n' %
-                                    ("v128",
-                                     " ".join("MULTI_" + ("str" if val in ('nan:canonical', 'nan:arithmetic') else lane_type) for val in value),
-                                     " ".join("MULTI_" + lane_type for _ in value),
-                                     self._Action(command),
-                                     self._SIMDCompareVector(expected[0]),
-                                     self._SIMDConstantList(expected[0]),
-                                     self._SIMDFoundList(lane_type, lane_count)))
+                self.out_file.write(
+                    f'ASSERT_RETURN_MULTI_T(v128, {fmt_expected}, {fmt_got}, {action}, {compare}, ({constants}), ({found}));\n')
             elif value == 'nan:canonical':
                 assert_map = {
                     'f32': 'ASSERT_RETURN_CANONICAL_NAN_F32',
                     'f64': 'ASSERT_RETURN_CANONICAL_NAN_F64',
                 }
                 assert_macro = assert_map[(type_)]
-                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+                self.out_file.write(f'{assert_macro}({self._Action(command)});\n')
             elif value == 'nan:arithmetic':
                 assert_map = {
                     'f32': 'ASSERT_RETURN_ARITHMETIC_NAN_F32',
                     'f64': 'ASSERT_RETURN_ARITHMETIC_NAN_F64',
                 }
                 assert_macro = assert_map[(type_)]
-                self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+                self.out_file.write(f'{assert_macro}({self._Action(command)});\n')
             else:
                 assert_map = {
                     'i32': 'ASSERT_RETURN_I32',
@@ -326,23 +325,20 @@ class CWriter(object):
                 }
 
                 assert_macro = assert_map[type_]
-                self.out_file.write('%s(%s, %s);\n' %
-                                    (assert_macro,
-                                     self._Action(command),
-                                     self._ConstantList(expected)))
+                self.out_file.write(f'{assert_macro}({self._Action(command)}, {self._ConstantList(expected)});\n')
         elif len(expected) == 0:
             self._WriteAssertActionCommand(command)
         else:
             result_types = [result['type'] for result in expected]
+            multi_struct = "struct wasm_multi_" + MangleTypes(result_types)
+            fmt_types = " ".join("MULTI_" + ty for ty in result_types)
+            action = self._Action(command)
+            compare = self._CompareList(expected)
+            constants = self._ConstantList(expected)
+            found = self._FoundList(result_types)
             # type, fmt_expected, fmt_got, f, compare, expected, found
-            self.out_file.write('ASSERT_RETURN_MULTI_T(%s, %s, %s, %s, %s, (%s), (%s));\n' %
-                                ("struct wasm_multi_" + MangleTypes(result_types),
-                                 " ".join("MULTI_" + ty for ty in result_types),
-                                 " ".join("MULTI_" + ty for ty in result_types),
-                                 self._Action(command),
-                                 self._CompareList(expected),
-                                 self._ConstantList(expected),
-                                 self._FoundList(result_types)))
+            self.out_file.write(
+                f'ASSERT_RETURN_MULTI_T({multi_struct}, {fmt_types}, {fmt_types}, {action}, {compare}, ({constants}), ({found}));\n')
 
     def _WriteAssertActionCommand(self, command):
         assert_map = {
@@ -353,26 +349,26 @@ class CWriter(object):
         }
 
         assert_macro = assert_map[command['type']]
-        self.out_file.write('%s(%s);\n' % (assert_macro, self._Action(command)))
+        self.out_file.write(f'{assert_macro}({self._Action(command)});\n')
 
     def _Constant(self, const):
         type_ = const['type']
         value = const['value']
         if type_ == 'i8':
-            return '%su' % int(value)
+            return f'{int(value)}u'
         if type_ == 'i16':
-            return '%su' % int(value)
+            return f'{int(value)}u'
         if type_ == 'i32':
-            return '%su' % int(value)
+            return f'{int(value)}u'
         elif type_ == 'i64':
-            return '%sull' % int(value)
+            return f'{int(value)}ull'
         elif type_ == 'f32':
             if value in ('nan:canonical', 'nan:arithmetic'):
-                return '"(f32 %s)"' % value
+                return f'"(f32 {value})"'
             return F32ToC(int(value))
         elif type_ == 'f64':
             if value in ('nan:canonical', 'nan:arithmetic'):
-                return '"(f64 %s)"' % value
+                return f'"(f64 {value})"'
             return F64ToC(int(value))
         elif type_ == 'v128':
             return 'v128_' + const['lane_type'] + 'x' + str(len(const['value'])) + '_make(' + ','.join([self._Constant({'type': const['lane_type'], 'value': x}) for x in value]) + ')'
@@ -380,7 +376,7 @@ class CWriter(object):
             if value == 'null':
                 return 'wasm_rt_externref_null_value'
             else:
-                return 'spectest_make_externref(%s)' % value
+                return f'spectest_make_externref({value})'
         elif type_ == 'funcref':
             if value == 'null':
                 return 'wasm_rt_funcref_null_value'
@@ -398,15 +394,16 @@ class CWriter(object):
         return ', '.join(self._Constant(const) for const in consts)
 
     def _Found(self, num, type_):
-        return "actual.%s%s" % (MangleType(type_), num)
+        return f"actual.{MangleType(type_)}{num}"
 
     def _FoundList(self, types):
         return ', '.join(self._Found(num, type_) for num, type_ in enumerate(types))
 
     def _Compare(self, num, const):
-        return "is_equal_%s(%s, %s)" % (const['type'],
-                                        self._Constant(const),
-                                        self._Found(num, const['type']))
+        type_ = const['type']
+        val = self._Constant(const)
+        found = self._Found(num, type_)
+        return f'is_equal_{type_}({val}, {found})'
 
     def _CompareList(self, consts):
         return ' && '.join(self._Compare(num, const) for num, const in enumerate(consts))
@@ -415,20 +412,20 @@ class CWriter(object):
         return ', '.join(self._Constant({'type': const['lane_type'], 'value': val}) for val in const['value'])
 
     def _SIMDFound(self, num, lane_type, lane_count):
-        return 'v128_%sx%d_extract_lane(actual, %d)' % (lane_type, lane_count, num)
+        return f'v128_{lane_type}x{lane_count}_extract_lane(actual, {num})'
 
     def _SIMDFoundList(self, lane_type, lane_count):
         return ', '.join(self._SIMDFound(num, lane_type, lane_count) for num in range(lane_count))
 
     def _SIMDCompare(self, num, val, lane_type, lane_count):
         if val == 'nan:canonical':
-            return 'is_canonical_nan_%s(%s_bits(%s))' % (lane_type, lane_type, self._SIMDFound(num, lane_type, lane_count))
+            return f'is_canonical_nan_{lane_type}({lane_type}_bits({self._SIMDFound(num, lane_type, lane_count)}))'
         elif val == 'nan:arithmetic':
-            return 'is_arithmetic_nan_%s(%s_bits(%s))' % (lane_type, lane_type, self._SIMDFound(num, lane_type, lane_count))
+            return f'is_arithmetic_nan_{lane_type}({lane_type}_bits({self._SIMDFound(num, lane_type, lane_count)}))'
         else:
-            return "is_equal_%s(%s, %s)" % (lane_type,
-                                            self._Constant({'type': lane_type, 'value': val}),
-                                            self._SIMDFound(num, lane_type, lane_count))
+            val = self._Constant({'type': lane_type, 'value': val})
+            found = self._SIMDFound(num, lane_type, lane_count)
+            return f'is_equal_{lane_type}({val}, {found})'
 
     def _SIMDCompareVector(self, const):
         return ' && '.join(self._SIMDCompare(num, val, const['lane_type'], len(const['value'])) for num, val in enumerate(const['value']))
@@ -444,11 +441,11 @@ class CWriter(object):
                 args = f'&{mangled_module_name}_instance'
             else:
                 args = f'&{mangled_module_name}_instance, {args}'
-            return '%s(%s)' % (field, args)
+            return f'{field}({args})'
         elif type_ == 'get':
-            return '*%s(%s)' % (field, '&' + mangled_module_name + '_instance')
+            return f'*{field}(&{mangled_module_name}_instance)'
         else:
-            raise Error('Unexpected action type: %s' % type_)
+            raise Error(f'Unexpected action type: {type_}')
 
 
 def Compile(cc, c_filename, out_dir, use_c11, *cflags):
@@ -616,11 +613,10 @@ def main(args):
         cwriter = CWriter(spec_json, prefix, output, out_dir)
 
         o_filenames = []
-        cflags = ['-I%s' % options.wasmrt_dir, '-I%s' % options.simde_dir]
-        if not options.disable_memory64:
-            if IS_WINDOWS:
-                sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
-                return SKIPPED
+        cflags = [f'-I{options.wasmrt_dir}', f'-I{options.simde_dir}']
+        if not options.disable_memory64 and IS_WINDOWS:
+            sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
+            return SKIPPED
 
         use_c11 = options.enable_threads
 
@@ -669,7 +665,7 @@ def main(args):
             # Run the resulting binary
             if options.run:
                 test_runner = os.getenv('WASM2C_TEST_RUNNER', '').split()
-                return subprocess.run(test_runner + [main_exe]).returncode
+                return subprocess.run(test_runner + [main_exe], check=False).returncode
     return 0
 
 

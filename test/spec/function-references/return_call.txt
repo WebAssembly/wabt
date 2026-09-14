@@ -1,3 +1,4 @@
+;;; SLOW:
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/function-references/return_call.wast
 ;;; ARGS*: --enable-function-references

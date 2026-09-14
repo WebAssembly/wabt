@@ -28,7 +28,7 @@ DEFAULT_EMSCRIPTEN_DIR = os.path.join(ROOT_DIR, 'emscripten')
 
 sys.path.append(TEST_DIR)
 
-from utils import Executable, Error  # noqa: E402
+from utils import Error, Executable  # noqa: E402
 
 
 def FindFiles(cmake_build_dir):

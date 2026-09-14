@@ -26,7 +26,7 @@ import sys
 
 def main():
     print("Running 'git status --short'")
-    print('')
+    print()
 
     here = os.path.dirname(__file__)
     root = os.path.dirname(here)
