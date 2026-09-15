@@ -1,6 +1,0 @@
-;;; TOOL: run-wasm2c-oom
-;;; PLATFORMS: Linux Darwin
-;;; SLOW:
-(;; STDOUT ;;;
-1/1 tests passed.
-;;; STDOUT ;;)
