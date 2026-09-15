@@ -1,10 +1,12 @@
 name: Build Release
 
-# Trigger whenever a release is created
 on:
+  # Trigger whenever a release is created
   release:
     types:
       - created
+  # Also, allow manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: write
