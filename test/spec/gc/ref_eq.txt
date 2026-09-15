@@ -1,0 +1,25 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/ref_eq.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+init() =>
+out/test/spec/gc/ref_eq.wast:122: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.1.wasm:0000027: error: type mismatch in ref.eq, expected [eqref, eqref] but got [(ref any), (ref any)]
+  0000027: error: OnGCUnaryExpr callback failed
+out/test/spec/gc/ref_eq.wast:130: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.2.wasm:0000026: error: type mismatch in ref.eq, expected [eqref, eqref] but got [anyref, anyref]
+  0000026: error: OnGCUnaryExpr callback failed
+out/test/spec/gc/ref_eq.wast:138: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.3.wasm:0000027: error: type mismatch in ref.eq, expected [eqref, eqref] but got [(ref func), (ref func)]
+  0000027: error: OnGCUnaryExpr callback failed
+out/test/spec/gc/ref_eq.wast:146: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.4.wasm:0000026: error: type mismatch in ref.eq, expected [eqref, eqref] but got [funcref, funcref]
+  0000026: error: OnGCUnaryExpr callback failed
+out/test/spec/gc/ref_eq.wast:154: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.5.wasm:0000027: error: type mismatch in ref.eq, expected [eqref, eqref] but got [(ref extern), (ref extern)]
+  0000027: error: OnGCUnaryExpr callback failed
+out/test/spec/gc/ref_eq.wast:162: assert_invalid passed:
+  out/test/spec/gc/ref_eq/ref_eq.6.wasm:0000026: error: type mismatch in ref.eq, expected [eqref, eqref] but got [externref, externref]
+  0000026: error: OnGCUnaryExpr callback failed
+89/89 tests passed.
+;;; STDOUT ;;)

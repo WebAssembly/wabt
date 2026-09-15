@@ -1,0 +1,16 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/unreached-valid.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/unreached-valid.wast:48: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:49: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:50: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:51: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:53: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:54: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:55: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:56: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:58: assert_trap passed: unreachable executed
+out/test/spec/gc/unreached-valid.wast:77: assert_trap passed: unreachable executed
+13/13 tests passed.
+;;; STDOUT ;;)
