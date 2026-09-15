@@ -71,6 +71,10 @@ TOOLS = {
         ('RUN', '%(wasm-objdump)s -r -d'),
         ('VERBOSE-ARGS', ['-v']),
     ],
+    'run-wasm2c-oom': [
+        ('RUN', 'test/run-wasm2c-oom.py'),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
     'run-roundtrip': [
         ('RUN', 'test/run-roundtrip.py'),
         ('ARGS', [
