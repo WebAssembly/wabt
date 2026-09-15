@@ -635,7 +635,12 @@ std::unordered_map<Instance*, WasiInstance*> wasiInstances;
                      Trap::Ptr* trap) {                                     \
     Instance* instance = thread.GetCallerInstance();                        \
     assert(instance);                                                       \
-    WasiInstance* wasi_instance = wasiInstances[instance];                  \
+    auto iter = wasiInstances.find(instance);                               \
+    if (iter == wasiInstances.end()) {                                      \
+      *trap = Trap::New(thread.store(), "WASI instance is not running");    \
+      return Result::Error;                                                 \
+    }                                                                       \
+    WasiInstance* wasi_instance = iter->second;                             \
     if (wasi_instance->trace_stream) {                                      \
       wasi_instance->trace_stream->Writef(                                  \
           ">>> running wasi function \"%s\":\n", #NAME);                    \
