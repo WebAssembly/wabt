@@ -8,13 +8,11 @@
 #
 # Windows is skipped (fork/setrlimit are POSIX). CI has this on Linux/macOS.
 import os
-import resource
 import subprocess
 import sys
 import tempfile
 
 import find_exe
-import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -59,40 +57,42 @@ int main(void) {
 
 
 def main(args):
-  if sys.platform == 'win32':
-    return 3  # SKIPPED
-  with tempfile.TemporaryDirectory() as d:
-    wat = os.path.join(d, 'bigtable.wat')
-    with open(wat, 'w') as f:
-      f.write(WAT)
-    wasm = os.path.join(d, 'bigtable.wasm')
-    subprocess.run([find_exe.GetWat2WasmExecutable(), wat, '-o', wasm],
-                   check=True)
-    c = os.path.join(d, 'bigtable.c')
-    h = os.path.join(d, 'bigtable.h')
-    subprocess.run([find_exe.GetWasm2CExecutable(), wasm, '-n', 'bigtable',
-                    '-o', c], check=True)
-    main_c = os.path.join(d, 'main.c')
-    with open(main_c, 'w') as f:
-      f.write(MAIN_C)
-    exe = os.path.join(d, 'oom_test')
-    inc = os.path.join(REPO, 'wasm2c')
-    cmd = ['cc', '-O0', '-I', inc, '-I', d, '-o', exe, main_c, c,
-           os.path.join(inc, 'wasm-rt-impl.c'),
-           os.path.join(inc, 'wasm-rt-exceptions-impl.c'),
-           os.path.join(inc, 'wasm-rt-mem-impl.c'), '-lpthread', '-lm']
-    subprocess.run(cmd, check=True)
-    r = subprocess.run([exe], capture_output=True, text=True)
-    if r.returncode != 0:
-      sys.stderr.write(r.stderr)
-      raise Error('table OOM was not fail-closed (expected SIGABRT)')
-  print('1/1 tests passed.')
-  return 0
+    if sys.platform == 'win32':
+        return 3  # SKIPPED
+    with tempfile.TemporaryDirectory() as d:
+        wat = os.path.join(d, 'bigtable.wat')
+        with open(wat, 'w') as f:
+            f.write(WAT)
+        wasm = os.path.join(d, 'bigtable.wasm')
+        subprocess.run(
+            [find_exe.GetWat2WasmExecutable(), wat, '-o', wasm],
+            check=True)
+        c = os.path.join(d, 'bigtable.c')
+        subprocess.run(
+            [find_exe.GetWasm2CExecutable(), wasm, '-n', 'bigtable',
+             '-o', c],
+            check=True)
+        main_c = os.path.join(d, 'main.c')
+        with open(main_c, 'w') as f:
+            f.write(MAIN_C)
+        exe = os.path.join(d, 'oom_test')
+        inc = os.path.join(REPO, 'wasm2c')
+        cmd = ['cc', '-O0', '-I', inc, '-I', d, '-o', exe, main_c, c,
+               os.path.join(inc, 'wasm-rt-impl.c'),
+               os.path.join(inc, 'wasm-rt-exceptions-impl.c'),
+               os.path.join(inc, 'wasm-rt-mem-impl.c'), '-lpthread', '-lm']
+        subprocess.run(cmd, check=True)
+        r = subprocess.run([exe], capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.stderr.write(r.stderr)
+            raise Error('table OOM was not fail-closed (expected SIGABRT)')
+    print('1/1 tests passed.')
+    return 0
 
 
 if __name__ == '__main__':
-  try:
-    sys.exit(main(sys.argv[1:]))
-  except Error as e:
-    sys.stderr.write(str(e) + '\n')
-    sys.exit(1)
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except Error as e:
+        sys.stderr.write(str(e) + '\n')
+        sys.exit(1)
