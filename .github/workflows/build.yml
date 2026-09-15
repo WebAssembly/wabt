@@ -45,7 +45,7 @@ jobs:
     - name: install ninja (osx)
       run: brew install ninja
       if: matrix.os == 'macos-latest'
-    - name: tool versions
+    - name: cmake version
       run: cmake --version
     - name: ninja version
       run: ninja --version
