@@ -3138,7 +3138,7 @@ void CWriter::WriteTailCallAsserts(const FuncSignature& sig) {
 }
 
 void CWriter::WriteTailCallStack() {
-  Write("void *instance_ptr_storage;", Newline());
+  Write("void *instance_ptr_storage = 0;", Newline());
   Write("void **instance_ptr = &instance_ptr_storage;", Newline());
   Write("char tail_call_stack[", std::to_string(kTailCallStackSize), "];",
         Newline());
@@ -4347,6 +4347,8 @@ void CWriter::Write(const ExprList& exprs) {
                 GlobalName(ModuleFieldType::Import,
                            import_module_sym_map_.at(func.name)),
                 ";", Newline());
+        } else {
+          Write("*instance_ptr = instance;", Newline());
         }
         DropTypes(num_params);
         FinishReturnCall();
