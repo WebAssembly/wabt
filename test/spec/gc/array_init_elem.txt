@@ -1,0 +1,27 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array_init_elem.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array_init_elem.wast:6: assert_invalid passed:
+  out/test/spec/gc/array_init_elem/array_init_elem.0.wasm:000004d: error: array is immutable
+  000004d: error: OnArrayInitElemExpr callback failed
+out/test/spec/gc/array_init_elem.wast:19: assert_invalid passed:
+  out/test/spec/gc/array_init_elem/array_init_elem.1.wasm:000004d: error: type mismatch: array type does not match to elem type
+  000004d: error: OnArrayInitElemExpr callback failed
+out/test/spec/gc/array_init_elem.wast:32: assert_invalid passed:
+  out/test/spec/gc/array_init_elem/array_init_elem.2.wasm:000004d: error: type mismatch: array type does not match to elem type
+  000004d: error: OnArrayInitElemExpr callback failed
+out/test/spec/gc/array_init_elem.wast:78: assert_trap passed: null array ref
+out/test/spec/gc/array_init_elem.wast:81: assert_trap passed: invalid range
+out/test/spec/gc/array_init_elem.wast:82: assert_trap passed: invalid range
+out/test/spec/gc/array_init_elem.wast:85: assert_trap passed: invalid range
+out/test/spec/gc/array_init_elem.wast:86: assert_trap passed: invalid range
+out/test/spec/gc/array_init_elem.wast:93: assert_trap passed: uninitialized table element
+out/test/spec/gc/array_init_elem.wast:94: assert_trap passed: uninitialized table element
+out/test/spec/gc/array_init_elem.wast:95: assert_trap passed: uninitialized table element
+out/test/spec/gc/array_init_elem.wast:96: assert_trap passed: invalid index
+out/test/spec/gc/array_init_elem.wast:100: assert_trap passed: uninitialized table element
+out/test/spec/gc/array_init_elem.wast:103: assert_trap passed: uninitialized table element
+out/test/spec/gc/array_init_elem.wast:108: assert_trap passed: invalid range
+23/23 tests passed.
+;;; STDOUT ;;)
