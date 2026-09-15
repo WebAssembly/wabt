@@ -45,22 +45,16 @@ jobs:
     - name: install ninja (osx)
       run: brew install ninja
       if: matrix.os == 'macos-latest'
-    - name: install ninja (win)
-      run: choco install ninja
-      if: matrix.os == 'windows-latest'
-    - name: mkdir
-      run: mkdir -p out
-    - name: tool versions
-      run: |
-        cmake --version
-        ninja --version
+    - name: cmake version
+      run: cmake --version
+    - name: ninja version
+      run: ninja --version
+      if: matrix.os != 'windows-latest'
     - name: cmake
-      run: cmake .. -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
+      run: cmake -S . -B out -G Ninja -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
       if: matrix.os != 'windows-latest'
     - name: cmake (windows)
-      run: cmake .. -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
-      working-directory: out
+      run: cmake -S . -B out -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF
       if: matrix.os == 'windows-latest'
     - name: build
       run: cmake --build out
