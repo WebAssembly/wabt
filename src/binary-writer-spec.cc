@@ -128,6 +128,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "module",
       "module",
       "action",
+      "instance",
       "register",
       "assert_malformed",
       "assert_invalid",
@@ -524,6 +525,18 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(action);
+        break;
+      }
+
+      case CommandType::Instance: {
+        auto* instance_command = cast<InstanceCommand>(command);
+        WriteLocation(instance_command->loc);
+        WriteSeparator();
+        WriteKey("instance");
+        WriteEscapedString(instance_command->instance_name);
+        WriteSeparator();
+        WriteKey("definition");
+        WriteEscapedString(instance_command->definition_name);
         break;
       }
 

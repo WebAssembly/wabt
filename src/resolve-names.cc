@@ -665,6 +665,7 @@ void NameResolver::VisitCommand(Command* command) {
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
     case CommandType::AssertException:
+    case CommandType::Instance:
     case CommandType::Register:
       /* Don't resolve a module_var, since it doesn't really behave like other
        * vars. You can't reference a module by index. */
