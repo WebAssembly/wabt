@@ -53,7 +53,6 @@ void WASM_RT_TABLE_APINAME(wasm_rt_allocate)(WASM_RT_TABLE_TYPE* table,
   table->max_size = max_elements;
   table->data = calloc(table->size, sizeof(WASM_RT_TABLE_ELEMENT_TYPE));
   if (table->size != 0 && !table->data) {
-    table->size = table->max_size = 0;
     abort();
   }
 }
