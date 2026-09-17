@@ -35,8 +35,7 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">wasm-interp</code></td>
-    <td>[options] <var class="Ar">filename</var>
-      <var class="Ar">[arg]...</var></td>
+    <td>[options] <var class="Ar">filename</var></td>
   </tr>
 </table>
 </section>
@@ -112,15 +111,6 @@
   <dt id="a"><a class="permalink" href="#a"><code class="Fl">-a</code></a>,
     <code class="Fl">--argument=ARGUMENT</code></dt>
   <dd>Add argument to an exported function execution</dd>
-  <dt id="wasi"><a class="permalink" href="#wasi"><code class="Fl">--wasi</code></a></dt>
-  <dd>Assume input module is WASI compliant (Export WASI API the the module and
-      invoke _start function)</dd>
-  <dt id="e"><a class="permalink" href="#e"><code class="Fl">-e</code></a>,
-    <code class="Fl">--env=ENV</code></dt>
-  <dd>Pass the given environment string in the WASI runtime</dd>
-  <dt id="d"><a class="permalink" href="#d"><code class="Fl">-d</code></a>,
-    <code class="Fl">--dir=DIR</code></dt>
-  <dd>Pass the given directory the the WASI runtime</dd>
   <dt id="run-all-exports"><a class="permalink" href="#run-all-exports"><code class="Fl">--run-all-exports</code></a></dt>
   <dd>Run all the exported functions, in order. Useful for testing</dd>
   <dt id="host-print"><a class="permalink" href="#host-print"><code class="Fl">--host-print</code></a></dt>
