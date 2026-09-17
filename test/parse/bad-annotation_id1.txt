@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (@a (@))
+  (@))
+(;; STDERR ;;;
+out/test/parse/bad-annotation_id1.txt:5:3: error: empty annotation id
+  (@))
+  ^^
+;;; STDERR ;;)
