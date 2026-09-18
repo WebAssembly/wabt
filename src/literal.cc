@@ -474,6 +474,10 @@ Result FloatParser<T>::Parse(LiteralType literal_type,
 // static
 template <typename T>
 void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
+  if (size == 0) {
+    return;
+  }
+
   static constexpr int kNumNybbles = Traits::kBits / 4;
   static constexpr int kTopNybbleShift = Traits::kBits - 4;
   static constexpr Uint kTopNybble = Uint(0xf) << kTopNybbleShift;
@@ -811,6 +815,10 @@ void WriteDoubleHex(char* buffer, size_t size, uint64_t bits) {
 }
 
 void WriteUint128(char* buffer, size_t size, v128 bits) {
+  if (size == 0) {
+    return;
+  }
+
   uint64_t digits;
   uint64_t remainder;
   char reversed_buffer[40];
