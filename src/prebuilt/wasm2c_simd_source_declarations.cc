@@ -4,7 +4,7 @@ R"w2c_template(    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var)
 )w2c_template"
-R"w2c_template(#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+R"w2c_template(#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
 )w2c_template"
 R"w2c_template(#if defined(__x86_64__)
 )w2c_template"

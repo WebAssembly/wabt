@@ -1,7 +1,7 @@
 #if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
     WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 #define SIMD_FORCE_READ(var)
-#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
 #if defined(__x86_64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
 #elif defined(__aarch64__)

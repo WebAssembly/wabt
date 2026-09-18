@@ -160,8 +160,9 @@ extern "C" {
  * compiler or the embedder must permit a non-conforming setting (allow dead
  * read elimination from linear memory)
  */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && \
-    (WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION || defined(__GNUC__))
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP &&      \
+    (WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION || \
+     defined(__GNUC__) || defined(__clang__))
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0
