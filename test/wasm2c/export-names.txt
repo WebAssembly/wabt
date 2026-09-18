@@ -283,7 +283,7 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
     WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 #define FORCE_READ_INT(var)
 #define FORCE_READ_FLOAT(var)
-#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var))
 
 #if defined(__x86_64__) || defined(_M_X64)

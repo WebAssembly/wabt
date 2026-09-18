@@ -361,7 +361,7 @@ R"w2c_template(#define FORCE_READ_INT(var)
 )w2c_template"
 R"w2c_template(#define FORCE_READ_FLOAT(var)
 )w2c_template"
-R"w2c_template(#elif defined(__GNUC__) && WASM_RT_MEMCHECK_GUARD_PAGES
+R"w2c_template(#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
 )w2c_template"
 R"w2c_template(#define FORCE_READ_INT(var) __asm__("" ::"r"(var))
 )w2c_template"
