@@ -49,6 +49,11 @@ namespace {
 #define strtod_l _strtod_l
 static _locale_t c_locale = _create_locale(LC_ALL, "C");
 #else
+#if defined(__OpenBSD__)
+// OpenBSD's libc has no strtof_l/strtod_l
+#define strtof_l(s, endptr, locale) ((void)(locale), strtof(s, endptr))
+#define strtod_l(s, endptr, locale) ((void)(locale), strtod(s, endptr))
+#endif
 static locale_t c_locale = newlocale(LC_ALL_MASK, "C", nullptr);
 #endif
 
