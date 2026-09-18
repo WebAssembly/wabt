@@ -68,7 +68,16 @@ struct FloatTraitsBase<float> {
   using Uint = uint32_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 23;
+#ifdef _AIX
+  // AIX defines HUGE_VAL and HUGE_VALF as reinterpret_cast expressions, which
+  // can't be constexpr.
+  static constexpr float kHugeVal = std::numeric_limits<float>::has_infinity
+                                        ? std::numeric_limits<float>::infinity()
+                                        : std::numeric_limits<float>::max();
+#else
   static constexpr float kHugeVal = HUGE_VALF;
+#endif
+
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
   static float Strto(const char* s, char** endptr) {
@@ -81,7 +90,16 @@ struct FloatTraitsBase<double> {
   using Uint = uint64_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 52;
-  static constexpr float kHugeVal = HUGE_VAL;
+#ifdef _AIX
+  // AIX defines HUGE_VAL and HUGE_VALF as reinterpret_cast expressions, which
+  // can't be constexpr.
+  static constexpr double kHugeVal =
+      std::numeric_limits<double>::has_infinity
+          ? std::numeric_limits<double>::infinity()
+          : std::numeric_limits<double>::max();
+#else
+  static constexpr double kHugeVal = HUGE_VAL;
+#endif
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
