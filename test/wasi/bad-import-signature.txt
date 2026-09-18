@@ -1,0 +1,18 @@
+;;; TOOL: run-interp-wasi
+;;; ERROR: 1
+;;
+;; A WASI import declared with the wrong arity must be rejected before the
+;; module runs. The host callbacks index params/results by the arity of the
+;; real WASI function, but those vectors are sized from the module-declared
+;; type, so a smaller declared arity would make the callback read/write past
+;; them. Here clock_time_get is declared with one param instead of three.
+;;
+(import "wasi_snapshot_preview1" "clock_time_get" (func $clock_time_get (param i32) (result i32)))
+(memory (export "memory") 1)
+(func (export "_start")
+  (call $clock_time_get (i32.const 0))
+  drop
+)
+(;; STDERR ;;;
+wasi error: invalid signature for import: `wasi_snapshot_preview1.clock_time_get`
+;;; STDERR ;;)
