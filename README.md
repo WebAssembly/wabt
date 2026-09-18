@@ -117,6 +117,18 @@ CMake documentation for more information.
 since the build produces an executable called `wasm2c` which conflicts with the
 `wasm2c` directory.
 
+### WASI compatibility
+
+`wasm-interp` no longer provides WASIp1 host functions. The `--wasi`,
+`--env` (`-e`), and `--dir` (`-d`) options and trailing WASI program arguments
+have been removed, along with the `wabt/interp/interp-wasi.h` header.
+Ordinary WebAssembly interpretation and `wasm2c` are unchanged.
+
+Remove `-DWITH_WASI=ON` from existing build configurations. It now produces a
+CMake warning and does not enable WASI support. The bundled uvwasi dependency is
+still available separately with `-DBUILD_UVWASI=ON` for the
+[wasm2c Dhrystone benchmark](wasm2c/benchmarks/dhrystone/README.md).
+
 ## Building using the top-level `Makefile` (Linux and macOS)
 
 **NOTE**: Under the hood, this uses `make` to run CMake, which then calls
