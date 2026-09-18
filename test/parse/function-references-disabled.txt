@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (type (func (param (ref $t))))
+  (type $t (func))
+)
+(;; STDERR ;;;
+out/test/parse/function-references-disabled.txt:4:27: error: value type not allowed: (ref $t)
+  (type (func (param (ref $t))))
+                          ^^
+;;; STDERR ;;)
