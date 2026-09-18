@@ -1052,7 +1052,11 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list,
       out_type_list->push_back(type.to_type());
     } else {
       assert(type.is_name());
-      assert(options_->features.function_references_enabled());
+      if (!options_->features.function_references_enabled()) {
+        Error(type.loc, "value type not allowed: (ref %s)",
+              type.name().c_str());
+        return Result::Error;
+      }
       type_vars->push_back(ReferenceVar(out_type_list->size(), type));
       out_type_list->push_back(Type(type.opt_type(), kInvalidIndex));
     }
@@ -2279,7 +2283,11 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
         types->push_back(type.to_type());
       } else {
         assert(type.is_name());
-        assert(options_->features.function_references_enabled());
+        if (!options_->features.function_references_enabled()) {
+          Error(type.loc, "value type not allowed: (ref %s)",
+                type.name().c_str());
+          return Result::Error;
+        }
         type_vars->push_back(ReferenceVar(types->size(), type));
         types->push_back(Type(type.opt_type(), kInvalidIndex));
       }
