@@ -87,6 +87,10 @@ struct ExprTree {
   const Expr* expr;
   std::vector<ExprTree> children;
   Index result_count;
+  /* Code metadata annotations decorating this instruction. They have to travel
+   * with it, since folding moves the instruction relative to the annotation's
+   * position in the flat instruction list. */
+  std::vector<const CodeMetadataExpr*> annotations;
 };
 
 class WatWriter : ModuleContext {
@@ -142,6 +146,7 @@ class WatWriter : ModuleContext {
   void WriteLoadStoreExpr(const Expr* expr);
   template <typename T>
   void WriteMemoryLoadStoreExpr(const Expr* expr);
+  void WriteCodeMetadataExpr(const CodeMetadataExpr& expr);
   void WriteExprList(const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
   template <typename T>
@@ -187,6 +192,7 @@ class WatWriter : ModuleContext {
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
   std::vector<ExprTree> expr_tree_stack_;
+  std::vector<const CodeMetadataExpr*> pending_annotations_;
   std::multimap<std::pair<ExternalKind, Index>, const Export*>
       inline_export_map_;
   std::vector<const Import*> inline_import_map_[kExternalKindCount];
@@ -720,11 +726,7 @@ Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
     CodeMetadataExpr* expr) {
-  writer_->WriteOpen("@metadata.code.", NextChar::None);
-  writer_->WriteDataWithNextChar(expr->name.data(), expr->name.size());
-  writer_->WritePutc(' ');
-  writer_->WriteQuotedData(expr->data.data(), expr->data.size());
-  writer_->WriteCloseSpace();
+  writer_->WriteCodeMetadataExpr(*expr);
   return Result::Ok;
 }
 
@@ -1217,8 +1219,26 @@ void WatWriter::WriteExprList(const ExprList& exprs) {
   (void)visitor.VisitExprList(const_cast<ExprList&>(exprs));
 }
 
+void WatWriter::WriteCodeMetadataExpr(const CodeMetadataExpr& expr) {
+  WriteOpen("@metadata.code.", NextChar::None);
+  WriteDataWithNextChar(expr.name.data(), expr.name.size());
+  WritePutc(' ');
+  WriteQuotedData(expr.data.data(), expr.data.size());
+  WriteCloseSpace();
+}
+
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
   WABT_TRACE_ARGS(WriteFoldedExpr, "%s", GetExprTypeName(*expr));
+  if (expr->type() == ExprType::CodeMetadata) {
+    /* A code metadata annotation is not an instruction, it decorates the one
+     * that follows it. Putting it on the expression stack would wrap it in its
+     * own parentheses, and since it has no results it would also flush the
+     * operands of the instruction it belongs to. Hold it until that
+     * instruction is pushed, so it can be written immediately before that
+     * instruction's folded expression. */
+    pending_annotations_.push_back(cast<CodeMetadataExpr>(expr));
+    return;
+  }
   auto arity = GetExprArity(*expr);
   PushExpr(expr, arity.nargs, arity.nreturns);
 }
@@ -1263,6 +1283,8 @@ void WatWriter::PushExpr(const Expr* expr,
   }
 
   ExprTree tree(expr, result_count);
+  tree.annotations = std::move(pending_annotations_);
+  pending_annotations_.clear();
 
   if (current_count == operand_count && operand_count > 0) {
     auto last_operand = expr_tree_stack_.end();
@@ -1278,6 +1300,9 @@ void WatWriter::PushExpr(const Expr* expr,
 
 void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
   WABT_TRACE_ARGS(FlushExprTree, "%s", GetExprTypeName(*expr_tree.expr));
+  for (const CodeMetadataExpr* annotation : expr_tree.annotations) {
+    WriteCodeMetadataExpr(*annotation);
+  }
   switch (expr_tree.expr->type()) {
     case ExprType::Block:
       WritePuts("(", NextChar::None);
@@ -1435,6 +1460,14 @@ void WatWriter::FlushExprTreeStack() {
   std::vector<ExprTree> stack_copy(std::move(expr_tree_stack_));
   expr_tree_stack_.clear();
   FlushExprTreeVector(stack_copy);
+  /* Anything still pending here trails the last instruction of the list, so
+   * there is nothing left to attach it to; write it rather than drop it. */
+  std::vector<const CodeMetadataExpr*> trailing(
+      std::move(pending_annotations_));
+  pending_annotations_.clear();
+  for (const CodeMetadataExpr* annotation : trailing) {
+    WriteCodeMetadataExpr(*annotation);
+  }
 }
 
 void WatWriter::WriteInitExpr(const ExprList& expr) {
