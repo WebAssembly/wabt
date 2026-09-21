@@ -3931,6 +3931,18 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
           filename, qsm->data.data(), qsm->data.size(), &errors);
       auto result = ParseWatModule(lexer.get(), &m, &errors, options_);
+
+      // Empty modules with annotations are accepted.
+      if (errors.size() == 1 && errors[0].error_level == ErrorLevel::Warning &&
+          errors[0].message == "empty module") {
+        lexer = WastLexer::CreateBufferLexer(filename, qsm->data.data(),
+                                             qsm->data.size(), &errors);
+        Token token = lexer->GetToken();
+        if (token.token_type() == TokenType::LparAnn) {
+          errors.clear();
+        }
+      }
+
       for (const auto& error : errors) {
         if (error.loc.offset == kInvalidOffset) {
           Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
