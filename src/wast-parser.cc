@@ -615,8 +615,7 @@ bool WastParser::PeekMatchExpr() {
 }
 
 bool WastParser::PeekMatchRefType() {
-  return (options_->features.function_references_enabled() ||
-          options_->features.exceptions_enabled()) &&
+  return options_->features.function_references_enabled() &&
          PeekMatchLpar(TokenType::Ref);
 }
 
