@@ -1229,6 +1229,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         std::string_view name,
                         uint32_t flags) override;
   Result OnDylinkExport(std::string_view name, uint32_t flags) override;
+  Result OnDylinkRuntimePathCount(Index count) override;
+  Result OnDylinkRuntimePath(std::string_view path) override;
+  Result OnDylinkTargetArch(std::string_view arch) override;
 
   Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
@@ -1276,6 +1279,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                        uint32_t flags,
                        Index count) override;
   Result OnComdatEntry(ComdatType kind, Index index) override;
+  Result OnTargetArch(std::string_view arch) override;
 
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
@@ -2149,6 +2153,22 @@ Result BinaryReaderObjdump::OnDylinkNeeded(std::string_view so_name) {
   return Result::Ok;
 }
 
+Result BinaryReaderObjdump::OnDylinkRuntimePathCount(Index count) {
+  PrintDetails(" - runtime_paths[%u]:\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkRuntimePath(std::string_view path) {
+  PrintDetails("  - " PRIstringview "\n", WABT_PRINTF_STRING_VIEW_ARG(path));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkTargetArch(std::string_view arch) {
+  PrintDetails(" - target_arch: " PRIstringview "\n",
+               WABT_PRINTF_STRING_VIEW_ARG(arch));
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdump::OnRelocCount(Index count, Index section_index) {
   CHECK_RESULT(BinaryReaderObjdumpBase::OnRelocCount(count, section_index));
   PrintDetails("  - relocations for section: %d (" PRIstringview ") [%d]\n",
@@ -2429,6 +2449,12 @@ Result BinaryReaderObjdump::OnComdatEntry(ComdatType kind, Index index) {
     }
   }
   PrintDetails("\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnTargetArch(std::string_view arch) {
+  PrintDetails("  - target arch: " PRIstringview "\n",
+               WABT_PRINTF_STRING_VIEW_ARG(arch));
   return Result::Ok;
 }
 

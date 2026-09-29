@@ -76,12 +76,15 @@ NAMED_VALUES = {
     'LINKING_INIT_FUNCTIONS': 6,
     'LINKING_COMDAT_INFO': 7,
     'LINKING_SYMBOL_TABLE': 8,
+    'LINKING_TARGET_ARCH': 9,
 
     # dylink.0 subsection codes
     'DYLINK_MEM_INFO': 1,
     'DYLINK_NEEDED': 2,
     'DYLINK_EXPORT_INFO': 3,
     'DYLINK_IMPORT_INFO': 4,
+    'DYLINK_RUNTIME_PATH': 5,
+    'DYLINK_TARGET_ARCH': 6,
 
     # external kinds
     'func_kind': 0,
