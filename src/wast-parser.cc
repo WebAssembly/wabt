@@ -1838,13 +1838,13 @@ Result WastParser::ParseField(Field* field) {
       field->mutable_ = true;
       Var type;
       CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
+      VarToType(type, &field->type);
       EXPECT(Rpar);
     } else {
       field->mutable_ = false;
       Var type;
       CHECK_RESULT(ParseValueType(&type));
-      field->type = Type(type.opt_type());
+      VarToType(type, &field->type);
     }
     return Result::Ok;
   };
@@ -1862,10 +1862,24 @@ Result WastParser::ParseField(Field* field) {
 
 Result WastParser::ParseFieldList(std::vector<Field>* fields) {
   WABT_TRACE(ParseFieldList);
+  // ParseField may register a deferred reference-type resolution that points at
+  // the field's Type. Because each field is parsed into a local and then copied
+  // into `fields`, those pointers would dangle; collect them and repoint them
+  // at the stored elements once the vector has stopped growing.
+  std::vector<std::pair<size_t, size_t>> deferred;
   while (PeekMatch(TokenType::ValueType) || PeekMatch(TokenType::Lpar)) {
+    size_t first_resolve = resolve_ref_types_.size();
     Field field;
     CHECK_RESULT(ParseField(&field));
+    size_t field_index = fields->size();
     fields->push_back(field);
+    for (size_t i = first_resolve; i < resolve_ref_types_.size(); ++i) {
+      deferred.emplace_back(i, field_index);
+    }
+  }
+  for (auto [resolve_index, field_index] : deferred) {
+    resolve_ref_types_[resolve_index].target_type =
+        &(*fields)[field_index].type;
   }
   return Result::Ok;
 }
