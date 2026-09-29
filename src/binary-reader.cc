@@ -2303,6 +2303,22 @@ Result BinaryReader::ReadDylink0Section(Offset section_size) {
           CALLBACK(OnDylinkExport, name, flags);
         }
         break;
+      case DylinkEntryType::RuntimePath: {
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnDylinkRuntimePathCount, count);
+        while (count--) {
+          std::string_view path;
+          CHECK_RESULT(ReadStr(&path, "path"));
+          CALLBACK(OnDylinkRuntimePath, path);
+        }
+        break;
+      }
+      case DylinkEntryType::TargetArch: {
+        std::string_view arch;
+        CHECK_RESULT(ReadStr(&arch, "target_arch"));
+        CALLBACK(OnDylinkTargetArch, arch);
+        break;
+      }
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;
@@ -2495,6 +2511,12 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           }
         }
         break;
+      case LinkingEntryType::TargetArch: {
+        std::string_view arch;
+        CHECK_RESULT(ReadStr(&arch, "target arch"));
+        CALLBACK(OnTargetArch, arch);
+        break;
+      }
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;
