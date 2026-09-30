@@ -1,0 +1,18 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-function-references
+(module
+  (func $f)
+  ;; non-defaultable element type, so these carry an initializer
+  (table $t1 10 (ref func) (ref.func $f))
+  (table $t2 2 4 (ref func) (ref.func $f))
+  ;; defaultable, so no initializer to write
+  (table $t3 1 funcref)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0))
+  (table (;0;) 10 (ref func) (ref.func 0))
+  (table (;1;) 2 4 (ref func) (ref.func 0))
+  (table (;2;) 1 funcref))
+;;; STDOUT ;;)
