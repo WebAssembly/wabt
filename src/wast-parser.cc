@@ -734,6 +734,23 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
   return Result::Ok;
 }
 
+void WastParser::AddScriptErrors(const Errors& errors,
+                                 const Location& loc,
+                                 const char* desc) {
+  for (const auto& error : errors) {
+    // Some spec tests may trigger wabt warnings, although these
+    // tests are still valid according to the specification.
+    if (error.error_level != ErrorLevel::Warning) {
+      if (error.loc.offset == kInvalidOffset) {
+        Error(loc, "error in %s module: %s", desc, error.message.c_str());
+      } else {
+        Error(loc, "error in %s module: @0x%08" PRIzx ": %s", desc,
+              error.loc.offset, error.message.c_str());
+      }
+    }
+  }
+}
+
 void WastParser::ParseAnnotations(Token& token) {
   // Custom annotation. For now, discard until matching Rpar, unless it is
   // a code metadata annotation or custom section. In those cases, we know
@@ -3907,14 +3924,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       }
       module->name = bsm->name;
       module->loc = bsm->loc;
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(bsm->loc, "error in binary module: %s", error.message.c_str());
-        } else {
-          Error(bsm->loc, "error in binary module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, bsm->loc, "binary");
 
       command->script_module = std::move(script_module);
       *out_command = std::move(command);
@@ -3931,14 +3941,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
           filename, qsm->data.data(), qsm->data.size(), &errors);
       auto result = ParseWatModule(lexer.get(), &m, &errors, options_);
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
-        } else {
-          Error(qsm->loc, "error in quoted module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, qsm->loc, "quoted");
       if (Succeeded(result)) {
         *module = std::move(*m.get());
       }

@@ -105,6 +105,9 @@ class WastParser {
   Result ErrorIfLpar(const std::vector<std::string>& expected,
                      const char* example = nullptr);
 
+  void AddScriptErrors(const Errors& errors, const Location& loc,
+                       const char* desc);
+
   // Returns the next token without consuming it.
   Token GetToken();
 

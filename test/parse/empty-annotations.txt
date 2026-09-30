@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+(module quote "(@a \09\0a\0d\20)")
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)
