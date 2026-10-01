@@ -42,6 +42,11 @@ void Features::UpdateDependencies() {
     function_references_enabled_ = true;
   }
 
+  // Garbage collector require function references.
+  if (gc_enabled_) {
+    function_references_enabled_ = true;
+  }
+
   // Disabling dependencies.
   if (!bulk_memory_enabled_) {
     reference_types_enabled_ = false;
@@ -49,9 +54,6 @@ void Features::UpdateDependencies() {
   if (!reference_types_enabled_) {
     exceptions_enabled_ = false;
     function_references_enabled_ = false;
-  }
-  if (!function_references_enabled_) {
-    gc_enabled_ = false;
   }
 }
 
