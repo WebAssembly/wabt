@@ -175,17 +175,12 @@ TEST_F(InterpTest, Fac) {
 }
 
 TEST_F(InterpTest, CallArgCountMismatch) {
-  // (module (func (export "f") (param i32) (result i32) local.get 0))
-  ReadModule({
-      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x06, 0x01, 0x60,
-      0x01, 0x7f, 0x01, 0x7f, 0x03, 0x02, 0x01, 0x00, 0x07, 0x05, 0x01, 0x01,
-      0x66, 0x00, 0x00, 0x0a, 0x06, 0x01, 0x04, 0x00, 0x20, 0x00, 0x0b,
-  });
+  ReadModule(s_fac_module);
   Instantiate();
   auto func = GetFuncExport(0);
 
-  // Calling with fewer arguments than the function has parameters must trap
-  // rather than read past the end of the params vector.
+  // Calling the one-parameter export with no arguments must trap rather than
+  // read past the end of the params vector.
   Values results;
   Trap::Ptr trap;
   Result result = func->Call(store_, {}, results, &trap);
