@@ -5,7 +5,7 @@
   ;; non-defaultable element type, so these carry an initializer
   (table $t1 10 (ref func) (ref.func $f))
   (table $t2 2 4 (ref func) (ref.func $f))
-  ;; defaultable, so no initializer to write
+  ;; defaultable element type, so the initializer is optional and omitted
   (table $t3 1 funcref)
 )
 (;; STDOUT ;;;
