@@ -88,18 +88,12 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
       os_print_last_error("os_mmap failed.");
       abort();
     }
-    uint8_t* data_end = addr + mmap_size;
-#if !WABT_BIG_ENDIAN
     int ret = os_mprotect(addr, byte_length);
-#else
-    int ret = os_mprotect(data_end - byte_length, byte_length);
-#endif
     if (ret != 0) {
       os_print_last_error("os_mprotect failed.");
       abort();
     }
     memory->data = (MEMORY_CELL_TYPE)addr;
-    memory->data_end = (MEMORY_CELL_TYPE)data_end;
     return;
   }
 #endif
@@ -108,7 +102,6 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
   if (byte_length != 0 && !memory->data) {
     abort();
   }
-  memory->data_end = memory->data + byte_length;
 }
 
 // Returns 0 on success
@@ -118,12 +111,7 @@ static int MEMORY_API_NAME(expand_data_allocation)(MEMORY_TYPE* memory,
                                                    uint64_t delta_size) {
 #if WASM_RT_USE_MMAP
   if (MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
-#if !WABT_BIG_ENDIAN
     return os_mprotect((void*)(memory->data + old_size), delta_size);
-#else
-    return os_mprotect((void*)(memory->data_end - old_size - delta_size),
-                       delta_size);
-#endif
   }
 #endif
 
@@ -131,15 +119,9 @@ static int MEMORY_API_NAME(expand_data_allocation)(MEMORY_TYPE* memory,
   if (new_data == NULL) {
     return -1;
   }
-#if !WABT_BIG_ENDIAN
   memset((void*)(new_data + old_size), 0, delta_size);
-#else
-  memmove((void*)(new_data + new_size - old_size), (void*)new_data, old_size);
-  memset((void*)new_data, 0, delta_size);
-#endif
 
   memory->data = (MEMORY_CELL_TYPE)new_data;
-  memory->data_end = memory->data + new_size;
   return 0;
 }
 

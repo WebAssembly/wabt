@@ -17,19 +17,17 @@ R"w2c_template(    TRAP(UNALIGNED);                     \
 R"w2c_template(  }
 )w2c_template"
 R"w2c_template(
-#define DEFINE_SHARED_LOAD(name, t1, t2, t3, force_read)                      \
+#if !WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(#define DEFINE_SHARED_LOAD(name, t1, atomic_type, t2, t3, force_read)         \
 )w2c_template"
 R"w2c_template(  static inline t3 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
 )w2c_template"
 R"w2c_template(                                    wasm_rt_shared_memory_t* mem, u64 addr) { \
 )w2c_template"
-R"w2c_template(    t1 result;                                                                \
+R"w2c_template(    t1 result = atomic_load_explicit((_Atomic volatile t1*)&mem->data[addr],  \
 )w2c_template"
-R"w2c_template(    result = atomic_load_explicit(                                            \
-)w2c_template"
-R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)),                \
-)w2c_template"
-R"w2c_template(        memory_order_relaxed);                                                \
+R"w2c_template(                                     memory_order_relaxed);                   \
 )w2c_template"
 R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
 )w2c_template"
@@ -41,37 +39,77 @@ R"w2c_template(  }                                                              
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS0(name, _shared_, t1, return, t3)
 )w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(// Big endian should not use atomic_load_explicit to load float* as Wasm stores
+)w2c_template"
+R"w2c_template(// these in little endian. Loading arbitrary values into float's may result in
+)w2c_template"
+R"w2c_template(// loading bytes that get interpreted as signalling nans etc. We avoid this by
+)w2c_template"
+R"w2c_template(// loading into an unsigned type of the same size.
+)w2c_template"
+R"w2c_template(#define DEFINE_SHARED_LOAD(name, t1, atomic_type, t2, t3, force_read)         \
+)w2c_template"
+R"w2c_template(  static inline t3 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
+)w2c_template"
+R"w2c_template(                                    wasm_rt_shared_memory_t* mem, u64 addr) { \
+)w2c_template"
+R"w2c_template(    atomic_type raw = WASM_ADJUST_ENDIAN_##atomic_type(                       \
+)w2c_template"
+R"w2c_template(        atomic_load_explicit((_Atomic volatile atomic_type*)&mem->data[addr], \
+)w2c_template"
+R"w2c_template(                             memory_order_relaxed));                          \
+)w2c_template"
+R"w2c_template(    t1 result;                                                                \
+)w2c_template"
+R"w2c_template(    wasm_rt_memcpy(&result, &raw, sizeof(t1));                                \
+)w2c_template"
+R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
+)w2c_template"
+R"w2c_template(    force_read(ret);                                                          \
+)w2c_template"
+R"w2c_template(    return ret;                                                               \
+)w2c_template"
+R"w2c_template(  }                                                                           \
+)w2c_template"
+R"w2c_template(  DEF_MEM_CHECKS0(name, _shared_, t1, return, t3)
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
 R"w2c_template(
-DEFINE_SHARED_LOAD(i32_load_shared, u32, u32, u32, FORCE_READ_INT)
+DEFINE_SHARED_LOAD(i32_load_shared, u32, u32, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load_shared, u64, u64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load_shared, u64, u64, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(f32_load_shared, f32, f32, f32, FORCE_READ_FLOAT)
+R"w2c_template(DEFINE_SHARED_LOAD(f32_load_shared, f32, u32, f32, f32, FORCE_READ_FLOAT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(f64_load_shared, f64, f64, f64, FORCE_READ_FLOAT)
+R"w2c_template(DEFINE_SHARED_LOAD(f64_load_shared, f64, u64, f64, f64, FORCE_READ_FLOAT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i32_load8_s_shared, s8, s32, u32, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i32_load8_s_shared, s8, u8, s32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load8_s_shared, s8, s64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load8_s_shared, s8, u8, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i32_load8_u_shared, u8, u32, u32, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i32_load8_u_shared, u8, u8, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load8_u_shared, u8, u64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load8_u_shared, u8, u8, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i32_load16_s_shared, s16, s32, u32, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i32_load16_s_shared, s16, u16, s32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load16_s_shared, s16, s64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load16_s_shared, s16, u16, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i32_load16_u_shared, u16, u32, u32, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i32_load16_u_shared, u16, u16, u32, u32, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load16_u_shared, u16, u64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load16_u_shared, u16, u16, u64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load32_s_shared, s32, s64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load32_s_shared, s32, u32, s64, u64, FORCE_READ_INT)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_LOAD(i64_load32_u_shared, u32, u64, u64, FORCE_READ_INT)
+R"w2c_template(DEFINE_SHARED_LOAD(i64_load32_u_shared, u32, u32, u64, u64, FORCE_READ_INT)
 )w2c_template"
 R"w2c_template(
-#define DEFINE_SHARED_STORE(name, t1, t2)                                     \
+#if !WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(#define DEFINE_SHARED_STORE(name, t1, atomic_type, t2)                        \
 )w2c_template"
 R"w2c_template(  static inline void name##_unchecked(                                        \
 )w2c_template"
@@ -81,34 +119,64 @@ R"w2c_template(      u64 addr, t2 value) {                                      
 )w2c_template"
 R"w2c_template(    t1 wrapped = (t1)value;                                                   \
 )w2c_template"
-R"w2c_template(    atomic_store_explicit(                                                    \
+R"w2c_template(    atomic_store_explicit((_Atomic volatile t1*)&mem->data[addr], wrapped,    \
 )w2c_template"
-R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped,       \
-)w2c_template"
-R"w2c_template(        memory_order_relaxed);                                                \
+R"w2c_template(                          memory_order_relaxed);                              \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS1(name, _shared_, t1, , void, t2)
 )w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(// Big endian should not use atomic_store_explicit to store float* for the same
+)w2c_template"
+R"w2c_template(// reason as the load
+)w2c_template"
+R"w2c_template(#define DEFINE_SHARED_STORE(name, t1, atomic_type, t2)                        \
+)w2c_template"
+R"w2c_template(  static inline void name##_unchecked(                                        \
+)w2c_template"
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_shared_memory_t* mem, \
+)w2c_template"
+R"w2c_template(      u64 addr, t2 value) {                                                   \
+)w2c_template"
+R"w2c_template(    t1 wrapped = (t1)value;                                                   \
+)w2c_template"
+R"w2c_template(    atomic_type raw;                                                          \
+)w2c_template"
+R"w2c_template(    wasm_rt_memcpy(&raw, &wrapped, sizeof(t1));                               \
+)w2c_template"
+R"w2c_template(    atomic_store_explicit((_Atomic volatile atomic_type*)&mem->data[addr],    \
+)w2c_template"
+R"w2c_template(                          WASM_ADJUST_ENDIAN_##atomic_type(raw),              \
+)w2c_template"
+R"w2c_template(                          memory_order_relaxed);                              \
+)w2c_template"
+R"w2c_template(  }                                                                           \
+)w2c_template"
+R"w2c_template(  DEF_MEM_CHECKS1(name, _shared_, t1, , void, t2)
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
 R"w2c_template(
-DEFINE_SHARED_STORE(i32_store_shared, u32, u32)
+DEFINE_SHARED_STORE(i32_store_shared, u32, u32, u32)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i64_store_shared, u64, u64)
+R"w2c_template(DEFINE_SHARED_STORE(i64_store_shared, u64, u64, u64)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(f32_store_shared, f32, f32)
+R"w2c_template(DEFINE_SHARED_STORE(f32_store_shared, f32, u32, f32)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(f64_store_shared, f64, f64)
+R"w2c_template(DEFINE_SHARED_STORE(f64_store_shared, f64, u64, f64)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i32_store8_shared, u8, u32)
+R"w2c_template(DEFINE_SHARED_STORE(i32_store8_shared, u8, u8, u32)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i32_store16_shared, u16, u32)
+R"w2c_template(DEFINE_SHARED_STORE(i32_store16_shared, u16, u16, u32)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i64_store8_shared, u8, u64)
+R"w2c_template(DEFINE_SHARED_STORE(i64_store8_shared, u8, u8, u64)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i64_store16_shared, u16, u64)
+R"w2c_template(DEFINE_SHARED_STORE(i64_store16_shared, u16, u16, u64)
 )w2c_template"
-R"w2c_template(DEFINE_SHARED_STORE(i64_store32_shared, u32, u64)
+R"w2c_template(DEFINE_SHARED_STORE(i64_store32_shared, u32, u32, u64)
 )w2c_template"
 R"w2c_template(
 #define DEFINE_ATOMIC_LOAD(name, t1, t2, t3, force_read)                      \
@@ -121,11 +189,9 @@ R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                            
 )w2c_template"
 R"w2c_template(    t1 result;                                                                \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),            \
+R"w2c_template(    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr), sizeof(t1));           \
 )w2c_template"
-R"w2c_template(                   sizeof(t1));                                               \
-)w2c_template"
-R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
+R"w2c_template(    t3 ret = (t3)(t2)WASM_ADJUST_ENDIAN_##t1(result);                         \
 )w2c_template"
 R"w2c_template(    force_read(ret);                                                          \
 )w2c_template"
@@ -143,13 +209,9 @@ R"w2c_template(      u64 addr) {                                                
 )w2c_template"
 R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                         \
 )w2c_template"
-R"w2c_template(    t1 result;                                                                \
+R"w2c_template(    t1 result = atomic_load((_Atomic volatile t1*)&mem->data[addr]);          \
 )w2c_template"
-R"w2c_template(    result =                                                                  \
-)w2c_template"
-R"w2c_template(        atomic_load((_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)));   \
-)w2c_template"
-R"w2c_template(    t3 ret = (t3)(t2)result;                                                  \
+R"w2c_template(    t3 ret = (t3)(t2)WASM_ADJUST_ENDIAN_##t1(result);                         \
 )w2c_template"
 R"w2c_template(    force_read(ret);                                                          \
 )w2c_template"
@@ -185,11 +247,9 @@ R"w2c_template(      u64 addr, t2 value) {                                      
 )w2c_template"
 R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                         \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                   \
+R"w2c_template(    t1 wrapped = WASM_ADJUST_ENDIAN_##t1((t1)value);                          \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,           \
-)w2c_template"
-R"w2c_template(                   sizeof(t1));                                               \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &wrapped, sizeof(t1));          \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"
@@ -203,11 +263,9 @@ R"w2c_template(      u64 addr, t2 value) {                                      
 )w2c_template"
 R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                         \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                   \
+R"w2c_template(    t1 wrapped = WASM_ADJUST_ENDIAN_##t1((t1)value);                          \
 )w2c_template"
-R"w2c_template(    atomic_store((_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)),       \
-)w2c_template"
-R"w2c_template(                 wrapped);                                                    \
+R"w2c_template(    atomic_store((_Atomic volatile t1*)&mem->data[addr], wrapped);            \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"
@@ -229,6 +287,45 @@ R"w2c_template(DEFINE_ATOMIC_STORE(i64_atomic_store16, u16, u64)
 R"w2c_template(DEFINE_ATOMIC_STORE(i64_atomic_store32, u32, u64)
 )w2c_template"
 R"w2c_template(
+#if WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(// Since native read-modify-write  operations expect values to have the host
+)w2c_template"
+R"w2c_template(// endianness, we can use them. So we have to do this in multiple steps, while
+)w2c_template"
+R"w2c_template(// checking that the value hasn't changed in the middle.
+)w2c_template"
+R"w2c_template(#define WASM_RT_ATOMIC_RMW(t, ptr, value, opname, op, ret)    \
+)w2c_template"
+R"w2c_template(  do {                                                        \
+)w2c_template"
+R"w2c_template(    t raw = atomic_load(ptr);                                 \
+)w2c_template"
+R"w2c_template(    while (1) {                                               \
+)w2c_template"
+R"w2c_template(      ret = WASM_ADJUST_ENDIAN_##t(raw);                      \
+)w2c_template"
+R"w2c_template(      t new_raw = WASM_ADJUST_ENDIAN_##t((ret)op(value));     \
+)w2c_template"
+R"w2c_template(      if (atomic_compare_exchange_weak(ptr, &raw, new_raw)) { \
+)w2c_template"
+R"w2c_template(        break;                                                \
+)w2c_template"
+R"w2c_template(      }                                                       \
+)w2c_template"
+R"w2c_template(    }                                                         \
+)w2c_template"
+R"w2c_template(  } while (0)
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define WASM_RT_ATOMIC_RMW(t, ptr, value, opname, op, ret) \
+)w2c_template"
+R"w2c_template(  ret = atomic_##opname(ptr, value)
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
 #define DEFINE_ATOMIC_RMW(name, opname, op, t1, t2)                           \
 )w2c_template"
 R"w2c_template(  static inline t2 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
@@ -243,13 +340,13 @@ R"w2c_template(    t1 wrapped = (t1)value;                                      
 )w2c_template"
 R"w2c_template(    t1 ret;                                                                   \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), sizeof(t1));  \
+R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr), sizeof(t1));              \
 )w2c_template"
-R"w2c_template(    t1 newval = ret op wrapped;                                               \
+R"w2c_template(    ret = WASM_ADJUST_ENDIAN_##t1(ret);                                       \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &newval,            \
+R"w2c_template(    t1 newval = WASM_ADJUST_ENDIAN_##t1(ret op wrapped);                      \
 )w2c_template"
-R"w2c_template(                   sizeof(t1));                                               \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &newval, sizeof(t1));           \
 )w2c_template"
 R"w2c_template(    return (t2)ret;                                                           \
 )w2c_template"
@@ -267,9 +364,11 @@ R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                            
 )w2c_template"
 R"w2c_template(    t1 wrapped = (t1)value;                                                   \
 )w2c_template"
-R"w2c_template(    t1 ret = atomic_##opname(                                                 \
+R"w2c_template(    t1 ret;                                                                   \
 )w2c_template"
-R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped);      \
+R"w2c_template(    WASM_RT_ATOMIC_RMW(t1, (_Atomic volatile t1*)&mem->data[addr], wrapped,   \
+)w2c_template"
+R"w2c_template(                       opname, op, ret);                                      \
 )w2c_template"
 R"w2c_template(    return (t2)ret;                                                           \
 )w2c_template"
@@ -353,49 +452,45 @@ R"w2c_template(DEFINE_ATOMIC_RMW(i64_atomic_rmw32_xor_u, fetch_xor, ^, u32, u64)
 R"w2c_template(DEFINE_ATOMIC_RMW(i64_atomic_rmw_xor, fetch_xor, ^, u64, u64)
 )w2c_template"
 R"w2c_template(
-#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                              \
+#define DEFINE_ATOMIC_XCHG(name, opname, t1, t2)                               \
 )w2c_template"
-R"w2c_template(  static inline t2 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
+R"w2c_template(  static inline t2 name##_unchecked(uint8_t* const wasm_rt_local_memory_base,  \
 )w2c_template"
-R"w2c_template(                                    wasm_rt_memory_t* mem, u64 addr,          \
+R"w2c_template(                                    wasm_rt_memory_t* mem, u64 addr,           \
 )w2c_template"
-R"w2c_template(                                    t2 value) {                               \
+R"w2c_template(                                    t2 value) {                                \
 )w2c_template"
-R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                         \
+R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                   \
+R"w2c_template(    t1 wrapped = WASM_ADJUST_ENDIAN_##t1((t1)value);                           \
 )w2c_template"
-R"w2c_template(    t1 ret;                                                                   \
+R"w2c_template(    t1 ret;                                                                    \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), sizeof(t1));  \
+R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr), sizeof(t1));               \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,           \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &wrapped, sizeof(t1));           \
 )w2c_template"
-R"w2c_template(                   sizeof(t1));                                               \
+R"w2c_template(    return (t2)WASM_ADJUST_ENDIAN_##t1(ret);                                   \
 )w2c_template"
-R"w2c_template(    return (t2)ret;                                                           \
+R"w2c_template(  }                                                                            \
 )w2c_template"
-R"w2c_template(  }                                                                           \
+R"w2c_template(  DEF_MEM_CHECKS1(name, _, t1, return, t2, t2)                                 \
 )w2c_template"
-R"w2c_template(  DEF_MEM_CHECKS1(name, _, t1, return, t2, t2)                                \
+R"w2c_template(  static inline t2 name##_shared_unchecked(                                    \
 )w2c_template"
-R"w2c_template(  static inline t2 name##_shared_unchecked(                                   \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_shared_memory_t* mem,  \
 )w2c_template"
-R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_shared_memory_t* mem, \
+R"w2c_template(      u64 addr, t2 value) {                                                    \
 )w2c_template"
-R"w2c_template(      u64 addr, t2 value) {                                                   \
+R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                          \
 )w2c_template"
-R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t1);                                         \
+R"w2c_template(    t1 wrapped = WASM_ADJUST_ENDIAN_##t1((t1)value);                           \
 )w2c_template"
-R"w2c_template(    t1 wrapped = (t1)value;                                                   \
+R"w2c_template(    t1 ret = atomic_##opname((_Atomic volatile t1*)&mem->data[addr], wrapped); \
 )w2c_template"
-R"w2c_template(    t1 ret = atomic_##opname(                                                 \
+R"w2c_template(    return (t2)WASM_ADJUST_ENDIAN_##t1(ret);                                   \
 )w2c_template"
-R"w2c_template(        (_Atomic volatile t1*)MEM_ADDR(mem, addr, sizeof(t1)), wrapped);      \
-)w2c_template"
-R"w2c_template(    return (t2)ret;                                                           \
-)w2c_template"
-R"w2c_template(  }                                                                           \
+R"w2c_template(  }                                                                            \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS1(name##_shared, _shared_, t1, return, t2, t2)
 )w2c_template"
@@ -425,23 +520,23 @@ R"w2c_template(                                    t1 expected, t1 replacement) 
 )w2c_template"
 R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t2);                                         \
 )w2c_template"
-R"w2c_template(    t2 expected_wrapped = (t2)expected;                                       \
+R"w2c_template(    t2 expected_wrapped = WASM_ADJUST_ENDIAN_##t2((t2)expected);              \
 )w2c_template"
-R"w2c_template(    t2 replacement_wrapped = (t2)replacement;                                 \
+R"w2c_template(    t2 replacement_wrapped = WASM_ADJUST_ENDIAN_##t2((t2)replacement);        \
 )w2c_template"
 R"w2c_template(    t2 ret;                                                                   \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr, sizeof(t2)), sizeof(t2));  \
+R"w2c_template(    wasm_rt_memcpy(&ret, MEM_ADDR_MEMOP(mem, addr), sizeof(t2));              \
 )w2c_template"
 R"w2c_template(    if (ret == expected_wrapped) {                                            \
 )w2c_template"
-R"w2c_template(      wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t2)),                   \
+R"w2c_template(      wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &replacement_wrapped,         \
 )w2c_template"
-R"w2c_template(                     &replacement_wrapped, sizeof(t2));                       \
+R"w2c_template(                     sizeof(t2));                                             \
 )w2c_template"
 R"w2c_template(    }                                                                         \
 )w2c_template"
-R"w2c_template(    return (t1)ret;                                                           \
+R"w2c_template(    return (t1)WASM_ADJUST_ENDIAN_##t2(ret);                                  \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"
@@ -455,17 +550,15 @@ R"w2c_template(      u64 addr, t1 expected, t1 replacement) {                   
 )w2c_template"
 R"w2c_template(    ATOMIC_ALIGNMENT_CHECK(addr, t2);                                         \
 )w2c_template"
-R"w2c_template(    t2 expected_wrapped = (t2)expected;                                       \
+R"w2c_template(    t2 expected_wrapped = WASM_ADJUST_ENDIAN_##t2((t2)expected);              \
 )w2c_template"
-R"w2c_template(    t2 replacement_wrapped = (t2)replacement;                                 \
+R"w2c_template(    t2 replacement_wrapped = WASM_ADJUST_ENDIAN_##t2((t2)replacement);        \
 )w2c_template"
-R"w2c_template(    atomic_compare_exchange_strong(                                           \
+R"w2c_template(    atomic_compare_exchange_strong((_Atomic volatile t2*)&mem->data[addr],    \
 )w2c_template"
-R"w2c_template(        (_Atomic volatile t2*)MEM_ADDR(mem, addr, sizeof(t2)),                \
+R"w2c_template(                                   &expected_wrapped, replacement_wrapped);   \
 )w2c_template"
-R"w2c_template(        &expected_wrapped, replacement_wrapped);                              \
-)w2c_template"
-R"w2c_template(    return (t1)expected_wrapped;                                              \
+R"w2c_template(    return (t1)WASM_ADJUST_ENDIAN_##t2(expected_wrapped);                     \
 )w2c_template"
 R"w2c_template(  }                                                                           \
 )w2c_template"

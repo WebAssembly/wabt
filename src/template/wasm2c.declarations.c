@@ -1,25 +1,3 @@
-
-// Computes a pointer to an object of the given size in a little-endian memory.
-//
-// On a little-endian host, this is just &mem->data[addr] - the object's size is
-// unused. On a big-endian host, it's &mem->data[mem->size - addr - n], where n
-// is the object's size.
-//
-// Note that mem may be evaluated multiple times.
-//
-// Parameters:
-// mem - The memory.
-// addr - The address.
-// n - The size of the object.
-//
-// Result:
-// A pointer for an object of size n.
-#if WABT_BIG_ENDIAN
-#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
-#else
-#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
-#endif
-
 // We can only use Segue for this module if it uses a single unshared,
 // default-page, 32-bit imported or exported memory.
 #if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
@@ -33,7 +11,7 @@
 #endif
 
 #if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE && WASM_RT_USE_MMAP && \
-    IS_SINGLE_UNSHARED_DEFAULT32_MEMORY && !WABT_BIG_ENDIAN
+    IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
 #define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 1
 #else
 #define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 0
@@ -63,11 +41,11 @@ static inline void wasm_rt_segue_write_base(void* base) {
     wasm_rt_syscall_set_segue_base(base);
   }
 }
-#define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
+#define MEM_ADDR_MEMOP(mem, addr) ((uint8_t __seg_gs*)(uintptr_t)addr)
 #elif WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
-#define MEM_ADDR_MEMOP(mem, addr, n) (&wasm_rt_local_memory_base[(addr)])
+#define MEM_ADDR_MEMOP(mem, addr) (&wasm_rt_local_memory_base[(addr)])
 #else
-#define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
+#define MEM_ADDR_MEMOP(mem, addr) (&(mem)->data[addr])
 #endif
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
@@ -219,23 +197,50 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
    "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 #endif
 
+#define WASM_ADJUST_ENDIAN_u8(value) (value)
+#define WASM_ADJUST_ENDIAN_s8(value) (value)
+#if WABT_BIG_ENDIAN
+#define WASM_ADJUST_ENDIAN_u16 htole16
+#define WASM_ADJUST_ENDIAN_s16 htole16
+#define WASM_ADJUST_ENDIAN_u32 htole32
+#define WASM_ADJUST_ENDIAN_s32 htole32
+#define WASM_ADJUST_ENDIAN_u64 htole64
+static inline f32 WASM_ADJUST_ENDIAN_f32(f32 value) {
+  u32 bits;
+  wasm_rt_memcpy(&bits, &value, sizeof(bits));
+  bits = htole32(bits);
+  wasm_rt_memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+static inline f64 WASM_ADJUST_ENDIAN_f64(f64 value) {
+  u64 bits;
+  wasm_rt_memcpy(&bits, &value, sizeof(bits));
+  bits = htole64(bits);
+  wasm_rt_memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+#else
+#define WASM_ADJUST_ENDIAN_u16(value) (value)
+#define WASM_ADJUST_ENDIAN_s16(value) (value)
+#define WASM_ADJUST_ENDIAN_u32(value) (value)
+#define WASM_ADJUST_ENDIAN_s32(value) (value)
+#define WASM_ADJUST_ENDIAN_u64(value) (value)
+#define WASM_ADJUST_ENDIAN_f32(value) (value)
+#define WASM_ADJUST_ENDIAN_f64(value) (value)
+#endif
+
 static inline void load_data(u8* dest, const u8* src, size_t n) {
   if (!n) {
     return;
   }
-#if WABT_BIG_ENDIAN
-  for (size_t i = 0; i < n; i++) {
-    dest[i] = src[n - i - 1];
-  }
-#else
   wasm_rt_memcpy(dest, src, n);
-#endif
 }
 
-#define LOAD_DATA(m, o, i, s)            \
-  do {                                   \
-    RANGE_CHECK((&m), o, s);             \
-    load_data(MEM_ADDR(&m, o, s), i, s); \
+#define LOAD_DATA(m, o, i, s)      \
+  do {                             \
+    RANGE_CHECK((&m), o, s);       \
+    load_data(&(m).data[o], i, s); \
   } while (0)
 
 #define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
@@ -291,8 +296,8 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
   static inline t3 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
                                     wasm_rt_memory_t* mem, u64 addr) {        \
     t1 result;                                                                \
-    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),            \
-                   sizeof(t1));                                               \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr), sizeof(t1));           \
+    result = WASM_ADJUST_ENDIAN_##t1(result);                                 \
     t3 ret = (t3)(t2)result;                                                  \
     force_read(ret);                                                          \
     return ret;                                                               \
@@ -304,8 +309,8 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
       uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem, \
       u64 addr, t2 value) {                                            \
     t1 wrapped = (t1)value;                                            \
-    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
-                   sizeof(t1));                                        \
+    wrapped = WASM_ADJUST_ENDIAN_##t1(wrapped);                        \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &wrapped, sizeof(t1));   \
   }                                                                    \
   DEF_MEM_CHECKS1(name, _, t1, , void, t2)
 
@@ -671,7 +676,7 @@ static float wasm_sqrtf(float x) {
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u64 d, u32 val, u64 n) {
   RANGE_CHECK(mem, d, n);
-  memset(MEM_ADDR(mem, d, n), val, n);
+  memset(&mem->data[d], val, n);
 }
 
 static inline void memory_copy(wasm_rt_memory_t* dest,
@@ -681,7 +686,7 @@ static inline void memory_copy(wasm_rt_memory_t* dest,
                                u64 n) {
   RANGE_CHECK(dest, dest_addr, n);
   RANGE_CHECK(src, src_addr, n);
-  memmove(MEM_ADDR(dest, dest_addr, n), MEM_ADDR(src, src_addr, n), n);
+  memmove(&dest->data[dest_addr], &src->data[src_addr], n);
 }
 
 static inline void memory_init(wasm_rt_memory_t* dest,

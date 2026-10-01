@@ -39,6 +39,33 @@ R"w2c_template(   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_
 R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(
+#if WABT_BIG_ENDIAN
+)w2c_template"
+R"w2c_template(static inline v128 WASM_ADJUST_ENDIAN_v128(v128 value) {
+)w2c_template"
+R"w2c_template(  u64 input[2];
+)w2c_template"
+R"w2c_template(  u64 output[2];
+)w2c_template"
+R"w2c_template(  wasm_rt_memcpy(input, &value, sizeof(input));
+)w2c_template"
+R"w2c_template(  output[0] = htole64(input[1]);
+)w2c_template"
+R"w2c_template(  output[1] = htole64(input[0]);
+)w2c_template"
+R"w2c_template(  wasm_rt_memcpy(&value, output, sizeof(value));
+)w2c_template"
+R"w2c_template(  return value;
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define WASM_ADJUST_ENDIAN_v128(value) (value)
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
 // The below SIMD operations copy to a local variable first as the
 )w2c_template"
 R"w2c_template(// MEM_ADDR_MEMOP maybe segment pointers if WASM_RT_USE_SEGUE_FOR_THIS_MODULE is
@@ -47,94 +74,94 @@ R"w2c_template(// defined and regular pointers otherwse. memcpy into the local w
 )w2c_template"
 R"w2c_template(// in both cases.
 )w2c_template"
-R"w2c_template(#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                              \
+R"w2c_template(#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                               \
 )w2c_template"
-R"w2c_template(  static inline v128 name##_unchecked(                                    \
+R"w2c_template(  static inline v128 name##_unchecked(                                     \
 )w2c_template"
-R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
 )w2c_template"
-R"w2c_template(      u64 addr) {                                                         \
+R"w2c_template(      u64 addr) {                                                          \
 )w2c_template"
-R"w2c_template(    t simd_mem_value;                                                     \
+R"w2c_template(    t simd_mem_value;                                                      \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
+R"w2c_template(    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr), sizeof(t)); \
 )w2c_template"
-R"w2c_template(                   sizeof(t));                                            \
+R"w2c_template(    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
 )w2c_template"
-R"w2c_template(    v128 result = func(&simd_mem_value);                                  \
+R"w2c_template(    v128 result = func(&simd_mem_value);                                   \
 )w2c_template"
-R"w2c_template(    SIMD_FORCE_READ(result);                                              \
+R"w2c_template(    SIMD_FORCE_READ(result);                                               \
 )w2c_template"
-R"w2c_template(    return result;                                                        \
+R"w2c_template(    return result;                                                         \
 )w2c_template"
-R"w2c_template(  }                                                                       \
+R"w2c_template(  }                                                                        \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS0(name, _, t, return, v128);
 )w2c_template"
 R"w2c_template(
-#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                        \
+#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                         \
 )w2c_template"
-R"w2c_template(  static inline v128 name##_unchecked(                                    \
+R"w2c_template(  static inline v128 name##_unchecked(                                     \
 )w2c_template"
-R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
 )w2c_template"
-R"w2c_template(      u64 addr, v128 vec) {                                               \
+R"w2c_template(      u64 addr, v128 vec) {                                                \
 )w2c_template"
-R"w2c_template(    t simd_mem_value;                                                     \
+R"w2c_template(    t simd_mem_value;                                                      \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
+R"w2c_template(    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr), sizeof(t)); \
 )w2c_template"
-R"w2c_template(                   sizeof(t));                                            \
+R"w2c_template(    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
 )w2c_template"
-R"w2c_template(    v128 result = func(&simd_mem_value, vec, lane);                       \
+R"w2c_template(    v128 result = func(&simd_mem_value, vec, lane);                        \
 )w2c_template"
-R"w2c_template(    SIMD_FORCE_READ(result);                                              \
+R"w2c_template(    SIMD_FORCE_READ(result);                                               \
 )w2c_template"
-R"w2c_template(    return result;                                                        \
+R"w2c_template(    return result;                                                         \
 )w2c_template"
-R"w2c_template(  }                                                                       \
+R"w2c_template(  }                                                                        \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
 )w2c_template"
 R"w2c_template(
-#define DEFINE_SIMD_STORE(name, t)                                        \
+#define DEFINE_SIMD_STORE(name, t)                                         \
 )w2c_template"
-R"w2c_template(  static inline void name##_unchecked(                                    \
+R"w2c_template(  static inline void name##_unchecked(                                     \
 )w2c_template"
-R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
 )w2c_template"
-R"w2c_template(      u64 addr, v128 value) {                                             \
+R"w2c_template(      u64 addr, v128 value) {                                              \
 )w2c_template"
-R"w2c_template(    t simd_mem_value;                                                     \
+R"w2c_template(    t simd_mem_value;                                                      \
 )w2c_template"
-R"w2c_template(    simde_wasm_v128_store(&simd_mem_value, value);                        \
+R"w2c_template(    simde_wasm_v128_store(&simd_mem_value, value);                         \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
+R"w2c_template(    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
 )w2c_template"
-R"w2c_template(                   sizeof(t));                                            \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &simd_mem_value, sizeof(t)); \
 )w2c_template"
-R"w2c_template(  }                                                                       \
+R"w2c_template(  }                                                                        \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS1(name, _, t, , void, v128);
 )w2c_template"
 R"w2c_template(
-#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                       \
+#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                        \
 )w2c_template"
-R"w2c_template(  static inline void name##_unchecked(                                    \
+R"w2c_template(  static inline void name##_unchecked(                                     \
 )w2c_template"
-R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+R"w2c_template(      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,     \
 )w2c_template"
-R"w2c_template(      u64 addr, v128 value) {                                             \
+R"w2c_template(      u64 addr, v128 value) {                                              \
 )w2c_template"
-R"w2c_template(    t simd_mem_value;                                                     \
+R"w2c_template(    t simd_mem_value;                                                      \
 )w2c_template"
-R"w2c_template(    func(&simd_mem_value, value, lane);                                   \
+R"w2c_template(    func(&simd_mem_value, value, lane);                                    \
 )w2c_template"
-R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
+R"w2c_template(    simd_mem_value = WASM_ADJUST_ENDIAN_##t(simd_mem_value);               \
 )w2c_template"
-R"w2c_template(                   sizeof(t));                                            \
+R"w2c_template(    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &simd_mem_value, sizeof(t)); \
 )w2c_template"
-R"w2c_template(  }                                                                       \
+R"w2c_template(  }                                                                        \
 )w2c_template"
 R"w2c_template(  DEF_MEM_CHECKS1(name, _, t, , void, v128);
 )w2c_template"
