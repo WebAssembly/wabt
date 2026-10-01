@@ -379,6 +379,14 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnImport(Index index,
+                  ExternalKind kind,
+                  std::string_view module_name,
+                  std::string_view field_name) override {
+    objdump_state_->num_imports = index + 1;
+    return Result::Ok;
+  }
+
   Result OnImportFunc(Index import_index,
                       std::string_view module_name,
                       std::string_view field_name,
@@ -1580,7 +1588,10 @@ Result BinaryReaderObjdump::OnDataCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnImportCount(Index count) {
-  return OnCount(count);
+  // `count` is the number of entries in the import section, which can be
+  // less than the number of imports when compact imports are used.  Report
+  // the total number of imports (as counted during the prepass) instead.
+  return OnCount(std::max(count, objdump_state_->num_imports));
 }
 
 Result BinaryReaderObjdump::OnImportFunc(Index import_index,

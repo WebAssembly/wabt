@@ -2800,11 +2800,14 @@ Result BinaryReader::ReadImport(Index i,
 
 Result BinaryReader::ReadImportSection(Offset section_size) {
   CALLBACK(BeginImportSection, section_size);
-  Index num_imports;
-  CHECK_RESULT(ReadCount(&num_imports, "import count"));
-  CALLBACK(OnImportCount, num_imports);
+  // Note: With compact imports a single entry in the import section can
+  // contain more than one import, so the number of entries is not necessarily
+  // the same as the number of imports.
+  Index num_entries;
+  CHECK_RESULT(ReadCount(&num_entries, "import count"));
+  CALLBACK(OnImportCount, num_entries);
   Index i = 0;
-  while (i < num_imports) {
+  for (Index entry = 0; entry < num_entries; ++entry) {
     std::string_view module_name;
     CHECK_RESULT(ReadStr(&module_name, "import module name"));
     std::string_view field_name;
