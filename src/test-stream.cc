@@ -25,7 +25,7 @@
 
 #include "wabt/stream.h"
 
-#if defined(_WIN64)
+#if COMPILER_IS_MSVC && defined(_WIN64)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -42,7 +42,7 @@ struct FileCloser {
   void operator()(FILE* file) const { fclose(file); }
 };
 
-#if defined(_WIN64)
+#if COMPILER_IS_MSVC && defined(_WIN64)
 struct HandleCloser {
   void operator()(HANDLE handle) const { CloseHandle(handle); }
 };
@@ -97,7 +97,7 @@ TEST(FileStream, RejectUnrepresentableSeekOffset) {
 }
 #endif
 
-#if defined(_WIN64)
+#if COMPILER_IS_MSVC && defined(_WIN64)
 TEST(FileStream, ReadAndPatchAbove2GBOnWindows64) {
   wchar_t directory[MAX_PATH];
   ASSERT_NE(0u, GetTempPathW(MAX_PATH, directory));
