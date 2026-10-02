@@ -115,6 +115,9 @@ class BinaryReaderDelegate {
 
   /* Import section */
   virtual Result BeginImportSection(Offset size) = 0;
+  // `count` is the number of entries in the import section.  When compact
+  // imports are used this can be less than the number of imports, since a
+  // single entry can contain multiple imports.
   virtual Result OnImportCount(Index count) = 0;
   virtual Result OnImport(Index index,
                           ExternalKind kind,
