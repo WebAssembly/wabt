@@ -1,0 +1,18 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/local_init.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/local_init.wast:26: assert_invalid passed:
+  out/test/spec/gc/local_init/local_init.1.wasm:000001c: error: uninitialized local reference
+  000001c: error: OnLocalGetExpr callback failed
+out/test/spec/gc/local_init.wast:30: assert_invalid passed:
+  out/test/spec/gc/local_init/local_init.2.wasm:000002a: error: uninitialized local reference
+  000002a: error: OnLocalGetExpr callback failed
+out/test/spec/gc/local_init.wast:40: assert_invalid passed:
+  out/test/spec/gc/local_init/local_init.3.wasm:0000027: error: uninitialized local reference
+  0000027: error: OnLocalGetExpr callback failed
+out/test/spec/gc/local_init.wast:53: assert_invalid passed:
+  out/test/spec/gc/local_init/local_init.4.wasm:000002c: error: uninitialized local reference
+  000002c: error: OnLocalGetExpr callback failed
+10/10 tests passed.
+;;; STDOUT ;;)
