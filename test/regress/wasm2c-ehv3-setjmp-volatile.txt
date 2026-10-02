@@ -1,5 +1,4 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --enable-exceptions
 ;;; NOTE: ref: issue-2469
 (module
   (tag $e0)

@@ -303,12 +303,11 @@ Result BinaryReaderOpcnt::OnEndExpr() {
 
 }  // end anonymous namespace
 
-Result ReadBinaryOpcnt(const void* data,
-                       size_t size,
+Result ReadBinaryOpcnt(ByteSpan data,
                        const ReadBinaryOptions& options,
                        OpcodeInfoCounts* counts) {
   BinaryReaderOpcnt reader(counts);
-  return ReadBinary(data, size, &reader, options);
+  return ReadBinary(data, &reader, options);
 }
 
 }  // namespace wabt

@@ -89,7 +89,7 @@ extern const u32 wasm2c_test_pagesize_env_0x5F_linear_memory;
 #endif
 
 #include "wasm.h"
-#define IS_SINGLE_UNSHARED_MEMORY 1
+#define IS_SINGLE_UNSHARED_DEFAULT32_MEMORY 1
 
 // Computes a pointer to an object of the given size in a little-endian memory.
 //
@@ -112,12 +112,23 @@ extern const u32 wasm2c_test_pagesize_env_0x5F_linear_memory;
 #define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
 #endif
 
-// We can only use Segue for this module if it uses a single unshared imported
-// or exported memory
-#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_MEMORY
+// We can only use Segue for this module if it uses a single unshared,
+// default-page, 32-bit imported or exported memory.
+#if WASM_RT_USE_SEGUE && IS_SINGLE_UNSHARED_DEFAULT32_MEMORY
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 1
 #else
 #define WASM_RT_USE_SEGUE_FOR_THIS_MODULE 0
+#endif
+
+#ifndef WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE 1
+#endif
+
+#if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE && WASM_RT_USE_MMAP && \
+    IS_SINGLE_UNSHARED_DEFAULT32_MEMORY && !WABT_BIG_ENDIAN
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 1
+#else
+#define WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE 0
 #endif
 
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
@@ -145,6 +156,8 @@ static inline void wasm_rt_segue_write_base(void* base) {
   }
 }
 #define MEM_ADDR_MEMOP(mem, addr, n) ((uint8_t __seg_gs*)(uintptr_t)addr)
+#elif WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
+#define MEM_ADDR_MEMOP(mem, addr, n) (&wasm_rt_local_memory_base[(addr)])
 #else
 #define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
 #endif
@@ -165,15 +178,37 @@ static inline void wasm_rt_segue_write_base(void* base) {
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
-static inline bool func_types_eq(const wasm_rt_func_type_t a,
-                                 const wasm_rt_func_type_t b) {
-  return (a == b) || LIKELY(a && b && !memcmp(a, b, 32));
+#if defined(__clang__) || defined(__GNUC__)
+#define W2C_COLD_FUNC __attribute__((noinline, cold))
+#elif defined(_MSC_VER)
+#define W2C_COLD_FUNC __declspec(noinline)
+#else
+#define W2C_COLD_FUNC
+#endif
+
+W2C_COLD_FUNC static bool func_types_eq_slowpath(
+    const wasm_rt_funcref_table_t* table,
+    const wasm_rt_func_type_t expected_type,
+    uint32_t index) {
+  const size_t sha256size = 32;
+  if (index >= table->size) {
+    // Table index out of bounds. Raise Wasm trap.
+    TRAP(CALL_INDIRECT);
+    return false;
+  }
+  const wasm_rt_funcref_t* const func_ref = &table->data[index];
+  if (!expected_type || !func_ref->func || !func_ref->func_type ||
+      memcmp(expected_type, func_ref->func_type, sha256size) != 0) {
+    // Type check failed. Raise Wasm trap.
+    TRAP(CALL_INDIRECT);
+    return false;
+  }
+  return true;
 }
 
-#define CHECK_CALL_INDIRECT(table, ft, x)                \
-  (LIKELY((x) < table.size && table.data[x].func &&      \
-          func_types_eq(ft, table.data[x].func_type)) || \
-   TRAP(CALL_INDIRECT))
+#define CHECK_CALL_INDIRECT(table, ft, x)                       \
+  (LIKELY((x) < table.size && ft == table.data[x].func_type) || \
+   func_types_eq_slowpath(&(table), ft, x))
 
 #define DO_CALL_INDIRECT(table, t, x, ...) ((t)table.data[x].func)(__VA_ARGS__)
 
@@ -181,23 +216,27 @@ static inline bool func_types_eq(const wasm_rt_func_type_t a,
   (CHECK_CALL_INDIRECT(table, ft, x),       \
    DO_CALL_INDIRECT(table, t, x, __VA_ARGS__))
 
-static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
+static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
+  uint64_t ret;
 #if __has_builtin(__builtin_add_overflow)
-  return __builtin_add_overflow(a, b, resptr);
+  if (__builtin_add_overflow(a, b, &ret))
+    TRAP(OOB);
 #elif defined(_MSC_VER)
-  return _addcarry_u64(0, a, b, resptr);
+  if (_addcarry_u64(0, a, b, &ret))
+    TRAP(OOB);
 #else
-#error "Missing implementation of __builtin_add_overflow or _addcarry_u64"
+  ret = a + b;
+  if (ret < a)
+    TRAP(OOB);
 #endif
+  return ret;
 }
 
-#define RANGE_CHECK(mem, offset, len)              \
-  do {                                             \
-    uint64_t res;                                  \
-    if (UNLIKELY(add_overflow(offset, len, &res))) \
-      TRAP(OOB);                                   \
-    if (UNLIKELY(res > (mem)->size))               \
-      TRAP(OOB);                                   \
+#define RANGE_CHECK(mem, offset, len)            \
+  do {                                           \
+    uint64_t res = checked_add_u64(offset, len); \
+    if (UNLIKELY(res > (mem)->size))             \
+      TRAP(OOB);                                 \
   } while (0);
 
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE && WASM_RT_SANITY_CHECKS
@@ -216,12 +255,20 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
 // (if hardware bounds-checking is enabled via guard pages)
 // or it may do a slightly faster RANGE_CHECK.
 #if WASM_RT_MEMCHECK_GUARD_PAGES
-#define MEMCHECK_DEFAULT32(mem, a, t) WASM_RT_CHECK_BASE(mem);
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
+  WASM_RT_CHECK_BASE(mem);
 #else
-#define MEMCHECK_DEFAULT32(mem, a, t)                \
-  WASM_RT_CHECK_BASE(mem);                           \
-  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size)) \
+#if WASM_RT_USE_LOCAL_MEMORY_BASE_SIZE_FOR_THIS_MODULE
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t)     \
+  WASM_RT_CHECK_BASE(mem);                                   \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > local_memory_size)) \
     TRAP(OOB);
+#else
+#define MEMCHECK_DEFAULT32(mem, local_memory_size, a, t) \
+  WASM_RT_CHECK_BASE(mem);                               \
+  if (UNLIKELY(a + (uint64_t)sizeof(t) > mem->size))     \
+    TRAP(OOB);
+#endif
 #endif
 
 // MEMCHECK_GENERAL can be used for any memory
@@ -229,19 +276,39 @@ static inline bool add_overflow(uint64_t a, uint64_t b, uint64_t* resptr) {
   WASM_RT_CHECK_BASE(mem);          \
   RANGE_CHECK(mem, a, sizeof(t));
 
-#ifdef __GNUC__
-#define FORCE_READ_INT(var) __asm__("" ::"r"(var));
-// Clang on Mips requires "f" constraints on floats
-// See https://github.com/llvm/llvm-project/issues/64241
-#if defined(__clang__) && \
-    (defined(mips) || defined(__mips__) || defined(__mips))
-#define FORCE_READ_FLOAT(var) __asm__("" ::"f"(var));
-#else
-#define FORCE_READ_FLOAT(var) __asm__("" ::"r"(var));
-#endif
-#else
+// When using guard pages, reads have to be immediately consumed so that OOB
+// trap checks are applied in the right place, and not optimized away. This is
+// done using FORCE_READ_INT/FORCE_READ_FLOAT
+#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
+    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
 #define FORCE_READ_INT(var)
 #define FORCE_READ_FLOAT(var)
+#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
+#define FORCE_READ_INT(var) __asm__("" ::"r"(var))
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define FORCE_READ_FLOAT_CONSTRAINT "x"
+#elif defined(__aarch64__) && defined(__ARM_FP) && ((__ARM_FP & 0x4) != 0)
+#define FORCE_READ_FLOAT_CONSTRAINT "w"
+#elif defined(__mips__) && defined(__clang__) && !defined(__mips_soft_float)
+// Clang before v18 uses hard floats which has a different constraint
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)) && \
+    !(defined(_SOFT_FLOAT) || defined(__NO_FPRS__))
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__riscv) && defined(__riscv_flen) && (__riscv_flen >= 32)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#elif defined(__s390__) || defined(__s390x__)
+#define FORCE_READ_FLOAT_CONSTRAINT "f"
+#else
+#define FORCE_READ_FLOAT_CONSTRAINT "r"
+#endif
+
+#define FORCE_READ_FLOAT(var) __asm__("" ::FORCE_READ_FLOAT_CONSTRAINT(var))
+#else
+#error \
+    "Guard page mode for Wasm not supported on this platform because FORCE_READ_INT/FORCE_READ_FLOAT could not be instantiated." \
+   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
 #endif
 
 static inline void load_data(u8* dest, const u8* src, size_t n) {
@@ -264,56 +331,70 @@ static inline void load_data(u8* dest, const u8* src, size_t n) {
   } while (0)
 
 #define DEF_MEM_CHECKS0(name, shared, mem_type, ret_kw, return_type)         \
-  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
-                                             u64 addr) {                     \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
-    ret_kw name##_unchecked(mem, addr);                                      \
+  static inline return_type name##_default32(                                \
+      uint8_t* const wasm_rt_local_memory_base,                              \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,    \
+      u64 addr) {                                                            \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);      \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
   }                                                                          \
-  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr) { \
+  static inline return_type name(uint8_t* const wasm_rt_local_memory_base,   \
+                                 uint64_t wasm_rt_local_memory_size,         \
+                                 wasm_rt##shared##memory_t* mem, u64 addr) { \
     MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
-    ret_kw name##_unchecked(mem, addr);                                      \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr);           \
   }
 
-#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,         \
-                        val_type1)                                           \
-  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
-                                             u64 addr, val_type1 val1) {     \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
-    ret_kw name##_unchecked(mem, addr, val1);                                \
-  }                                                                          \
-  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
-                                 val_type1 val1) {                           \
-    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
-    ret_kw name##_unchecked(mem, addr, val1);                                \
+#define DEF_MEM_CHECKS1(name, shared, mem_type, ret_kw, return_type,       \
+                        val_type1)                                         \
+  static inline return_type name##_default32(                              \
+      uint8_t* const wasm_rt_local_memory_base,                            \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,  \
+      u64 addr, val_type1 val1) {                                          \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);    \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1);   \
+  }                                                                        \
+  static inline return_type name(uint8_t* const wasm_rt_local_memory_base, \
+                                 uint64_t wasm_rt_local_memory_size,       \
+                                 wasm_rt##shared##memory_t* mem, u64 addr, \
+                                 val_type1 val1) {                         \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                 \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1);   \
   }
 
-#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,         \
-                        val_type1, val_type2)                                \
-  static inline return_type name##_default32(wasm_rt##shared##memory_t* mem, \
-                                             u64 addr, val_type1 val1,       \
-                                             val_type2 val2) {               \
-    MEMCHECK_DEFAULT32(mem, addr, mem_type);                                 \
-    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
-  }                                                                          \
-  static inline return_type name(wasm_rt##shared##memory_t* mem, u64 addr,   \
-                                 val_type1 val1, val_type2 val2) {           \
-    MEMCHECK_GENERAL(mem, addr, mem_type);                                   \
-    ret_kw name##_unchecked(mem, addr, val1, val2);                          \
+#define DEF_MEM_CHECKS2(name, shared, mem_type, ret_kw, return_type,           \
+                        val_type1, val_type2)                                  \
+  static inline return_type name##_default32(                                  \
+      uint8_t* const wasm_rt_local_memory_base,                                \
+      uint64_t wasm_rt_local_memory_size, wasm_rt##shared##memory_t* mem,      \
+      u64 addr, val_type1 val1, val_type2 val2) {                              \
+    MEMCHECK_DEFAULT32(mem, wasm_rt_local_memory_size, addr, mem_type);        \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1, val2); \
+  }                                                                            \
+  static inline return_type name(uint8_t* const wasm_rt_local_memory_base,     \
+                                 uint64_t wasm_rt_local_memory_size,           \
+                                 wasm_rt##shared##memory_t* mem, u64 addr,     \
+                                 val_type1 val1, val_type2 val2) {             \
+    MEMCHECK_GENERAL(mem, addr, mem_type);                                     \
+    ret_kw name##_unchecked(wasm_rt_local_memory_base, mem, addr, val1, val2); \
   }
 
-#define DEFINE_LOAD(name, t1, t2, t3, force_read)                      \
-  static inline t3 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
-    t1 result;                                                         \
-    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),     \
-                   sizeof(t1));                                        \
-    force_read(result);                                                \
-    return (t3)(t2)result;                                             \
-  }                                                                    \
+#define DEFINE_LOAD(name, t1, t2, t3, force_read)                             \
+  static inline t3 name##_unchecked(uint8_t* const wasm_rt_local_memory_base, \
+                                    wasm_rt_memory_t* mem, u64 addr) {        \
+    t1 result;                                                                \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)),            \
+                   sizeof(t1));                                               \
+    t3 ret = (t3)(t2)result;                                                  \
+    force_read(ret);                                                          \
+    return ret;                                                               \
+  }                                                                           \
   DEF_MEM_CHECKS0(name, _, t1, return, t3)
 
 #define DEFINE_STORE(name, t1, t2)                                     \
-  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
-                                      t2 value) {                      \
+  static inline void name##_unchecked(                                 \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem, \
+      u64 addr, t2 value) {                                            \
     t1 wrapped = (t1)value;                                            \
     wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
                    sizeof(t1));                                        \
@@ -650,14 +731,34 @@ static double wasm_sqrt(double x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nan(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrt(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrt(x);
+#endif
 }
 
 static float wasm_sqrtf(float x) {
   if (UNLIKELY(isnan(x))) {
     return quiet_nanf(x);
   }
+
+#if __has_builtin(__builtin_elementwise_sqrt)
+  // Fastest option: doesn't set errno
+  return __builtin_elementwise_sqrt(x);
+#elif __has_builtin(__builtin_sqrt)
+  // Optimized if -fno-math-errno is set
+  return __builtin_sqrtf(x);
+#else
+  // Libc call. May/may not be optimized
   return sqrtf(x);
+#endif
 }
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u64 d, u32 val, u64 n) {
@@ -909,30 +1010,44 @@ wasm_rt_func_type_t wasm2c_test_get_func_type(uint32_t param_count, uint32_t res
 
 u32 w2c_test_f0(w2c_test* instance, u32 var_p0) {
   FUNC_PROLOGUE;
+  uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
+  (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = var_p0;
   var_i0 = CALL_INDIRECT((*instance->w2c_env_0x5F_indirect_function_table), u32 (*)(void*), w2c_test_t1, var_i0, (*instance->w2c_env_0x5F_indirect_function_table).data[var_i0].module_instance);
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
   wasm_rt_segue_write_base((*instance->w2c_env_0x5F_linear_memory).data);
 #endif
+  wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   FUNC_EPILOGUE;
   return var_i0;
 }
 
 u32 w2c_test_f1(w2c_test* instance) {
   FUNC_PROLOGUE;
+  uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
+  (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = 16u;
-  var_i0 = i32_load_default32(instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
+  var_i0 = i32_load_default32(wasm_rt_local_memory_base, wasm_rt_local_memory_size, instance->w2c_env_0x5F_linear_memory, (u64)(var_i0));
   FUNC_EPILOGUE;
   return var_i0;
 }
 
 u32 w2c_test_f2(w2c_test* instance, u32 var_p0, u32 var_p1) {
   FUNC_PROLOGUE;
+  uint8_t* const wasm_rt_local_memory_base = (instance->w2c_env_0x5F_linear_memory)->data;
+  uint64_t wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
+  (void)wasm_rt_local_memory_base;
+  (void)wasm_rt_local_memory_size;
   u32 var_i0;
   var_i0 = 1u;
   var_i0 = w2c_test_f0(instance, var_i0);
+  wasm_rt_local_memory_size = (instance->w2c_env_0x5F_linear_memory)->size;
   FUNC_EPILOGUE;
   return var_i0;
 }

@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --enable-memory64 --fold-exprs --stdout
+;;; ARGS: --fold-exprs --stdout
 (memory i64 0)
 (func (drop (i32.load offset=18446744073709551615 (i64.const 0))))
 (;; STDOUT ;;;

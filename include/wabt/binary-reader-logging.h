@@ -303,9 +303,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                           uint8_t flags) override;
   Result BeginDataSegmentInitExpr(Index index) override;
   Result EndDataSegmentInitExpr(Index index) override;
-  Result OnDataSegmentData(Index index,
-                           const void* data,
-                           Address size) override;
+  Result OnDataSegmentData(Index index, ByteSpan data) override;
   Result EndDataSegment(Index index) override;
   Result EndDataSection() override;
 
@@ -362,12 +360,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                         std::string_view name,
                         uint32_t flags) override;
   Result OnDylinkExport(std::string_view name, uint32_t flags) override;
+  Result OnDylinkRuntimePathCount(Index count) override;
+  Result OnDylinkRuntimePath(std::string_view path) override;
+  Result OnDylinkTargetArch(std::string_view arch) override;
   Result EndDylinkSection() override;
 
   Result BeginGenericCustomSection(Offset size) override;
-  Result OnGenericCustomSection(std::string_view name,
-                                const void* data,
-                                Offset size) override;
+  Result OnGenericCustomSection(std::string_view name, ByteSpan data) override;
   Result EndGenericCustomSection() override;
 
   Result BeginTargetFeaturesSection(Offset size) override;
@@ -414,6 +413,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        uint32_t flags,
                        Index count) override;
   Result OnComdatEntry(ComdatType kind, Index index) override;
+  Result OnTargetArch(std::string_view arch) override;
   Result EndLinkingSection() override;
 
   Result BeginTagSection(Offset size) override;
@@ -425,7 +425,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
+  Result OnCodeMetadata(Offset offset, ByteSpan data) override;
   Result EndCodeMetadataSection() override;
 
  private:

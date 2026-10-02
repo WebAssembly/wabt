@@ -145,5 +145,7 @@
       i32.const 32
       i32.const 10
     end
-    i32.add))
+    i32.add)
+  (@custom "linking" "\02\08\05\01\00\06\00\00")
+  (@custom "reloc.Code" "\02\01\06\04A"))
 ;;; STDOUT ;;)

@@ -1,6 +1,5 @@
 ;;; TOOL: wat2wasm
 ;;; ERROR: 1
-;;; ARGS: --enable-exceptions
 (module
   (tag $e)
   (func
@@ -13,7 +12,7 @@
     catch $e
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-delegate-depth.txt:9:9: error: invalid depth: 4 (max 3)
+out/test/typecheck/bad-delegate-depth.txt:8:9: error: invalid depth: 4 (max 3)
         try
         ^^^
 ;;; STDERR ;;)

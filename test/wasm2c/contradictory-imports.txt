@@ -1,0 +1,9 @@
+;;; RUN: %(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm
+;;; RUN: %(wasm2c)s %(temp_file)s.wasm -o %(temp_file)s.c
+;;; ERROR: 1
+(module
+  (import "e" "x" (func))
+  (import "e" "x" (global i32)))
+(;; STDERR ;;;
+error: contradictory import declaration: "e"."x" is imported as both a func and a global
+;;; STDERR ;;)

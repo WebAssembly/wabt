@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/table_get.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 init(externref:2) =>
 out/test/spec/memory64/table_get.wast:38: assert_trap passed: out of bounds table access: table.get at 2 >= max value 2

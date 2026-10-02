@@ -1,4 +1,6 @@
 ;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --disable-memory64
+;;; ARGS2: --disable-memory64
 magic
 version
 section(MEMORY) {

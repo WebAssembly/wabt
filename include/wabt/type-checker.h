@@ -148,6 +148,7 @@ class TypeChecker {
   Result OnRethrow(Index depth);
   Result OnReturn();
   Result OnSelect(const TypeVector& result_types);
+  Result OnSelectCondition();
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdLoadLane(Opcode, const Limits& limits, uint64_t);
   Result OnSimdStoreLane(Opcode, const Limits& limits, uint64_t);
@@ -176,7 +177,7 @@ class TypeChecker {
   void PushLabel(LabelType label_type,
                  const TypeVector& param_types,
                  const TypeVector& result_types);
-  Result PopLabel();
+  void PopLabel();
   Result CheckLabelType(Label* label, LabelType label_type);
   Result Check2LabelTypes(Label* label,
                           LabelType label_type1,

@@ -1,0 +1,37 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+(module
+  (type $t (func))
+
+  ;; Each field below names a reference type, which defers its resolution to
+  ;; the end of the module, and then fails to parse.
+  (func (param (ref $t)) (foo))
+  (func (result (ref null $t)) (foo))
+  (func (local (ref $t)) (foo))
+  (table 0 (ref null $t) (foo))
+  (elem declare (ref null $t) (item ref.null $t) foo)
+  (import "a" "b" (func (param (ref $t)) foo))
+
+  (memory 1)
+)
+(;; STDERR ;;;
+out/test/parse/bad-ref-type-in-failed-field.txt:9:27: error: unexpected token "foo", expected an instr.
+  (func (param (ref $t)) (foo))
+                          ^^^
+out/test/parse/bad-ref-type-in-failed-field.txt:10:33: error: unexpected token "foo", expected an instr.
+  (func (result (ref null $t)) (foo))
+                                ^^^
+out/test/parse/bad-ref-type-in-failed-field.txt:11:27: error: unexpected token "foo", expected an instr.
+  (func (local (ref $t)) (foo))
+                          ^^^
+out/test/parse/bad-ref-type-in-failed-field.txt:12:27: error: unexpected token "foo", expected an instr.
+  (table 0 (ref null $t) (foo))
+                          ^^^
+out/test/parse/bad-ref-type-in-failed-field.txt:13:50: error: unexpected token foo, expected ).
+  (elem declare (ref null $t) (item ref.null $t) foo)
+                                                 ^^^
+out/test/parse/bad-ref-type-in-failed-field.txt:14:42: error: unexpected token foo, expected ).
+  (import "a" "b" (func (param (ref $t)) foo))
+                                         ^^^
+;;; STDERR ;;)

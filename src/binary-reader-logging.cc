@@ -72,7 +72,7 @@ void BinaryReaderLogging::WriteIndent() {
     i -= s_indent_len;
   }
   if (i > 0) {
-    stream_->WriteData(s_indent, indent_);
+    stream_->WriteData(s_indent, i);
   }
 }
 
@@ -464,12 +464,10 @@ Result BinaryReaderLogging::OnElemSegmentElemType(Index index, Type elem_type) {
   return reader_->OnElemSegmentElemType(index, elem_type);
 }
 
-Result BinaryReaderLogging::OnDataSegmentData(Index index,
-                                              const void* data,
-                                              Address size) {
+Result BinaryReaderLogging::OnDataSegmentData(Index index, ByteSpan data) {
   LOGF("OnDataSegmentData(index:%" PRIindex ", size:%" PRIaddress ")\n", index,
-       size);
-  return reader_->OnDataSegmentData(index, data, size);
+       static_cast<Address>(data.size()));
+  return reader_->OnDataSegmentData(index, data);
 }
 
 Result BinaryReaderLogging::OnModuleNameSubsection(Index index,
@@ -571,6 +569,18 @@ Result BinaryReaderLogging::OnDylinkImport(std::string_view module,
        WABT_PRINTF_STRING_VIEW_ARG(module), WABT_PRINTF_STRING_VIEW_ARG(name),
        flags);
   return reader_->OnDylinkImport(module, name, flags);
+}
+
+Result BinaryReaderLogging::OnDylinkRuntimePath(std::string_view path) {
+  LOGF("OnDylinkRuntimePath(path: " PRIstringview ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(path));
+  return reader_->OnDylinkRuntimePath(path);
+}
+
+Result BinaryReaderLogging::OnDylinkTargetArch(std::string_view arch) {
+  LOGF("OnDylinkTargetArch(arch: " PRIstringview ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(arch));
+  return reader_->OnDylinkTargetArch(arch);
 }
 
 Result BinaryReaderLogging::OnRelocCount(Index count, Index section_index) {
@@ -685,6 +695,11 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
   return reader_->OnComdatEntry(kind, index);
 }
 
+Result BinaryReaderLogging::OnTargetArch(std::string_view arch) {
+  LOGF("OnTargetArch(" PRIstringview ")\n", WABT_PRINTF_STRING_VIEW_ARG(arch));
+  return reader_->OnTargetArch(arch);
+}
+
 Result BinaryReaderLogging::BeginCodeMetadataSection(std::string_view name,
                                                      Offset size) {
   LOGF("BeginCodeMetadataSection('" PRIstringview "', size:%" PRIzd ")\n",
@@ -692,22 +707,20 @@ Result BinaryReaderLogging::BeginCodeMetadataSection(std::string_view name,
   Indent();
   return reader_->BeginCodeMetadataSection(name, size);
 }
-Result BinaryReaderLogging::OnCodeMetadata(Offset code_offset,
-                                           const void* data,
-                                           Address size) {
-  std::string_view content(static_cast<const char*>(data), size);
+Result BinaryReaderLogging::OnCodeMetadata(Offset code_offset, ByteSpan data) {
+  std::string_view content(reinterpret_cast<const char*>(data.data()),
+                           data.size());
   LOGF("OnCodeMetadata(offset: %" PRIzd ", data: \"" PRIstringview "\")\n",
        code_offset, WABT_PRINTF_STRING_VIEW_ARG(content));
-  return reader_->OnCodeMetadata(code_offset, data, size);
+  return reader_->OnCodeMetadata(code_offset, data);
 }
 
 Result BinaryReaderLogging::OnGenericCustomSection(std::string_view name,
-                                                   const void* data,
-                                                   Offset size) {
+                                                   ByteSpan data) {
   LOGF("OnGenericCustomSection(name: \"" PRIstringview "\", size: %" PRIzd
        ")\n",
-       WABT_PRINTF_STRING_VIEW_ARG(name), size);
-  return reader_->OnGenericCustomSection(name, data, size);
+       WABT_PRINTF_STRING_VIEW_ARG(name), data.size());
+  return reader_->OnGenericCustomSection(name, data);
 }
 
 #define DEFINE_BEGIN(name)                        \
@@ -947,6 +960,7 @@ DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)
 DEFINE_INDEX(OnDylinkExportCount)
 DEFINE_INDEX(OnDylinkImportCount)
+DEFINE_INDEX(OnDylinkRuntimePathCount)
 DEFINE_END(EndDylinkSection)
 
 DEFINE_BEGIN(BeginTargetFeaturesSection)

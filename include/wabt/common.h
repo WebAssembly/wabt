@@ -18,6 +18,7 @@
 #define WABT_COMMON_H_
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -161,11 +162,8 @@ struct v128 {
 namespace wabt {
 
 template <typename Dst, typename Src>
-Dst WABT_VECTORCALL Bitcast(Src&& value) {
-  static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
-  Dst result;
-  memcpy(&result, &value, sizeof(result));
-  return result;
+Dst WABT_VECTORCALL Bitcast(const Src& value) {
+  return std::bit_cast<Dst>(value);
 }
 
 template <typename T>
@@ -311,6 +309,7 @@ enum class LinkingEntryType {
   InitFunctions = 6,
   ComdatInfo = 7,
   SymbolTable = 8,
+  TargetArch = 9,
 };
 
 enum class DylinkEntryType {
@@ -318,6 +317,8 @@ enum class DylinkEntryType {
   Needed = 2,
   ExportInfo = 3,
   ImportInfo = 4,
+  RuntimePath = 5,
+  TargetArch = 6,
 };
 
 enum class SymbolType {

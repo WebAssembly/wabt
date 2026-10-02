@@ -1,5 +1,4 @@
 ;;; TOOL: wat-desugar
-;;; ARGS: --enable-exceptions
 (module
   (tag $ex (param i32))
   (func (result i32)

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/binary.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic
@@ -111,9 +110,9 @@ out/test/spec/multi-memory/binary.wast:459: assert_malformed passed:
 out/test/spec/multi-memory/binary.wast:470: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/multi-memory/binary.wast:489: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  000000e: error: unable to read uint8_t: tag attribute
 out/test/spec/multi-memory/binary.wast:499: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  000000f: error: unable to read u32 leb128: tag signature index
 out/test/spec/multi-memory/binary.wast:510: assert_malformed passed:
   000000e: error: invalid import external kind: 5
 out/test/spec/multi-memory/binary.wast:520: assert_malformed passed:

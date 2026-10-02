@@ -25,5 +25,6 @@
   (import "m5" "foo_1" (func $m5.foo_1 (type $t1)))
   (import "m5" "foo" (func $m5.foo_2 (type $t2)))
   (func $m5.foo (type $t2) (result i32)
-    i32.const 123))
+    i32.const 123)
+  (@custom "name" "\01\09\01\03\06m5.foo\02\09\04\00\00\01\00\02\00\03\00"))
 ;;; STDOUT ;;)

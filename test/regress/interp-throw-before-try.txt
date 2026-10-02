@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-exceptions
 (module
   (tag $e0)
   (func (export "throws")
@@ -14,6 +13,6 @@
 
 (assert_exception (invoke "throws"))
 (;; STDOUT ;;;
-out/test/regress/interp-throw-before-try.txt:15: assert_exception passed
+out/test/regress/interp-throw-before-try.txt:14: assert_exception passed
 2/2 tests passed.
 ;;; STDOUT ;;)

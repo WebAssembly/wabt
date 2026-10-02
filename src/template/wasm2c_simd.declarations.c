@@ -1,43 +1,74 @@
-#if defined(__GNUC__) && defined(__x86_64__)
+#if WASM_RT_MEMCHECK_BOUNDS_CHECK || \
+    WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION
+#define SIMD_FORCE_READ(var)
+#elif (defined(__GNUC__) || defined(__clang__)) && WASM_RT_MEMCHECK_GUARD_PAGES
+#if defined(__x86_64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"x"(var));
-#elif defined(__GNUC__) && defined(__aarch64__)
+#elif defined(__aarch64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
+#elif defined(__riscv)
+#define SIMD_FORCE_READ(var) __asm__("" ::"vr"(var));
 #elif defined(__s390x__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
 #else
-#define SIMD_FORCE_READ(var)
+#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
 #endif
-// TODO: equivalent constraint for ARM and other architectures
+#else
+#error \
+    "Guard page mode for Wasm not supported on this platform because SIMD_FORCE_READ could not be instantiated." \
+   "Either enable specify -DWASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION=1 during compilation or use -DWASM_RT_MEMCHECK_BOUNDS_CHECK=1 to use bounds check mode"
+#endif
 
-#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                             \
-  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr) { \
-    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)));                  \
-    SIMD_FORCE_READ(result);                                             \
-    return result;                                                       \
-  }                                                                      \
+// The below SIMD operations copy to a local variable first as the
+// MEM_ADDR_MEMOP maybe segment pointers if WASM_RT_USE_SEGUE_FOR_THIS_MODULE is
+// defined and regular pointers otherwse. memcpy into the local works correctly
+// in both cases.
+#define DEFINE_SIMD_LOAD_FUNC(name, func, t)                              \
+  static inline v128 name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr) {                                                         \
+    t simd_mem_value;                                                     \
+    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
+                   sizeof(t));                                            \
+    v128 result = func(&simd_mem_value);                                  \
+    SIMD_FORCE_READ(result);                                              \
+    return result;                                                        \
+  }                                                                       \
   DEF_MEM_CHECKS0(name, _, t, return, v128);
 
-#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                     \
-  static inline v128 name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
-                                      v128 vec) {                      \
-    v128 result = func(MEM_ADDR(mem, addr, sizeof(t)), vec, lane);     \
-    SIMD_FORCE_READ(result);                                           \
-    return result;                                                     \
-  }                                                                    \
+#define DEFINE_SIMD_LOAD_LANE(name, func, t, lane)                        \
+  static inline v128 name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 vec) {                                               \
+    t simd_mem_value;                                                     \
+    wasm_rt_memcpy(&simd_mem_value, MEM_ADDR_MEMOP(mem, addr, sizeof(t)), \
+                   sizeof(t));                                            \
+    v128 result = func(&simd_mem_value, vec, lane);                       \
+    SIMD_FORCE_READ(result);                                              \
+    return result;                                                        \
+  }                                                                       \
   DEF_MEM_CHECKS1(name, _, t, return, v128, v128);
 
-#define DEFINE_SIMD_STORE(name, t)                                     \
-  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
-                                      v128 value) {                    \
-    simde_wasm_v128_store(MEM_ADDR(mem, addr, sizeof(t)), value);      \
-  }                                                                    \
+#define DEFINE_SIMD_STORE(name, t)                                        \
+  static inline void name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 value) {                                             \
+    t simd_mem_value;                                                     \
+    simde_wasm_v128_store(&simd_mem_value, value);                        \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
+                   sizeof(t));                                            \
+  }                                                                       \
   DEF_MEM_CHECKS1(name, _, t, , void, v128);
 
-#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                    \
-  static inline void name##_unchecked(wasm_rt_memory_t* mem, u64 addr, \
-                                      v128 value) {                    \
-    func(MEM_ADDR(mem, addr, sizeof(t)), value, lane);                 \
-  }                                                                    \
+#define DEFINE_SIMD_STORE_LANE(name, func, t, lane)                       \
+  static inline void name##_unchecked(                                    \
+      uint8_t* const wasm_rt_local_memory_base, wasm_rt_memory_t* mem,    \
+      u64 addr, v128 value) {                                             \
+    t simd_mem_value;                                                     \
+    func(&simd_mem_value, value, lane);                                   \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t)), &simd_mem_value, \
+                   sizeof(t));                                            \
+  }                                                                       \
   DEF_MEM_CHECKS1(name, _, t, , void, v128);
 
 // clang-format off

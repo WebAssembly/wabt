@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
+// strtof_l/strtod_l are only declared by glibc and musl when _GNU_SOURCE is
+// set.
+#if !defined(_WIN32) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
+
 #include "wabt/literal.h"
 
+#include <locale.h>
+#include <bit>
 #include <cassert>
 #include <cerrno>
 #include <cinttypes>
@@ -24,10 +32,30 @@
 #include <cstring>
 #include <limits>
 #include <type_traits>
+#include <vector>
+
+#if defined(__APPLE__)
+#include <xlocale.h>
+#endif
 
 namespace wabt {
 
 namespace {
+
+// Always use the C locale for parsing floats since the Wat grammar requires
+// `.` for the radix.
+#if defined(_WIN32)
+#define strtof_l _strtof_l
+#define strtod_l _strtod_l
+static _locale_t c_locale = _create_locale(LC_ALL, "C");
+#else
+#if defined(__OpenBSD__)
+// OpenBSD's libc has no strtof_l/strtod_l
+#define strtof_l(s, endptr, locale) ((void)(locale), strtof(s, endptr))
+#define strtod_l(s, endptr, locale) ((void)(locale), strtod(s, endptr))
+#endif
+static locale_t c_locale = newlocale(LC_ALL_MASK, "C", nullptr);
+#endif
 
 template <typename T>
 struct FloatTraitsBase {};
@@ -40,10 +68,19 @@ struct FloatTraitsBase<float> {
   using Uint = uint32_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 23;
+#ifdef _AIX
+  // AIX defines HUGE_VAL and HUGE_VALF as reinterpret_cast expressions, which
+  // can't be constexpr.
+  static constexpr float kHugeVal = std::numeric_limits<float>::infinity();
+#else
   static constexpr float kHugeVal = HUGE_VALF;
+#endif
+
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
 
-  static float Strto(const char* s, char** endptr) { return strtof(s, endptr); }
+  static float Strto(const char* s, char** endptr) {
+    return strtof_l(s, endptr, c_locale);
+  }
 };
 
 template <>
@@ -51,11 +88,17 @@ struct FloatTraitsBase<double> {
   using Uint = uint64_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 52;
-  static constexpr float kHugeVal = HUGE_VAL;
+#ifdef _AIX
+  // AIX defines HUGE_VAL and HUGE_VALF as reinterpret_cast expressions, which
+  // can't be constexpr.
+  static constexpr double kHugeVal = std::numeric_limits<double>::infinity();
+#else
+  static constexpr double kHugeVal = HUGE_VAL;
+#endif
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
 
   static double Strto(const char* s, char** endptr) {
-    return strtod(s, endptr);
+    return strtod_l(s, endptr, c_locale);
   }
 };
 
@@ -113,21 +156,14 @@ class FloatWriter {
   static void WriteHex(char* out, size_t size, Uint bits);
 };
 
-// Return 1 if the non-NULL-terminated string starting with |start| and ending
-// with |end| starts with the NULL-terminated string |prefix|.
+// Return true if the non-NULL-terminated string starting with |start| and
+// ending with |end| starts with the NULL-terminated string |prefix|.
 template <typename T>
 // static
 bool FloatParser<T>::StringStartsWith(const char* start,
                                       const char* end,
                                       const char* prefix) {
-  while (start < end && *prefix) {
-    if (*start != *prefix) {
-      return false;
-    }
-    start++;
-    prefix++;
-  }
-  return *prefix == 0;
+  return std::string_view(start, end - start).starts_with(prefix);
 }
 
 // static
@@ -159,14 +195,14 @@ Result FloatParser<T>::ParseFloat(const char* s,
   // so remove them first.
   assert(s <= end);
   const size_t kBufferSize = end - s + 1;  // +1 for \0.
-  char* buffer = static_cast<char*>(alloca(kBufferSize));
-  auto buffer_end =
-      std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
-  assert(buffer_end < buffer + kBufferSize);
+  std::vector<char> buffer(kBufferSize);
+  char* buffer_end = std::copy_if(s, end, buffer.data(),
+                                  [](char c) -> bool { return c != '_'; });
+  assert(buffer_end < buffer.data() + kBufferSize);
   *buffer_end = 0;
 
   char* endptr;
-  Float value = Traits::Strto(buffer, &endptr);
+  Float value = Traits::Strto(buffer.data(), &endptr);
   if (endptr != buffer_end ||
       (value == Traits::kHugeVal || value == -Traits::kHugeVal)) {
     return Result::Error;
@@ -281,7 +317,8 @@ Result FloatParser<T>::ParseHex(const char* s,
     } else if (*s == '.') {
       seen_dot = true;
     } else if (Succeeded(ParseHexdigit(*s, &digit))) {
-      if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
+      if (Traits::kBits - std::countl_zero(significand) <=
+          Traits::kSigPlusOneBits) {
         significand = (significand << 4) + digit;
         if (seen_dot) {
           significand_exponent -= 4;
@@ -341,7 +378,7 @@ Result FloatParser<T>::ParseHex(const char* s,
     exponent = -exponent;
   }
 
-  int significand_bits = Traits::kBits - Clz(significand);
+  int significand_bits = Traits::kBits - std::countl_zero(significand);
   // -1 for the implicit 1 bit of the significand.
   exponent += significand_exponent + significand_bits - 1;
 
@@ -506,7 +543,7 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
     if (sig) {
       if (exp == Traits::kMinExp) {
         // Subnormal; shift the significand up, and shift out the implicit 1.
-        Uint leading_zeroes = Clz(sig);
+        Uint leading_zeroes = std::countl_zero(sig);
         if (leading_zeroes < Traits::kSignShift) {
           sig <<= leading_zeroes + 1;
         } else {

@@ -19,12 +19,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 namespace wabt {
 
 using Index = uint32_t;    // An index into one of the many index spaces.
 using Address = uint64_t;  // An address or size in linear memory.
 using Offset = size_t;     // An offset into a host's file or memory buffer.
+using ByteSpan = std::span<const uint8_t>;
 
 constexpr Address kInvalidAddress = ~0;
 constexpr Index kInvalidIndex = ~0;

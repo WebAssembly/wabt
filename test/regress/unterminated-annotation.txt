@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-annotations --enable-code-metadata
+;;; ARGS: --enable-code-metadata
 ;;; ERROR: 1
 (module
    (func (@metadata.code.data "this is a test"

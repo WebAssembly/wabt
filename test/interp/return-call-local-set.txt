@@ -1,5 +1,4 @@
 ;;; TOOL: run-interp
-;;; ARGS*: --enable-tail-call
 (module
   (func (export "f") (result i32)
     (i64.const 1)

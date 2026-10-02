@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-tail-call
 ;;; ERROR: 1
 (module
   (type $v_v (func))
@@ -9,10 +8,10 @@
     return_call_indirect)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-returncallindirect-no-table.txt:9:5: error: table variable out of range: 0 (max 0)
+out/test/typecheck/bad-returncallindirect-no-table.txt:8:5: error: table variable out of range: 0 (max 0)
     return_call_indirect)
     ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-returncallindirect-no-table.txt:9:5: error: type mismatch: return_call_indirect must reference table of funcref type
+out/test/typecheck/bad-returncallindirect-no-table.txt:8:5: error: type mismatch: return_call_indirect must reference table of funcref type
     return_call_indirect)
     ^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

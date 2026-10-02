@@ -29,9 +29,6 @@ out/test/spec/block.wast:464: assert_malformed passed:
   out/test/spec/block/block.7.wat:1:35: error: unexpected token $x, expected ).
   (func (i32.const 0) (block (param $x i32) (drop)))
                                     ^^
-  out/test/spec/block/block.7.wat:1:50: error: unexpected token ), expected EOF.
-  (func (i32.const 0) (block (param $x i32) (drop)))
-                                                   ^
 out/test/spec/block.wast:468: assert_malformed passed:
   out/test/spec/block/block.8.wat:1:25: error: expected 0 results, got 1
   (type $sig (func))(func (block (type $sig) (result i32) (i32.const 0)) (unrea...

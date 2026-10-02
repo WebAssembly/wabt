@@ -1,5 +1,4 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS*: --enable-exceptions
 (module
   (tag $e0)
   (func $throw (throw $e0))

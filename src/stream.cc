@@ -19,10 +19,10 @@
 #include <cassert>
 #include <cctype>
 #include <cerrno>
+#include <climits>
 
 #if COMPILER_IS_MSVC
-#include <cstdint>
-#include <limits>
+#define fseek _fseeki64
 #endif
 
 #define DUMP_OCTETS_PER_LINE 16
@@ -33,39 +33,6 @@
 
 namespace wabt {
 
-#if COMPILER_IS_MSVC
-static Result WriteDataChunked(FILE* file,
-                               const void* data,
-                               size_t size,
-                               const char* name) {
-  static constexpr size_t kWriteChunkSize = 64 * 1024 * 1024;
-  const uint8_t* src = static_cast<const uint8_t*>(data);
-  size_t offset = 0;
-
-  while (offset < size) {
-    size_t remaining = size - offset;
-    size_t chunk_size =
-        remaining < kWriteChunkSize ? remaining : kWriteChunkSize;
-    size_t bytes_written = fwrite(src + offset, 1, chunk_size, file);
-    if (bytes_written != chunk_size) {
-      ERROR("failed to write %" PRIzd " bytes to %s\n", size, name);
-      return Result::Error;
-    }
-    offset += bytes_written;
-  }
-
-  return Result::Ok;
-}
-
-static int SeekFile(FILE* file, size_t offset) {
-  if (offset > static_cast<size_t>(std::numeric_limits<int64_t>::max())) {
-    errno = EINVAL;
-    return -1;
-  }
-  return _fseeki64(file, static_cast<int64_t>(offset), SEEK_SET);
-}
-#endif
-
 Stream::Stream(Stream* log_stream)
     : offset_(0), result_(Result::Ok), log_stream_(log_stream) {}
 
@@ -74,25 +41,21 @@ void Stream::AddOffset(ssize_t delta) {
 }
 
 void Stream::WriteDataAt(size_t at,
-                         const void* src,
-                         size_t size,
+                         ByteSpan data,
                          const char* desc,
                          PrintChars print_chars) {
   if (Failed(result_)) {
     return;
   }
   if (log_stream_) {
-    log_stream_->WriteMemoryDump(src, size, at, print_chars, nullptr, desc);
+    log_stream_->WriteMemoryDump(data, at, print_chars, nullptr, desc);
   }
-  result_ = WriteDataImpl(at, src, size);
+  result_ = WriteDataImpl(at, data);
 }
 
-void Stream::WriteData(const void* src,
-                       size_t size,
-                       const char* desc,
-                       PrintChars print_chars) {
-  WriteDataAt(offset_, src, size, desc, print_chars);
-  offset_ += size;
+void Stream::WriteData(ByteSpan src, const char* desc, PrintChars print_chars) {
+  WriteDataAt(offset_, src, desc, print_chars);
+  offset_ += src.size();
 }
 
 void Stream::MoveData(size_t dst_offset, size_t src_offset, size_t size) {
@@ -126,22 +89,20 @@ void Stream::Writef(const char* format, ...) {
   WriteData(buffer, length);
 }
 
-void Stream::WriteMemoryDump(const void* start,
-                             size_t size,
+void Stream::WriteMemoryDump(ByteSpan data,
                              size_t offset,
                              PrintChars print_chars,
                              const char* prefix,
                              const char* desc) {
-  const uint8_t* p = static_cast<const uint8_t*>(start);
-  const uint8_t* end = p + size;
+  const uint8_t* p = data.data();
+  const uint8_t* end = p + data.size();
   while (p < end) {
     const uint8_t* line = p;
     const uint8_t* line_end = p + DUMP_OCTETS_PER_LINE;
     if (prefix) {
       Writef("%s", prefix);
     }
-    Writef("%07" PRIzx ": ", reinterpret_cast<intptr_t>(p) -
-                                 reinterpret_cast<intptr_t>(start) + offset);
+    Writef("%07" PRIzx ": ", static_cast<size_t>(p - data.data()) + offset);
     while (p < line_end) {
       for (int i = 0; i < DUMP_OCTETS_PER_GROUP; ++i, ++p) {
         if (p < end) {
@@ -183,13 +144,6 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
     return Result::Ok;
   }
 
-#if COMPILER_IS_MSVC
-  if (Failed(WriteDataChunked(file, data.data(), data.size(),
-                              filename_str.c_str()))) {
-    fclose(file);
-    return Result::Error;
-  }
-#else
   ssize_t bytes = fwrite(data.data(), 1, data.size(), file);
   if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", data.size(),
@@ -197,7 +151,6 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
     fclose(file);
     return Result::Error;
   }
-#endif
 
   fclose(file);
   return Result::Ok;
@@ -207,17 +160,11 @@ Result OutputBuffer::WriteToStdout() const {
   if (data.empty()) {
     return Result::Ok;
   }
-#if COMPILER_IS_MSVC
-  if (Failed(WriteDataChunked(stdout, data.data(), data.size(), "stdout"))) {
-    return Result::Error;
-  }
-#else
   ssize_t bytes = fwrite(data.data(), 1, data.size(), stdout);
   if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
     ERROR("failed to write %" PRIzd " bytes to stdout\n", data.size());
     return Result::Error;
   }
-#endif
   return Result::Ok;
 }
 
@@ -239,18 +186,16 @@ void MemoryStream::Clear() {
     buf_.reset(new OutputBuffer());
 }
 
-Result MemoryStream::WriteDataImpl(size_t dst_offset,
-                                   const void* src,
-                                   size_t size) {
-  if (size == 0) {
+Result MemoryStream::WriteDataImpl(size_t dst_offset, ByteSpan data) {
+  if (data.empty()) {
     return Result::Ok;
   }
-  size_t end = dst_offset + size;
+  size_t end = dst_offset + data.size();
   if (end > buf_->data.size()) {
     buf_->data.resize(end);
   }
   uint8_t* dst = &buf_->data[dst_offset];
-  memcpy(dst, src, size);
+  memcpy(dst, data.data(), data.size());
   return Result::Ok;
 }
 
@@ -325,38 +270,33 @@ void FileStream::Flush() {
   }
 }
 
-Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {
+Result FileStream::WriteDataImpl(size_t at, ByteSpan data) {
   if (!file_) {
     return Result::Error;
   }
-  if (size == 0) {
+  if (data.empty()) {
     return Result::Ok;
   }
   if (at != offset_) {
-#if COMPILER_IS_MSVC
-    if (SeekFile(file_, at) != 0) {
+#if !COMPILER_IS_MSVC
+    // fseek takes a long offset on this path; do not truncate a larger size_t.
+    if (at > static_cast<size_t>(LONG_MAX)) {
+      errno = EINVAL;
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", at, errno);
       return Result::Error;
     }
-#else
+#endif
     if (fseek(file_, at, SEEK_SET) != 0) {
-      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
+      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", at, errno);
       return Result::Error;
     }
-#endif
     offset_ = at;
   }
-#if COMPILER_IS_MSVC
-  if (Failed(WriteDataChunked(file_, data, size, "FileStream"))) {
+  if (fwrite(data.data(), data.size(), 1, file_) != 1) {
+    ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", data.size(), errno);
     return Result::Error;
   }
-#else
-  if (fwrite(data, size, 1, file_) != 1) {
-    ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", size, errno);
-    return Result::Error;
-  }
-#endif
-  offset_ += size;
+  offset_ += data.size();
   return Result::Ok;
 }
 

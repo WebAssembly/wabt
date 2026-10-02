@@ -15,11 +15,11 @@
 #
 
 cmake_minimum_required(VERSION 3.16)
-project(WABT LANGUAGES C CXX VERSION 1.0.41)
+project(WABT LANGUAGES C CXX VERSION 1.0.42)
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -302,7 +302,6 @@ set(WABT_LIBRARY_CC
   src/common.cc
   src/config.cc
   src/config.h.in
-  src/decompiler.cc
   src/error-formatter.cc
   src/expr-visitor.cc
   src/feature.cc
@@ -352,10 +351,6 @@ set(WABT_LIBRARY_H
   include/wabt/binding-hash.h
   include/wabt/color.h
   include/wabt/common.h
-  include/wabt/decompiler-ast.h
-  include/wabt/decompiler-ls.h
-  include/wabt/decompiler-naming.h
-  include/wabt/decompiler.h
   include/wabt/error-formatter.h
   include/wabt/expr-visitor.h
   include/wabt/feature.h
@@ -406,7 +401,7 @@ else()
   include_directories("${WABT_SOURCE_DIR}/third_party/picosha2")
 endif()
 
-target_compile_features(wabt PUBLIC cxx_std_17)
+target_compile_features(wabt PUBLIC cxx_std_20)
 target_include_directories(
   wabt
   PUBLIC
@@ -512,6 +507,10 @@ function(wabt_executable)
   target_link_libraries(${EXE_NAME} ${EXE_LIBS})
 
   if (MSVC)
+    # The wast parser is recursive descent, so nesting depth costs stack, and
+    # real modules nest deeply: a switch lowers to a br_table wrapped in one
+    # block per case. msvc's 1MB default is not enough for that, so ask for
+    # the 8MB Linux and macOS give us.
     target_link_options(${EXE_NAME} PRIVATE "/STACK:8388608")
   endif ()
 
@@ -638,13 +637,6 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
-  # wasm-decompile
-  wabt_executable(
-    NAME wasm-decompile
-    SOURCES src/tools/wasm-decompile.cc
-    INSTALL
-  )
-
   if(BUILD_FUZZ_TOOLS)
     # wasm2wat-fuzz
     wabt_executable(
@@ -676,8 +668,8 @@ if (BUILD_TESTS)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
 
-  # Python 3.5 is the version shipped in Ubuntu Xenial
-  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
+  # Python 3.8 is the version shipped in Ubuntu Focal
+  find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
 
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
@@ -701,6 +693,13 @@ if (BUILD_TESTS)
     if (COMPILER_IS_GNU)
       target_compile_options(gtest PRIVATE "-Wno-maybe-uninitialized")
     endif ()
+    if (EMSCRIPTEN OR APPLE)
+      # Only need for libc++-based platforms. Remove this once a new version
+      # of gtest is released:
+      # See https://github.com/google/googletest/issues/5004
+      target_compile_options(gtest PUBLIC "-Wno-conversion")
+      target_compile_options(gtest_main PRIVATE "-Wno-conversion")
+    endif ()
   endif ()
 
   # hexfloat-test
@@ -717,10 +716,12 @@ if (BUILD_TESTS)
   # wabt-unittests
   set(UNITTESTS_SRCS
     src/test-binary-reader.cc
+    src/test-c-writer.cc
     src/test-interp.cc
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
+    src/test-stream.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc
@@ -735,7 +736,7 @@ if (BUILD_TESTS)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
   add_custom_target(run-tests
-    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} ${WABT_RUN_TESTS_ARGS} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL
@@ -762,7 +763,7 @@ if (BUILD_TESTS)
     if (COMPILER_IS_MSVC)
       set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-wd4311")
     else ()
-      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-pointer-to-int-cast")
+      set_target_properties(${EXENAME} PROPERTIES COMPILE_FLAGS "-std=gnu11 -Wno-gnu-folding-constant -Wno-pointer-to-int-cast")
     endif ()
 
     target_link_libraries(${EXENAME} wasm Threads::Threads)

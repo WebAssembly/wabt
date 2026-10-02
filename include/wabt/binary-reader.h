@@ -74,11 +74,9 @@ enum class TableInitExprStatus {
 class BinaryReaderDelegate {
  public:
   struct State {
-    State(const uint8_t* data, Offset size)
-        : data(data), size(size), offset(0) {}
+    explicit State(ByteSpan data) : data(data), offset(0) {}
 
-    const uint8_t* data;
-    Offset size;
+    ByteSpan data;
     Offset offset;
   };
 
@@ -382,9 +380,7 @@ class BinaryReaderDelegate {
                                   uint8_t flags) = 0;
   virtual Result BeginDataSegmentInitExpr(Index index) = 0;
   virtual Result EndDataSegmentInitExpr(Index index) = 0;
-  virtual Result OnDataSegmentData(Index index,
-                                   const void* data,
-                                   Address size) = 0;
+  virtual Result OnDataSegmentData(Index index, ByteSpan data) = 0;
   virtual Result EndDataSegment(Index index) = 0;
   virtual Result EndDataSection() = 0;
 
@@ -446,6 +442,9 @@ class BinaryReaderDelegate {
   virtual Result OnDylinkExport(std::string_view name, uint32_t flags) = 0;
   virtual Result OnDylinkNeededCount(Index count) = 0;
   virtual Result OnDylinkNeeded(std::string_view so_name) = 0;
+  virtual Result OnDylinkRuntimePathCount(Index count) = 0;
+  virtual Result OnDylinkRuntimePath(std::string_view path) = 0;
+  virtual Result OnDylinkTargetArch(std::string_view arch) = 0;
   virtual Result EndDylinkSection() = 0;
 
   /* target_features section */
@@ -457,8 +456,7 @@ class BinaryReaderDelegate {
   /* Generic custom section */
   virtual Result BeginGenericCustomSection(Offset size) = 0;
   virtual Result OnGenericCustomSection(std::string_view name,
-                                        const void* data,
-                                        Offset size) = 0;
+                                        ByteSpan data) = 0;
   virtual Result EndGenericCustomSection() = 0;
 
   /* Linking section */
@@ -501,6 +499,7 @@ class BinaryReaderDelegate {
                                uint32_t flags,
                                Index count) = 0;
   virtual Result OnComdatEntry(ComdatType kind, Index index) = 0;
+  virtual Result OnTargetArch(std::string_view arch) = 0;
   virtual Result EndLinkingSection() = 0;
 
   /* Tag section */
@@ -514,16 +513,13 @@ class BinaryReaderDelegate {
                                           Offset size) = 0;
   virtual Result OnCodeMetadataFuncCount(Index count) = 0;
   virtual Result OnCodeMetadataCount(Index function_index, Index count) = 0;
-  virtual Result OnCodeMetadata(Offset offset,
-                                const void* data,
-                                Address size) = 0;
+  virtual Result OnCodeMetadata(Offset offset, ByteSpan data) = 0;
   virtual Result EndCodeMetadataSection() = 0;
 
   const State* state = nullptr;
 };
 
-Result ReadBinary(const void* data,
-                  size_t size,
+Result ReadBinary(ByteSpan data,
                   BinaryReaderDelegate* reader,
                   const ReadBinaryOptions& options);
 

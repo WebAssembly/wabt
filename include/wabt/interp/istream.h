@@ -88,6 +88,15 @@ struct Instr {
       u32 fst, snd;
       u8 idx;
     } imm_u32x2_u8;
+    struct {
+      u32 memidx;
+      u64 offset;
+    } imm_index_offset;
+    struct {
+      u32 memidx;
+      u8 lane;
+      u64 offset;
+    } imm_index_offset_lane;
   };
 };
 
@@ -115,6 +124,8 @@ class Istream {
   void Emit(Opcode::Enum, v128);
   void Emit(Opcode::Enum, u32, u32);
   void Emit(Opcode::Enum, u32, u32, u8);
+  void Emit(Opcode::Enum, u32, u64);
+  void Emit(Opcode::Enum, u32, u64, u8);
   void EmitDropKeep(u32 drop, u32 keep);
   void EmitCatchDrop(u32 drop);
 

@@ -827,26 +827,26 @@ class Table : public Extern {
 
   Result Match(Store&, const ImportType&, Trap::Ptr* out_trap) override;
 
-  bool IsValidRange(u32 offset, u32 size) const;
+  bool IsValidRange(u64 offset, u64 size) const;
 
-  Result Get(u32 offset, Ref* out) const;
-  Result Set(Store&, u32 offset, Ref);
-  Result Grow(Store&, u32 count, Ref);
-  Result Fill(Store&, u32 offset, Ref, u32 size);
+  Result Get(u64 offset, Ref* out) const;
+  Result Set(Store&, u64 offset, Ref);
+  Result Grow(Store&, u64 count, Ref);
+  Result Fill(Store&, u64 offset, Ref, u64 size);
   Result Init(Store&,
-              u32 dst_offset,
+              u64 dst_offset,
               const ElemSegment&,
               u32 src_offset,
               u32 size);
   static Result Copy(Store&,
                      Table& dst,
-                     u32 dst_offset,
+                     u64 dst_offset,
                      const Table& src,
-                     u32 src_offset,
-                     u32 size);
+                     u64 src_offset,
+                     u64 size);
 
   // Unsafe API.
-  Ref UnsafeGet(u32 offset) const;
+  Ref UnsafeGet(u64 offset) const;
 
   const ExternType& extern_type() override;
   const TableType& type() const;

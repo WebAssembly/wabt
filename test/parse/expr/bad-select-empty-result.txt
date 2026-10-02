@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (func
+    i32.const 42
+    i32.const 100
+    i32.const 1
+    select (result)
+    drop
+    drop))
+(;; STDERR ;;;
+out/test/parse/expr/bad-select-empty-result.txt:8:5: error: invalid arity in select instruction: 0.
+    select (result)
+    ^^^^^^
+;;; STDERR ;;)

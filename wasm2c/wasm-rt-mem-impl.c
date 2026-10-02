@@ -140,6 +140,16 @@ static uint64_t get_alloc_size_for_mmap_default32(uint64_t max_pages) {
 
 #endif /* WASM_RT_USE_MMAP */
 
+static bool u64_mult_overflow(uint64_t a, uint64_t b, uint64_t* result) {
+  uint64_t x = a * b;
+  *result = x;
+  if (a != 0 && x / a != b) {
+    // overflow
+    return true;
+  }
+  return false;
+}
+
 // Include operations for memory
 #define WASM_RT_MEM_OPS
 #include "wasm-rt-mem-impl-helper.inc"

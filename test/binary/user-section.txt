@@ -31,5 +31,8 @@ EndModule
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 (module
-  (type (;0;) (func (result i32))))
+  (type (;0;) (func (result i32)))
+  (@custom "foo" "\04")
+  (@custom "bar" "\05")
+  (@custom "foo" "\06"))
 ;;; STDOUT ;;)

@@ -1,0 +1,32 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-function-references
+;;; ERROR: 1
+;; The block registers its result type for later resolution, then fails to
+;; parse and is discarded. Resolution used to run over the freed block.
+(func $n(param $r(ref $t))(result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+(;; STDERR ;;;
+out/test/parse/bad-block-ref-result-discarded.txt:6:76: error: unexpected token (, expected ).
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                   ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:77: error: unexpected token n.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                    ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:79: error: unexpected token l.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                      ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:81: error: unexpected token g.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                        ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:83: error: unexpected token t.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                          ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:85: error: unexpected token f.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                            ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:87: error: unexpected token n.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                              ^
+out/test/parse/bad-block-ref-result-discarded.txt:6:89: error: unexpected token l.
+...result i32)(call_ref $t(block $l(result(ref $t))(n(l g(t f)n l(local.get $r))
+                                                                ^
+;;; STDERR ;;)

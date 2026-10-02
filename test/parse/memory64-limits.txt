@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (memory 0x1_0000_0000)
+  (table 0x1_0000_0000 funcref))
+(;; STDERR ;;;
+out/test/parse/memory64-limits.txt:5:4: error: initial elems (4294967296) must be <= (4294967295)
+  (table 0x1_0000_0000 funcref))
+   ^^^^^
+out/test/parse/memory64-limits.txt:4:4: error: initial pages (4294967296) must be <= (65536)
+  (memory 0x1_0000_0000)
+   ^^^^^^
+;;; STDERR ;;)

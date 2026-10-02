@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+;;; ARGS: --stdout --fold-exprs --debug-names
 (module
   (func (result i32)
     try_table (result i32)
@@ -31,5 +31,6 @@
           (nop)
           (br 2 (;@0;)
             (i32.const 7)))))
-    (i32.const 8)))
+    (i32.const 8))
+  (@custom "name" "\02\03\01\00\00"))
 ;;; STDOUT ;;)

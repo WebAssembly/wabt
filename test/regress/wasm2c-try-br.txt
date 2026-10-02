@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; ARGS: --debug-names --enable-exceptions
+;;; ARGS: --debug-names
 (module
   (func (export "break-try")
     (try (do (br 0)) (delegate 0))

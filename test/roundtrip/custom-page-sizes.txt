@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS*: --stdout --enable-custom-page-sizes --enable-multi-memory --enable-memory64 --debug-names
+;;; ARGS*: --stdout --enable-custom-page-sizes --debug-names
 (module
   (import "n" "mem2" (memory 23 (pagesize 1)))
   (import "o" "mem3" (memory 24 25 (pagesize 1)))
@@ -87,5 +87,6 @@
   (data (;7;) (memory $i) (i64.const 0) "")
   (data (;8;) (memory $j) (i64.const 0) "xyz")
   (data (;9;) (memory 29) (i64.const 0) "")
-  (data (;10;) (memory 30) (i64.const 0) "xyz"))
+  (data (;10;) (memory 30) (i64.const 0) "xyz")
+  (@custom "name" "\02\01\00\06\1f\0a\04\01g\05\01h\0a\01c\14\01a\15\01b\16\01d\17\01e\18\01k\19\01i\1a\01j"))
 ;;; STDOUT ;;)

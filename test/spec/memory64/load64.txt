@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/load64.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 out/test/spec/memory64/load64.wast:214: assert_malformed passed:
   out/test/spec/memory64/load64/load64.1.wat:1:47: error: unexpected token "i32.load32", expected an instr.

@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/extended-const/global.wast
-;;; ARGS*: --enable-extended-const
 (;; STDOUT ;;;
 out/test/spec/extended-const/global.wast:263: assert_trap passed: undefined table index
 out/test/spec/extended-const/global.wast:285: assert_invalid passed:

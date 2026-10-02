@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --debug-names --generate-names --enable-tail-call
+;;; ARGS: --stdout --debug-names --generate-names
 (module
   (table 1 funcref)
   (func return_call 0)
@@ -13,5 +13,6 @@
   (func $f1 (type $t0)
     i32.const 0
     return_call_indirect (type $t0))
-  (table $T0 1 funcref))
+  (table $T0 1 funcref)
+  (@custom "name" "\02\05\02\00\00\01\00"))
 ;;; STDOUT ;;)

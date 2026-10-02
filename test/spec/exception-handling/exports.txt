@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/exports.wast
-;;; ARGS*: --enable-exceptions
 (;; STDOUT ;;;
 out/test/spec/exception-handling/exports.wast:39: assert_invalid passed:
   out/test/spec/exception-handling/exports/exports.15.wasm:000000f: error: function variable out of range: 0 (max 0)

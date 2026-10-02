@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --enable-annotations --stdout
+;;; ARGS: --stdout
 (module
   (@custom "stuff" (before import) "hello")
   (import "a" "b" (func (result i32)))

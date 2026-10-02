@@ -1,0 +1,17 @@
+;;; TOOL: run-interp
+;;; ARGS1: --run-export=f32_add --argument=f32:1.5 --argument=f32:2.25 --run-export=f64_add --argument=f64:1.5 --argument=f64:2.25
+(module
+  (func (export "f32_add") (param f32 f32) (result f32)
+    local.get 0
+    local.get 1
+    f32.add)
+
+  (func (export "f64_add") (param f64 f64) (result f64)
+    local.get 0
+    local.get 1
+    f64.add)
+)
+(;; STDOUT ;;;
+f32_add(f32:1.500000, f32:2.250000) => f32:3.750000
+f64_add(f64:1.500000, f64:2.250000) => f64:3.750000
+;;; STDOUT ;;)

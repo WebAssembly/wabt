@@ -24,19 +24,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   objdump_options.log_stream = nullptr;
 
   objdump_options.mode = wabt::ObjdumpMode::Prepass;
-  wabt::ReadBinaryObjdump(data, size, &objdump_options, &state);
+  wabt::ReadBinaryObjdump({data, size}, &objdump_options, &state);
 
   objdump_options.mode = wabt::ObjdumpMode::Headers;
-  wabt::ReadBinaryObjdump(data, size, &objdump_options, &state);
+  wabt::ReadBinaryObjdump({data, size}, &objdump_options, &state);
 
   objdump_options.mode = wabt::ObjdumpMode::Details;
-  wabt::ReadBinaryObjdump(data, size, &objdump_options, &state);
+  wabt::ReadBinaryObjdump({data, size}, &objdump_options, &state);
 
   objdump_options.mode = wabt::ObjdumpMode::Disassemble;
-  wabt::ReadBinaryObjdump(data, size, &objdump_options, &state);
+  wabt::ReadBinaryObjdump({data, size}, &objdump_options, &state);
 
   objdump_options.mode = wabt::ObjdumpMode::RawData;
-  wabt::ReadBinaryObjdump(data, size, &objdump_options, &state);
+  wabt::ReadBinaryObjdump({data, size}, &objdump_options, &state);
 
   return 0;
 }

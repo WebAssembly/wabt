@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cinttypes>
+#include <limits>
 
 #include "wabt/interp/interp-math.h"
 
@@ -579,7 +580,9 @@ Table::Table(Store& store, TableType type, Ref init_ref)
     : Extern(skind), type_(type) {
   elements_.resize(type.limits.initial);
   if (init_ref != Ref::Null) {
-    Fill(store, 0, init_ref, type.limits.initial);
+    Result result = Fill(store, 0, init_ref, type.limits.initial);
+    WABT_USE(result);
+    assert(Succeeded(result));
   }
 }
 
@@ -593,12 +596,12 @@ Result Table::Match(Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
-bool Table::IsValidRange(u32 offset, u32 size) const {
+bool Table::IsValidRange(u64 offset, u64 size) const {
   size_t elem_size = elements_.size();
   return size <= elem_size && offset <= elem_size - size;
 }
 
-Result Table::Get(u32 offset, Ref* out) const {
+Result Table::Get(u64 offset, Ref* out) const {
   if (IsValidRange(offset, 1)) {
     *out = elements_[offset];
     return Result::Ok;
@@ -606,12 +609,12 @@ Result Table::Get(u32 offset, Ref* out) const {
   return Result::Error;
 }
 
-Ref Table::UnsafeGet(u32 offset) const {
+Ref Table::UnsafeGet(u64 offset) const {
   assert(IsValidRange(offset, 1));
   return elements_[offset];
 }
 
-Result Table::Set(Store& store, u32 offset, Ref ref) {
+Result Table::Set(Store& store, u64 offset, Ref ref) {
   assert(store.HasValueType(ref, type_.element));
   if (IsValidRange(offset, 1)) {
     elements_[offset] = ref;
@@ -620,22 +623,28 @@ Result Table::Set(Store& store, u32 offset, Ref ref) {
   return Result::Error;
 }
 
-Result Table::Grow(Store& store, u32 count, Ref ref) {
+Result Table::Grow(Store& store, u64 count, Ref ref) {
   size_t old_size = elements_.size();
   u32 new_size;
   assert(store.HasValueType(ref, type_.element));
-  if (CanGrow<u32>(type_.limits, old_size, count, &new_size)) {
+  // Table sizes are bounded to 2^32-1 elements, so a delta that does not fit in
+  // a u32 can never succeed; checking here keeps the u64 count from being
+  // truncated by the u32 CanGrow below.
+  if (count > std::numeric_limits<u32>::max()) {
+    return Result::Error;
+  }
+  if (CanGrow<u32>(type_.limits, old_size, static_cast<u32>(count),
+                   &new_size)) {
     // Grow the limits of the table too, so that if it is used as an
     // import to another module its new size is honored.
     type_.limits.initial += count;
     elements_.resize(new_size);
-    Fill(store, old_size, ref, new_size - old_size);
-    return Result::Ok;
+    return Fill(store, old_size, ref, new_size - old_size);
   }
   return Result::Error;
 }
 
-Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
+Result Table::Fill(Store& store, u64 offset, Ref ref, u64 size) {
   assert(store.HasValueType(ref, type_.element));
   if (IsValidRange(offset, size)) {
     std::fill(elements_.begin() + offset, elements_.begin() + offset + size,
@@ -646,7 +655,7 @@ Result Table::Fill(Store& store, u32 offset, Ref ref, u32 size) {
 }
 
 Result Table::Init(Store& store,
-                   u32 dst_offset,
+                   u64 dst_offset,
                    const ElemSegment& src,
                    u32 src_offset,
                    u32 size) {
@@ -663,10 +672,10 @@ Result Table::Init(Store& store,
 // static
 Result Table::Copy(Store& store,
                    Table& dst,
-                   u32 dst_offset,
+                   u64 dst_offset,
                    const Table& src,
-                   u32 src_offset,
-                   u32 size) {
+                   u64 src_offset,
+                   u64 size) {
   if (dst.IsValidRange(dst_offset, size) &&
       src.IsValidRange(src_offset, size) &&
       TypesMatch(dst.type_.element, src.type_.element)) {
@@ -2213,12 +2222,12 @@ RunResult Thread::DoCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
 
 template <typename T>
 RunResult Thread::Load(Instr instr, T* out, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Load(offset, instr.imm_u32x2.snd, out)),
+  TRAP_IF(Failed(memory->Load(offset, instr.imm_index_offset.offset, out)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2.snd, sizeof(T),
+                       offset + instr.imm_index_offset.offset, sizeof(T),
                        memory->ByteSize()));
   return RunResult::Ok;
 }
@@ -2235,13 +2244,13 @@ RunResult Thread::DoLoad(Instr instr, Trap::Ptr* out_trap) {
 
 template <typename T, typename V>
 RunResult Thread::DoStore(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V val = static_cast<V>(Pop<T>());
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2.snd, val)),
+  TRAP_IF(Failed(memory->Store(offset, instr.imm_index_offset.offset, val)),
           StringPrintf("out of bounds memory access: access at %" PRIu64
                        "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2.snd, sizeof(V),
+                       offset + instr.imm_index_offset.offset, sizeof(V),
                        memory->ByteSize()));
   return RunResult::Ok;
 }
@@ -2317,7 +2326,11 @@ RunResult Thread::DoDataDrop(Instr instr) {
 RunResult Thread::DoMemoryCopy(Instr instr, Trap::Ptr* out_trap) {
   Memory::Ptr mem_dst{store_, inst_->memories()[instr.imm_u32x2.fst]};
   Memory::Ptr mem_src{store_, inst_->memories()[instr.imm_u32x2.snd]};
-  u64 size = PopPtr(mem_src);
+  // The size operand's type is the minimum of the two memory index types, so it
+  // is only 64-bit when both memories are (see TypeChecker::OnMemoryCopy).
+  bool size_is_64 =
+      mem_dst->type().limits.is_64 && mem_src->type().limits.is_64;
+  u64 size = size_is_64 ? Pop<u64>() : Pop<u32>();
   u64 src = PopPtr(mem_src);
   u64 dst = PopPtr(mem_dst);
   // TODO: change to "out of bounds"
@@ -2355,7 +2368,11 @@ RunResult Thread::DoElemDrop(Instr instr) {
 RunResult Thread::DoTableCopy(Instr instr, Trap::Ptr* out_trap) {
   Table::Ptr table_dst{store_, inst_->tables()[instr.imm_u32x2.fst]};
   Table::Ptr table_src{store_, inst_->tables()[instr.imm_u32x2.snd]};
-  u64 size = PopPtr(table_src);
+  // The size operand's type is the minimum of the two table index types, so it
+  // is only 64-bit when both tables are (see TypeChecker::OnTableCopy).
+  bool size_is_64 =
+      table_dst->type().limits.is_64 && table_src->type().limits.is_64;
+  u64 size = size_is_64 ? Pop<u64>() : Pop<u32>();
   u64 src = PopPtr(table_src);
   u64 dst = PopPtr(table_dst);
   TRAP_IF(Failed(Table::Copy(store_, *table_dst, dst, *table_src, src, size)),
@@ -2564,7 +2581,7 @@ RunResult Thread::DoSimdLoadLane(Instr instr, Trap::Ptr* out_trap) {
   if (Load<T>(instr, &val, out_trap) != RunResult::Ok) {
     return RunResult::Trap;
   }
-  result[instr.imm_u32x2_u8.idx] = val;
+  result[instr.imm_index_offset_lane.lane] = val;
   Push(result);
   return RunResult::Ok;
 }
@@ -2572,15 +2589,17 @@ RunResult Thread::DoSimdLoadLane(Instr instr, Trap::Ptr* out_trap) {
 template <typename S>
 RunResult Thread::DoSimdStoreLane(Instr instr, Trap::Ptr* out_trap) {
   using T = typename S::LaneType;
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2_u8.fst]};
+  Memory::Ptr memory{store_,
+                     inst_->memories()[instr.imm_index_offset_lane.memidx]};
   auto result = Pop<S>();
-  T val = result[instr.imm_u32x2_u8.idx];
+  T val = result[instr.imm_index_offset_lane.lane];
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->Store(offset, instr.imm_u32x2_u8.snd, val)),
-          StringPrintf("out of bounds memory access: access at %" PRIu64
-                       "+%" PRIzd " >= max value %" PRIu64,
-                       offset + instr.imm_u32x2_u8.snd, sizeof(T),
-                       memory->ByteSize()));
+  TRAP_IF(
+      Failed(memory->Store(offset, instr.imm_index_offset_lane.offset, val)),
+      StringPrintf("out of bounds memory access: access at %" PRIu64 "+%" PRIzd
+                   " >= max value %" PRIu64,
+                   offset + instr.imm_index_offset_lane.offset, sizeof(T),
+                   memory->ByteSize()));
   return RunResult::Ok;
 }
 
@@ -2757,24 +2776,26 @@ RunResult Thread::DoSimdRelaxedNmadd() {
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicLoad(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   u64 offset = PopPtr(memory);
   V val;
-  TRAP_IF(Failed(memory->AtomicLoad(offset, instr.imm_u32x2.snd, &val)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(
+      Failed(memory->AtomicLoad(offset, instr.imm_index_offset.offset, &val)),
+      StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64, offset,
+                   instr.imm_index_offset.offset));
   Push(static_cast<T>(val));
   return RunResult::Ok;
 }
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicStore(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V val = static_cast<V>(Pop<T>());
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->AtomicStore(offset, instr.imm_u32x2.snd, val)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(
+      Failed(memory->AtomicStore(offset, instr.imm_index_offset.offset, val)),
+      StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64, offset,
+                   instr.imm_index_offset.offset));
   return RunResult::Ok;
 }
 
@@ -2782,28 +2803,29 @@ template <typename R, typename T>
 RunResult Thread::DoAtomicRmw(BinopFunc<T, T> f,
                               Instr instr,
                               Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   T val = static_cast<T>(Pop<R>());
   u64 offset = PopPtr(memory);
   T old;
-  TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_u32x2.snd, val, f, &old)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(Failed(memory->AtomicRmw(offset, instr.imm_index_offset.offset, val,
+                                   f, &old)),
+          StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64,
+                       offset, instr.imm_index_offset.offset));
   Push(static_cast<R>(old));
   return RunResult::Ok;
 }
 
 template <typename T, typename V>
 RunResult Thread::DoAtomicRmwCmpxchg(Instr instr, Trap::Ptr* out_trap) {
-  Memory::Ptr memory{store_, inst_->memories()[instr.imm_u32x2.fst]};
+  Memory::Ptr memory{store_, inst_->memories()[instr.imm_index_offset.memidx]};
   V replace = static_cast<V>(Pop<T>());
   V expect = static_cast<V>(Pop<T>());
   V old;
   u64 offset = PopPtr(memory);
-  TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_u32x2.snd, expect,
-                                          replace, &old)),
-          StringPrintf("invalid atomic access at %" PRIaddress "+%u", offset,
-                       instr.imm_u32x2.snd));
+  TRAP_IF(Failed(memory->AtomicRmwCmpxchg(offset, instr.imm_index_offset.offset,
+                                          expect, replace, &old)),
+          StringPrintf("invalid atomic access at %" PRIaddress "+%" PRIu64,
+                       offset, instr.imm_index_offset.offset));
   Push(static_cast<T>(old));
   return RunResult::Ok;
 }
@@ -2929,10 +2951,12 @@ std::string Thread::TraceSource::Pick(Index index, Instr instr) {
   auto type = index > num_operands
                   ? Type(ValueType::Void)
                   : instr.op.GetParamType(num_operands - index + 1);
-  if (type == ValueType::Void) {
+  if (type == ValueType::Void || type == ValueType::Any) {
     // Void should never be displayed normally; we only expect to see it when
     // the stack may have different a different type. This is likely to occur
-    // with an index; try to see which type we should expect.
+    // with an index; try to see which type we should expect. Any marks an
+    // operand that exists but whose type isn't statically known, e.g.
+    // table.set's value, whose type comes from the table.
     switch (instr.op) {
       case Opcode::GlobalSet: type = GetGlobalType(instr.imm_u32); break;
       case Opcode::LocalSet:
@@ -3002,11 +3026,15 @@ ValueType Thread::TraceSource::GetLocalType(Index stack_slot) {
 }
 
 ValueType Thread::TraceSource::GetGlobalType(Index index) {
-  return thread_->mod_->desc().globals[index].type.type;
+  // The immediate counts imported globals, so resolve it against the
+  // instance's globals rather than the module's defined-only descriptions.
+  Global::Ptr global{thread_->store_, thread_->inst_->globals()[index]};
+  return global->type().type;
 }
 
 ValueType Thread::TraceSource::GetTableElementType(Index index) {
-  return thread_->mod_->desc().tables[index].type.element;
+  Table::Ptr table{thread_->store_, thread_->inst_->tables()[index]};
+  return table->type().element;
 }
 
 }  // namespace interp

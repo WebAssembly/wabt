@@ -56,5 +56,6 @@
                 (local.get $i)
                 (i64.const 1)))))
         (br $L1)))
-    (local.get $res)))
+    (local.get $res))
+  (@custom "name" "\01\10\01\00\0dfac-stack-raw\02\0e\01\00\03\00\01n\01\01i\02\03res"))
 ;;; STDOUT ;;)

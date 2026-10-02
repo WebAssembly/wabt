@@ -13,6 +13,7 @@ docs/demo/primer.css binary
 docs/demo/libwabt.js binary
 docs/demo/third_party/codemirror/codemirror.css binary
 docs/demo/third_party/codemirror/codemirror.js binary
+docs/demo/third_party.bundle.js.map binary
 
 # Mark these tests as binary so git doesn't change the line endings:
 test/parse/bad-crlf.txt binary

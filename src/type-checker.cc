@@ -156,9 +156,8 @@ void TypeChecker::PushLabel(LabelType label_type,
                             type_stack_.size());
 }
 
-Result TypeChecker::PopLabel() {
+void TypeChecker::PopLabel() {
   label_stack_.pop_back();
-  return Result::Ok;
 }
 
 Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
@@ -773,7 +772,12 @@ Result TypeChecker::OnDelegate(Index depth) {
   Result result = Result::Ok;
   Label* label;
   // Delegate starts counting after the current try, as the delegate
-  // instruction is not actually in the try block.
+  // instruction is not actually in the try block. depth + 1 wraps to 0 when
+  // depth is kInvalidIndex, which would slip past the bounds check in GetLabel.
+  if (depth == kInvalidIndex) {
+    PrintError("invalid depth: %" PRIindex, depth);
+    return Result::Error;
+  }
   CHECK_RESULT(GetLabel(depth + 1, &label));
 
   Label* try_label;
@@ -1060,6 +1064,10 @@ Result TypeChecker::OnSelect(const TypeVector& expected) {
   result |= DropTypes(3);
   PushType(result_type);
   return result;
+}
+
+Result TypeChecker::OnSelectCondition() {
+  return PopAndCheck1Type(Type::I32, "select");
 }
 
 Result TypeChecker::OnStore(Opcode opcode, const Limits& limits) {

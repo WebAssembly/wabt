@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-annotations
 (module
   (func $abc)
   (func $"hi\6a")

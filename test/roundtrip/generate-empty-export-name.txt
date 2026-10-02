@@ -1,0 +1,22 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --generate-names
+
+(module
+  ;; With no name section the generated names come from the exports. An empty
+  ;; export name cannot be used as an identifier, since it would produce a bare
+  ;; "$", so it has to be skipped: this func has no other export to take a name
+  ;; from and falls back to an index-based name.
+  (func $f)
+  (export "" (func $f))
+
+  (func $g)
+  (export "named" (func $g))
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0))
+  (func $named (type $t0))
+  (export "" (func $f0))
+  (export "named" (func $named)))
+;;; STDOUT ;;)

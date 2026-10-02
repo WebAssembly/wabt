@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-memory/memory_trap0.wast
-;;; ARGS*: --enable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/multi-memory/memory_trap0.wast:25: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
 out/test/spec/multi-memory/memory_trap0.wast:26: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536

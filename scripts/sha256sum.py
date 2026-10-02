@@ -30,7 +30,7 @@ def main(args):
     m = hashlib.sha256()
     with open(options.file, 'rb') as f:
         m.update(f.read())
-    print('%s  %s' % (m.hexdigest(), options.file))
+    print(f'{m.hexdigest()}  {options.file}')
     return 0
 
 

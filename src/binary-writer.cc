@@ -78,8 +78,8 @@ uint32_t ComputeLimitsFlags(const Limits* limits) {
   return flags;
 }
 
-void WriteLimitsData(Stream* stream, const Limits* limits) {
-  if (limits->is_64) {
+void WriteLimitsData(Stream* stream, const Limits* limits, bool is_64) {
+  if (is_64) {
     WriteU64Leb128(stream, limits->initial, "limits: initial");
     if (limits->has_max) {
       WriteU64Leb128(stream, limits->max, "limits: max");
@@ -239,7 +239,7 @@ class SymbolTable {
   std::set<std::string_view> seen_names_;
 
   Result EnsureUnique(const std::string_view& name) {
-    if (seen_names_.count(name)) {
+    if (seen_names_.contains(name)) {
       fprintf(stderr,
               "error: duplicate symbol when writing relocatable "
               "binary: %s\n",
@@ -330,7 +330,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->funcs.size(); ++i) {
       const Func* func = module->funcs[i];
       bool imported = i < module->num_func_imports;
-      bool exported = exported_funcs.count(i);
+      bool exported = exported_funcs.contains(i);
       CHECK_RESULT(AddSymbol(&functions_, func->name, imported, exported,
                              Symbol::Function{Index(i)}));
     }
@@ -338,7 +338,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->tables.size(); ++i) {
       const Table* table = module->tables[i];
       bool imported = i < module->num_table_imports;
-      bool exported = exported_tables.count(i);
+      bool exported = exported_tables.contains(i);
       CHECK_RESULT(AddSymbol(&tables_, table->name, imported, exported,
                              Symbol::Table{Index(i)}));
     }
@@ -346,7 +346,7 @@ class SymbolTable {
     for (size_t i = 0; i < module->globals.size(); ++i) {
       const Global* global = module->globals[i];
       bool imported = i < module->num_global_imports;
-      bool exported = exported_globals.count(i);
+      bool exported = exported_globals.contains(i);
       CHECK_RESULT(AddSymbol(&globals_, global->name, imported, exported,
                              Symbol::Global{Index(i)}));
     }
@@ -1081,7 +1081,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Select: {
       auto* select_expr = cast<SelectExpr>(expr);
-      if (select_expr->result_type.empty()) {
+      if (select_expr->IsUntyped()) {
         WriteOpcode(stream_, Opcode::Select);
       } else {
         WriteOpcode(stream_, Opcode::SelectT);
@@ -1238,7 +1238,8 @@ void BinaryWriter::WriteTable(const Table* table) {
   }
   WriteType(stream_, table->elem_type);
   WriteLimitsFlags(stream_, ComputeLimitsFlags(&table->elem_limits));
-  WriteLimitsData(stream_, &table->elem_limits);
+  WriteLimitsData(stream_, &table->elem_limits,
+                  options_.features.memory64_enabled());
 
   if (!table->init_expr.empty()) {
     WriteInitExpr(table->init_expr);
@@ -1250,7 +1251,8 @@ void BinaryWriter::WriteMemory(const Memory* memory) {
   const bool custom_page_size = memory->page_size != WABT_DEFAULT_PAGE_SIZE;
   flags |= custom_page_size ? WABT_BINARY_LIMITS_HAS_CUSTOM_PAGE_SIZE_FLAG : 0;
   WriteLimitsFlags(stream_, flags);
-  WriteLimitsData(stream_, &memory->page_limits);
+  WriteLimitsData(stream_, &memory->page_limits,
+                  options_.features.memory64_enabled());
   if (custom_page_size) {
     WriteU32Leb128(stream_, log2_u32(memory->page_size), "memory page size");
   }
@@ -1810,10 +1812,10 @@ Result BinaryWriter::WriteModule() {
     // we don't want to double-write.
     if ((custom.name == WABT_BINARY_SECTION_NAME &&
          options_.write_debug_names) ||
-        (custom.name.rfind(WABT_BINARY_SECTION_RELOC) == 0 &&
+        (custom.name.starts_with(WABT_BINARY_SECTION_RELOC) &&
          options_.relocatable) ||
         (custom.name == WABT_BINARY_SECTION_LINKING && options_.relocatable) ||
-        (custom.name.find(WABT_BINARY_SECTION_CODE_METADATA) == 0 &&
+        (custom.name.starts_with(WABT_BINARY_SECTION_CODE_METADATA) &&
          options_.features.code_metadata_enabled())) {
       continue;
     }
@@ -1921,8 +1923,7 @@ void BinaryWriter::WriteCodeMetadataSections() {
       for (auto& a : f.entries) {
         WriteU32Leb128(stream_, a.offset, "code offset");
         WriteU32Leb128(stream_, a.data.size(), "data length");
-        stream_->WriteData(a.data.data(), a.data.size(), "data",
-                           PrintChars::Yes);
+        stream_->WriteData(a.data, "data", PrintChars::Yes);
       }
     }
     EndSection();
@@ -1931,7 +1932,7 @@ void BinaryWriter::WriteCodeMetadataSections() {
   auto buf = tmp_stream.ReleaseOutputBuffer();
   stream_->MoveData(code_start_ + buf->data.size(), code_start_,
                     stream_->offset() - code_start_);
-  stream_->WriteDataAt(code_start_, buf->data.data(), buf->data.size());
+  stream_->WriteDataAt(code_start_, buf->data);
   stream_->AddOffset(buf->data.size());
   code_start_ += buf->data.size();
   section_count_ += 1;

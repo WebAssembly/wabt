@@ -29,9 +29,6 @@ out/test/spec/loop.wast:568: assert_malformed passed:
   out/test/spec/loop/loop.7.wat:1:34: error: unexpected token $x, expected ).
   (func (i32.const 0) (loop (param $x i32) (drop)))
                                    ^^
-  out/test/spec/loop/loop.7.wat:1:49: error: unexpected token ), expected EOF.
-  (func (i32.const 0) (loop (param $x i32) (drop)))
-                                                  ^
 out/test/spec/loop.wast:572: assert_malformed passed:
   out/test/spec/loop/loop.8.wat:1:25: error: expected 0 results, got 1
   (type $sig (func))(func (loop (type $sig) (result i32) (i32.const 0)) (unreac...

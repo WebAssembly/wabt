@@ -86,8 +86,7 @@ bool operator>=(const OpcodeInfo&, const OpcodeInfo&);
 
 using OpcodeInfoCounts = std::map<OpcodeInfo, size_t>;
 
-Result ReadBinaryOpcnt(const void* data,
-                       size_t size,
+Result ReadBinaryOpcnt(ByteSpan data,
                        const ReadBinaryOptions& options,
                        OpcodeInfoCounts* opcode_counts);
 

@@ -4,7 +4,10 @@ magic
 version
 section("reloc.BAD") {
   reloc_section[99]
-  reloc_count[0]
+  reloc_count[1]
+  reloc_type[0]  ;; R_WASM_FUNCTION_INDEX_LEB
+  offset[0]
+  index[0]
 }
 (;; STDERR ;;;
 invalid relocation section index: 99
@@ -20,7 +23,6 @@ Section Details:
 
 Custom:
  - name: "reloc.BAD"
-  - relocations for section: 99 () [0]
 
 Code Disassembly:
 

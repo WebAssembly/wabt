@@ -701,7 +701,13 @@ class SelectExpr : public ExprMixin<ExprType::Select> {
  public:
   SelectExpr(const Location& loc = Location())
       : ExprMixin<ExprType::Select>(loc) {}
-  TypeVector result_type;
+  // Untyped select is represented by {Type::Void}. An empty result_type
+  // represents an explicit typed select with zero result types and is invalid.
+  TypeVector result_type{Type::Void};
+
+  bool IsUntyped() const {
+    return result_type.size() == 1 && result_type[0] == Type::Void;
+  }
 };
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {
@@ -1372,6 +1378,8 @@ class ScriptModule {
   ScriptModuleType type() const { return type_; }
   virtual const Location& location() const = 0;
 
+  bool is_definition;
+
  protected:
   explicit ScriptModule(ScriptModuleType type) : type_(type) {}
 
@@ -1463,6 +1471,7 @@ enum class CommandType {
   Module,
   ScriptModule,
   Action,
+  Instance,
   Register,
   AssertMalformed,
   AssertInvalid,
@@ -1500,6 +1509,7 @@ class CommandMixin : public Command {
 class ModuleCommand : public CommandMixin<CommandType::Module> {
  public:
   Module module;
+  bool is_definition;
 };
 
 class ScriptModuleCommand : public CommandMixin<CommandType::ScriptModule> {
@@ -1518,6 +1528,19 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 };
 
 using ActionCommand = ActionCommandBase<CommandType::Action>;
+
+class InstanceCommand : public CommandMixin<CommandType::Instance> {
+ public:
+  InstanceCommand(const Location& loc,
+                  std::string instance_name,
+                  std::string definition_name)
+      : loc(loc), instance_name(instance_name),
+        definition_name(definition_name) {}
+
+  Location loc;
+  std::string instance_name;
+  std::string definition_name;
+};
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:

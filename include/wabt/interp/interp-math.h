@@ -17,6 +17,7 @@
 #ifndef WABT_INTERP_MATH_H_
 #define WABT_INTERP_MATH_H_
 
+#include <bit>
 #include <cmath>
 #include <limits>
 #include <string>
@@ -66,6 +67,7 @@ T WABT_VECTORCALL CanonNaN(T val) {
 
 template <typename T> T ShiftMask(T val) { return val & (sizeof(T)*8-1); }
 
+// clang-format off
 template <typename T> bool WABT_VECTORCALL IntEqz(T val) { return val == 0; }
 template <typename T> bool WABT_VECTORCALL Eq(T lhs, T rhs) { return lhs == rhs; }
 template <typename T> bool WABT_VECTORCALL Ne(T lhs, T rhs) { return lhs != rhs; }
@@ -73,9 +75,9 @@ template <typename T> bool WABT_VECTORCALL Lt(T lhs, T rhs) { return lhs < rhs; 
 template <typename T> bool WABT_VECTORCALL Le(T lhs, T rhs) { return lhs <= rhs; }
 template <typename T> bool WABT_VECTORCALL Gt(T lhs, T rhs) { return lhs > rhs; }
 template <typename T> bool WABT_VECTORCALL Ge(T lhs, T rhs) { return lhs >= rhs; }
-template <typename T> T WABT_VECTORCALL IntClz(T val) { return Clz(val); }
-template <typename T> T WABT_VECTORCALL IntCtz(T val) { return Ctz(val); }
-template <typename T> T WABT_VECTORCALL IntPopcnt(T val) { return Popcount(val); }
+template <typename T> T WABT_VECTORCALL IntClz(T val) { return std::countl_zero(val); }
+template <typename T> T WABT_VECTORCALL IntCtz(T val) { return std::countr_zero(val); }
+template <typename T> T WABT_VECTORCALL IntPopcnt(T val) { return std::popcount(val); }
 template <typename T> T WABT_VECTORCALL IntNot(T val) { return ~val; }
 template <typename T> T WABT_VECTORCALL IntNeg(T val) { return ~val + 1; }
 template <typename T> T WABT_VECTORCALL Add(T lhs, T rhs) { return CanonNaN(lhs + rhs); }
@@ -90,6 +92,7 @@ template <typename T> T WABT_VECTORCALL IntMax(T lhs, T rhs) { return std::max(l
 template <typename T> T WABT_VECTORCALL IntAndNot(T lhs, T rhs) { return lhs & ~rhs; }
 template <typename T> T WABT_VECTORCALL IntAvgr(T lhs, T rhs) { return (lhs + rhs + 1) / 2; }
 template <typename T> T WABT_VECTORCALL Xchg(T lhs, T rhs) { return rhs; }
+// clang-format off
 
 // This is a wrapping absolute value function, so a negative number that is not
 // representable as a positive number will be unchanged (e.g. abs(-128) = 128).

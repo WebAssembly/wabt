@@ -140,6 +140,7 @@ class ModuleCommand : public CommandMixin<CommandType::Module> {
   ModuleType module = ModuleType::Binary;
   std::string filename;
   std::string name;
+  bool is_definition;
 };
 
 class Action {
@@ -158,6 +159,12 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 };
 
 using ActionCommand = ActionCommandBase<CommandType::Action>;
+
+class InstanceCommand : public CommandMixin<CommandType::Instance> {
+ public:
+  std::string instance_name;
+  std::string definition_name;
+};
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -291,8 +298,8 @@ bool CheckIR(const std::string& filename, bool validate) {
 
   Errors errors;
   wabt::Module module;
-  if (Failed(ReadBinaryIr(filename.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module))) {
+  if (Failed(ReadBinaryIr(filename.c_str(), file_data, options, &errors,
+                          &module))) {
     return false;
   }
 
@@ -378,6 +385,7 @@ class JSONParser {
   wabt::Result ParseString(std::string* out_string);
   wabt::Result ParseKeyStringValue(const char* key, std::string* out_string);
   wabt::Result ParseOptNameStringValue(std::string* out_string);
+  wabt::Result ParseOptIsDefinitionValue(bool* out_is_definition);
   wabt::Result ParseLine(uint32_t* out_line_number);
   wabt::Result ParseType(Type* out_type);
   wabt::Result ParseTypeObject(Type* out_type);
@@ -601,6 +609,24 @@ wabt::Result JSONParser::ParseOptNameStringValue(std::string* out_string) {
   if (Match("\"name\"")) {
     EXPECT(":");
     CHECK_RESULT(ParseString(out_string));
+    EXPECT(",");
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseOptIsDefinitionValue(bool* out_is_definition) {
+  if (Match("\"definition\"")) {
+    EXPECT(":");
+    std::string value;
+    CHECK_RESULT(ParseString(&value));
+    if (value == "true") {
+      *out_is_definition = true;
+    } else if (value == "false") {
+      *out_is_definition = false;
+    } else {
+      PrintError("unknown bool value: \"%s\"", value.c_str());
+      return wabt::Result::Error;
+    }
     EXPECT(",");
   }
   return wabt::Result::Ok;
@@ -1054,6 +1080,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
   if (Match("\"module\"")) {
     auto command = std::make_unique<ModuleCommand>();
     EXPECT(",");
+    CHECK_RESULT(ParseOptIsDefinitionValue(&command->is_definition));
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseOptNameStringValue(&command->name));
@@ -1067,6 +1094,15 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
     CHECK_RESULT(ParseActionResult());
+    *out_command = std::move(command);
+  } else if (Match("\"instance\"")) {
+    auto command = std::make_unique<InstanceCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("instance", &command->instance_name);
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("definition", &command->definition_name);
     *out_command = std::move(command);
   } else if (Match("\"register\"")) {
     auto command = std::make_unique<RegisterCommand>();
@@ -1230,6 +1266,7 @@ class CommandRunner {
 
   wabt::Result OnModuleCommand(const ModuleCommand*);
   wabt::Result OnActionCommand(const ActionCommand*);
+  wabt::Result OnInstanceCommand(const InstanceCommand*);
   wabt::Result OnRegisterCommand(const RegisterCommand*);
   wabt::Result OnAssertMalformedCommand(const AssertMalformedCommand*);
   wabt::Result OnAssertUnlinkableCommand(const AssertUnlinkableCommand*);
@@ -1271,6 +1308,7 @@ class CommandRunner {
   Registry registry_;   // Used when importing.
   Registry instances_;  // Used when referencing module by name in invoke.
   ExportMap last_instance_;
+  std::map<std::string, interp::Module::Ptr> definitions_;
   int passed_ = 0;
   int total_ = 0;
 
@@ -1343,6 +1381,13 @@ wabt::Result CommandRunner::Run(const Script& script) {
 
       case CommandType::Action:
         TallyCommand(OnActionCommand(cast<ActionCommand>(command.get())));
+        break;
+
+      case CommandType::Instance:
+        if (Failed(OnInstanceCommand(cast<InstanceCommand>(command.get())))) {
+          PrintError(command->line, "invalid instance command");
+          return wabt::Result::Error;
+        }
         break;
 
       case CommandType::Register:
@@ -1484,8 +1529,7 @@ interp::Module::Ptr CommandRunner::ReadModule(std::string_view module_filename,
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
   ModuleDesc module_desc;
-  if (Failed(ReadBinaryInterp(module_filename, file_data.data(),
-                              file_data.size(), options, errors,
+  if (Failed(ReadBinaryInterp(module_filename, file_data, options, errors,
                               &module_desc))) {
     return {};
   }
@@ -1551,8 +1595,7 @@ wabt::Result CommandRunner::ReadMalformedBinaryModule(
   };
 
   BinaryReaderErrorLogging reader_delegate{errors};
-  return ReadBinary(file_data.data(), file_data.size(), &reader_delegate,
-                    options);
+  return ReadBinary(file_data, &reader_delegate, options);
 }
 
 wabt::Result CommandRunner::ReadMalformedModule(
@@ -1627,6 +1670,13 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
+  if (command->is_definition) {
+    if (!command->name.empty()) {
+      definitions_[command->name] = module;
+    }
+    return wabt::Result::Ok;
+  }
+
   RefVec imports;
   PopulateImports(module, &imports);
 
@@ -1677,6 +1727,32 @@ wabt::Result CommandRunner::OnAssertMalformedCommand(
     return wabt::Result::Error;
   }
 
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnInstanceCommand(const InstanceCommand* command) {
+  auto definition_iter = definitions_.find(command->definition_name);
+  if (definition_iter == definitions_.end()) {
+    PrintError(command->line, "unknown module definition in register");
+    return wabt::Result::Error;
+  }
+
+  auto module = definition_iter->second;
+
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (trap) {
+    assert(!instance);
+    PrintError(command->line, "error instantiating module: \"%s\"",
+               trap->message().c_str());
+    return wabt::Result::Error;
+  }
+
+  PopulateExports(instance, &last_instance_);
+  instances_[command->instance_name] = last_instance_;
   return wabt::Result::Ok;
 }
 

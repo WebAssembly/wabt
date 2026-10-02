@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-annotations --enable-code-metadata
+;;; ARGS0: --enable-code-metadata
 ;;; ARGS1: -x -j "metadata.code.branch_hint"
 ;; combined from https://github.com/bytecodealliance/wasm-tools/tree/6ed178840fae8599312ab14c2cad6faea9f80bf1/tests/cli/branch-hinting
 (module

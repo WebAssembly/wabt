@@ -46,6 +46,7 @@ code, TokenType::Code
 data.drop, TokenType::DataDrop, Opcode::DataDrop
 data, TokenType::Data
 declare, TokenType::Declare
+definition, TokenType::Definition
 delegate, TokenType::Delegate
 do, TokenType::Do
 drop, TokenType::Drop, Opcode::Drop
@@ -537,6 +538,7 @@ i8x16, TokenType::I8X16
 if, TokenType::If, Opcode::If
 import, TokenType::Import
 input, TokenType::Input
+instance, TokenType::Instance
 invoke, TokenType::Invoke
 item, TokenType::Item
 local.get, TokenType::LocalGet, Opcode::LocalGet

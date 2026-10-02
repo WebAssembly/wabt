@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/table_copy.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 test() =>
 out/test/spec/memory64/table_copy.wast:46: assert_trap passed: uninitialized table element

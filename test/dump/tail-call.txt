@@ -1,5 +1,4 @@
 ;;; TOOL: run-objdump
-;;; ARGS0: --enable-tail-call
 (module
   (table 1 funcref)
   (func return_call 0)

@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS0: --enable-tail-call
 (module
   (type $t (func))
   (table 1 funcref)

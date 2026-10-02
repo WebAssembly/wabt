@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/memory_max.wast
-;;; ARGS*: --enable-custom-page-sizes
+;;; ARGS*: --enable-custom-page-sizes --disable-memory64
 (;; STDOUT ;;;
 out/test/spec/custom-page-sizes/memory_max.wast:13: assert_unlinkable passed:
   error: invalid import "test.unknown"

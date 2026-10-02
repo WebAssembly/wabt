@@ -1,5 +1,4 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
 (module
   (tag $e1 (param i32))
   (tag $e2 (param i32 i32))

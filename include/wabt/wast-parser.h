@@ -105,6 +105,9 @@ class WastParser {
   Result ErrorIfLpar(const std::vector<std::string>& expected,
                      const char* example = nullptr);
 
+  void AddScriptErrors(const Errors& errors, const Location& loc,
+                       const char* desc);
+
   // Returns the next token without consuming it.
   Token GetToken();
 
@@ -172,6 +175,7 @@ class WastParser {
   // Check the maximum allowed declarations.
   Result CheckIndexRange(Location& loc, size_t size, const char* decl);
 
+  void ParseAnnotations(Token& token);
   Result ParseVarText(Token& token, std::string* out_text);
   Result ParseBindVarOpt(std::string* name);
   Result ParseVar(Var* out_var);
@@ -206,6 +210,7 @@ class WastParser {
                                         ReferenceVars*, Errors*);
   Result ParseModuleFieldList(Module*);
   Result ParseModuleField(Module*);
+  Result ParseModuleFieldImpl(Module*);
   Result ParseDataModuleField(Module*);
   Result ParseElemModuleField(Module*);
   Result ParseTagModuleField(Module*);
@@ -297,6 +302,7 @@ class WastParser {
   Result ParseOutputCommand(CommandPtr*);
 
   Result ParseAction(ActionPtr*);
+  Result ParseScriptModuleNoLpar(std::unique_ptr<ScriptModule>*);
   Result ParseScriptModule(std::unique_ptr<ScriptModule>*);
 
   template <typename T>

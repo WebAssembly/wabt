@@ -139,7 +139,7 @@ struct Opcode {
                                   uint32_t* out_code) {
     uint32_t prefix_code = ~static_cast<uint32_t>(e) + 1;
     *out_prefix = prefix_code >> MAX_OPCODE_BITS;
-    *out_code = prefix_code & 0xff;
+    *out_code = prefix_code & ((1 << MAX_OPCODE_BITS) - 1);
   }
 
   Info GetInfo() const;

@@ -351,7 +351,7 @@ Result NameApplier::OnBrOnNullExpr(BrOnNullExpr* expr) {
 
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   for (Var& target : expr->targets) {
-    UseNameForLabelVar(&target);
+    CHECK_RESULT(UseNameForLabelVar(&target));
   }
 
   return UseNameForLabelVar(&expr->default_target);
@@ -372,7 +372,7 @@ Result NameApplier::BeginTryTableExpr(TryTableExpr* expr) {
     if (!catch_.IsCatchAll()) {
       CHECK_RESULT(UseNameForTagVar(&catch_.tag));
     }
-    UseNameForLabelVar(&catch_.target);
+    CHECK_RESULT(UseNameForLabelVar(&catch_.target));
   }
   PushLabel(expr->block.label);
   return Result::Ok;
@@ -499,23 +499,23 @@ Result NameApplier::VisitTag(Tag* tag) {
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
   switch (export_->kind) {
     case ExternalKind::Func:
-      UseNameForFuncVar(&export_->var);
+      CHECK_RESULT(UseNameForFuncVar(&export_->var));
       break;
 
     case ExternalKind::Table:
-      UseNameForTableVar(&export_->var);
+      CHECK_RESULT(UseNameForTableVar(&export_->var));
       break;
 
     case ExternalKind::Memory:
-      UseNameForMemoryVar(&export_->var);
+      CHECK_RESULT(UseNameForMemoryVar(&export_->var));
       break;
 
     case ExternalKind::Global:
-      UseNameForGlobalVar(&export_->var);
+      CHECK_RESULT(UseNameForGlobalVar(&export_->var));
       break;
 
     case ExternalKind::Tag:
-      UseNameForTagVar(&export_->var);
+      CHECK_RESULT(UseNameForTagVar(&export_->var));
       break;
   }
   return Result::Ok;

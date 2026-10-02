@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
-;;; ARGS*: --enable-custom-page-sizes --enable-multi-memory
+;;; ARGS*: --enable-custom-page-sizes
 ;;; STDIN_FILE: third_party/testsuite/proposals/custom-page-sizes/custom-page-sizes-invalid.wast
 (;; STDOUT ;;;
 out/test/spec/custom-page-sizes/custom-page-sizes-invalid.wast:3: assert_malformed passed:

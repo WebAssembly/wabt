@@ -155,8 +155,8 @@ compiling a Wasm module with clang, running on x86_64 Linux, the macro
 `WASM_RT_ALLOW_SEGUE` is defined, and the flag `-mfsgsbase` is passed to clang.
 Segue is not used if
 
-1. The Wasm module uses a more than a single unshared imported or exported
-   memory
+1. The Wasm module does not use exactly one unshared, default-page, 32-bit
+   imported or exported memory.
 2. The wasm2c code is compiled with GCC. Segue requires intrinsics for
    (rd|wr)gsbase, "address namespaces" for accessing pointers, and support for
    memcpy on pointers with custom "address namespaces". GCC does not support the
@@ -433,8 +433,8 @@ called `wasm_rt_init`). An example can be found in
 ### Runtime support for exception handling
 
 Several additional symbols must be defined if wasm2c is being run with support
-for exceptions (`--enable-exceptions`). These are defined in
-`wasm-rt-exceptions.h`. These symbols are:
+for exceptions (Use `--disable-exceptions` if you want to avoid these). These
+are defined in `wasm-rt-exceptions.h`. These symbols are:
 
 ```c
 void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);

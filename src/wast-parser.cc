@@ -569,8 +569,14 @@ void WastParser::Error(Location loc, const char* format, ...) {
 }
 
 Token WastParser::GetToken() {
-  if (tokens_.empty()) {
-    tokens_.push_back(lexer_->GetToken());
+  while (tokens_.empty()) {
+    Token cur = lexer_->GetToken();
+    if (cur.token_type() != TokenType::LparAnn) {
+      tokens_.push_back(cur);
+      break;
+    }
+
+    ParseAnnotations(cur);
   }
   return tokens_.front();
 }
@@ -586,42 +592,7 @@ TokenType WastParser::Peek(size_t n) {
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
-      // Custom annotation. For now, discard until matching Rpar, unless it is
-      // a code metadata annotation or custom section. In those cases, we know
-      // how to parse it.
-      if (!options_->features.annotations_enabled()) {
-        Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
-        tokens_.push_back(Token(cur.loc, TokenType::Invalid));
-        continue;
-      }
-      if ((options_->features.code_metadata_enabled() &&
-           cur.text().find("metadata.code.") == 0) ||
-          cur.text() == "custom") {
-        tokens_.push_back(cur);
-        continue;
-      }
-      int indent = 1;
-      while (indent > 0) {
-        cur = lexer_->GetToken();
-        switch (cur.token_type()) {
-          case TokenType::Lpar:
-          case TokenType::LparAnn:
-            indent++;
-            break;
-
-          case TokenType::Rpar:
-            indent--;
-            break;
-
-          case TokenType::Eof:
-            indent = 0;
-            Error(cur.loc, "unterminated annotation");
-            break;
-
-          default:
-            break;
-        }
-      }
+      ParseAnnotations(cur);
     }
   }
   return tokens_.at(n).token_type();
@@ -761,6 +732,78 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
     return ErrorExpected(expected, example);
   }
   return Result::Ok;
+}
+
+void WastParser::AddScriptErrors(const Errors& errors,
+                                 const Location& loc,
+                                 const char* desc) {
+  for (const auto& error : errors) {
+    // Some spec tests may trigger wabt warnings, although these
+    // tests are still valid according to the specification.
+    if (error.error_level != ErrorLevel::Warning) {
+      if (error.loc.offset == kInvalidOffset) {
+        Error(loc, "error in %s module: %s", desc, error.message.c_str());
+      } else {
+        Error(loc, "error in %s module: @0x%08" PRIzx ": %s", desc,
+              error.loc.offset, error.message.c_str());
+      }
+    }
+  }
+}
+
+void WastParser::ParseAnnotations(Token& token) {
+  // Custom annotation. For now, discard until matching Rpar, unless it is
+  // a code metadata annotation or custom section. In those cases, we know
+  // how to parse it.
+  if (!options_->features.annotations_enabled()) {
+    Error(token.loc, "annotations not enabled: %s", token.to_string().c_str());
+    tokens_.push_back(Token(token.loc, TokenType::Invalid));
+    return;
+  }
+
+  if (token.text().size() == 0) {
+    Error(token.loc, "empty annotation id");
+  } else if (*token.text().data() == '\"') {
+    std::string name;
+    RemoveEscapes(token.text(), std::back_inserter(name));
+    size_t length = name.length();
+
+    if (length == 0) {
+      Error(token.loc, "empty annotation id");
+    } else if (!IsValidUtf8(name.data(), length)) {
+      Error(token.loc, "quoted annotation id has an invalid utf-8 encoding");
+    }
+  }
+
+  if ((options_->features.code_metadata_enabled() &&
+       token.text().starts_with("metadata.code.")) ||
+      token.text() == "custom") {
+    tokens_.push_back(token);
+    return;
+  }
+
+  int indent = 1;
+  while (indent > 0) {
+    Token cur = lexer_->GetToken();
+    switch (cur.token_type()) {
+      case TokenType::Lpar:
+      case TokenType::LparAnn:
+        indent++;
+        break;
+
+      case TokenType::Rpar:
+        indent--;
+        break;
+
+      case TokenType::Eof:
+        indent = 0;
+        Error(token.loc, "unterminated annotation");
+        break;
+
+      default:
+        break;
+    }
+  }
 }
 
 Result WastParser::ParseVarText(Token& token, std::string* out_text) {
@@ -1211,9 +1254,11 @@ Result WastParser::ParseLimitsIndex(Limits* out_limits) {
 Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
 
-  CHECK_RESULT(ParseNat(&out_limits->initial, out_limits->is_64));
+  CHECK_RESULT(
+      ParseNat(&out_limits->initial, options_->features.memory64_enabled()));
   if (PeekMatch(TokenType::Nat)) {
-    CHECK_RESULT(ParseNat(&out_limits->max, out_limits->is_64));
+    CHECK_RESULT(
+        ParseNat(&out_limits->max, options_->features.memory64_enabled()));
     out_limits->has_max = true;
   } else {
     out_limits->has_max = false;
@@ -1299,7 +1344,8 @@ Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
                           lexer_->Filename(), "empty module");
   } else {
     ConsumeIfLpar();
-    ErrorExpected({"a module field", "a module"});
+    // Intentionally continuing to report additional errors.
+    (void)ErrorExpected({"a module field", "a module"});
   }
 
   EXPECT(Eof);
@@ -1332,7 +1378,8 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
                           lexer_->Filename(), "empty script");
   } else {
     ConsumeIfLpar();
-    ErrorExpected({"a module field", "a command"});
+    // Intentionally continuing to report additional errors.
+    (void)ErrorExpected({"a module field", "a command"});
   }
 
   EXPECT(Eof);
@@ -1492,6 +1539,31 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
+  // A field is only appended to the module once it has parsed successfully; a
+  // field that fails to parse is destroyed instead, so the deferred reference
+  // type resolutions registered while parsing it would point into freed
+  // memory. Remember where the resolve lists ended and drop those entries
+  // again if the field fails.
+  size_t ref_types_size = resolve_ref_types_.size();
+  size_t type_vectors_size = resolve_type_vectors_.size();
+  size_t funcs_size = resolve_funcs_.size();
+
+  Result result = ParseModuleFieldImpl(module);
+
+  if (Failed(result)) {
+    resolve_ref_types_.erase(resolve_ref_types_.begin() + ref_types_size,
+                             resolve_ref_types_.end());
+    resolve_type_vectors_.erase(
+        resolve_type_vectors_.begin() + type_vectors_size,
+        resolve_type_vectors_.end());
+    resolve_funcs_.erase(resolve_funcs_.begin() + funcs_size,
+                         resolve_funcs_.end());
+  }
+
+  return result;
+}
+
+Result WastParser::ParseModuleFieldImpl(Module* module) {
   switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
@@ -2255,6 +2327,11 @@ Result WastParser::ParseResultList(TypeVector* result_types,
 
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
+  // Keep going after a bad instruction so the rest of the errors get reported,
+  // but remember that one was dropped. Returning Ok here would tell the caller
+  // the field parsed cleanly when part of it was thrown away, and anything the
+  // discarded expressions registered for later would outlive them.
+  Result result = Result::Ok;
   ExprList new_exprs;
   while (true) {
     auto pair = PeekPair();
@@ -2262,19 +2339,21 @@ Result WastParser::ParseInstrList(ExprList* exprs) {
       if (Succeeded(ParseInstr(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        result = Result::Error;
         CHECK_RESULT(Synchronize(IsInstr));
       }
     } else if (IsLparAnn(pair)) {
       if (Succeeded(ParseCodeMetadataAnnotation(&new_exprs))) {
         exprs->splice(exprs->end(), new_exprs);
       } else {
+        result = Result::Error;
         CHECK_RESULT(Synchronize(IsLparAnn));
       }
     } else {
       break;
     }
   }
-  return Result::Ok;
+  return result;
 }
 
 Result WastParser::ParseTerminatingInstrList(ExprList* exprs) {
@@ -2311,6 +2390,30 @@ Result WastParser::ParseCodeMetadataAnnotation(ExprList* exprs) {
   WABT_TRACE(ParseCodeMetadataAnnotation);
   Token tk = Consume();
   std::string_view name = tk.text();
+  if (!name.starts_with("metadata.code.")) {
+    // Not a code metadata annotation. This can be reached when Peek admits a
+    // (@custom ...) annotation (only meaningful at module scope) into an
+    // instruction list. Discard it like any other unrecognised annotation
+    // rather than stripping a prefix that isn't there.
+    int indent = 1;
+    while (indent > 0) {
+      switch (Peek()) {
+        case TokenType::Lpar:
+        case TokenType::LparAnn:
+          indent++;
+          break;
+        case TokenType::Rpar:
+          indent--;
+          break;
+        case TokenType::Eof:
+          return ErrorExpected({"a close paren"});
+        default:
+          break;
+      }
+      Consume();
+    }
+    return Result::Ok;
+  }
   name.remove_prefix(sizeof("metadata.code.") - 1);
   std::string data_text;
   CHECK_RESULT(ParseQuotedText(&data_text, false));
@@ -2487,6 +2590,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ResolveTypeVector result_type(&expr->result_type);
       if (options_->features.reference_types_enabled() &&
           PeekMatchLpar(TokenType::Result)) {
+        expr->result_type.clear();
         CHECK_RESULT(ParseResultList(&expr->result_type, &result_type.vars));
       }
       *out_expr = std::move(expr);
@@ -3341,7 +3445,7 @@ Result WastParser::ParseLabelOpt(std::string* out_label) {
   WABT_TRACE(ParseLabelOpt);
   if (PeekMatch(TokenType::Var)) {
     Token token = Consume();
-    ParseVarText(token, out_label);
+    CHECK_RESULT(ParseVarText(token, out_label));
   } else {
     out_label->clear();
   }
@@ -3381,15 +3485,17 @@ Result WastParser::ParseBlock(Block* block) {
 
 Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
+  Result result = Result::Ok;
   ExprList new_exprs;
   while (PeekMatchExpr()) {
     if (Succeeded(ParseExpr(&new_exprs))) {
       exprs->splice(exprs->end(), new_exprs);
     } else {
+      result = Result::Error;
       CHECK_RESULT(Synchronize(IsExpr));
     }
   }
-  return Result::Ok;
+  return result;
 }
 
 Result WastParser::ParseExpr(ExprList* exprs) {
@@ -3489,7 +3595,8 @@ Result WastParser::ParseExpr(ExprList* exprs) {
               break;
             }
             default:
-              ErrorExpected({"catch", "catch_all", "delegate"});
+              // Intentionally continuing to report additional errors.
+              (void)ErrorExpected({"catch", "catch_all", "delegate"});
               break;
           }
         }
@@ -3763,7 +3870,29 @@ Result WastParser::ParseActionCommand(CommandPtr* out_command) {
 Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   WABT_TRACE(ParseModuleCommand);
   std::unique_ptr<ScriptModule> script_module;
-  CHECK_RESULT(ParseScriptModule(&script_module));
+  EXPECT(Lpar);
+  if (Peek(1) == TokenType::Instance) {
+    Location loc = GetLocation();
+    EXPECT(Module);
+    EXPECT(Instance);
+    if (!PeekMatch(TokenType::Var)) {
+      Error(loc, "missing instance name");
+      return Result::Error;
+    }
+    std::string instance_name;
+    CHECK_RESULT(ParseBindVarOpt(&instance_name));
+    if (!PeekMatch(TokenType::Var)) {
+      Error(loc, "missing definition name");
+      return Result::Error;
+    }
+    std::string definition_name;
+    CHECK_RESULT(ParseBindVarOpt(&definition_name));
+    EXPECT(Rpar);
+    out_command->reset(
+        new InstanceCommand(loc, instance_name, definition_name));
+    return Result::Ok;
+  }
+  CHECK_RESULT(ParseScriptModuleNoLpar(&script_module));
 
   Module* module = nullptr;
 
@@ -3772,6 +3901,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       auto command = std::make_unique<ModuleCommand>();
       module = &command->module;
       *module = std::move(cast<TextScriptModule>(script_module.get())->module);
+      command->is_definition = script_module->is_definition;
       *out_command = std::move(command);
       break;
     }
@@ -3789,19 +3919,12 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       Errors errors;
       const char* filename = "<text>";
       if (options_->parse_binary_modules) {
-        ReadBinaryIr(filename, bsm->data.data(), bsm->data.size(), options,
-                     &errors, module);
+        // TODO: what should we do about errors?
+        (void)ReadBinaryIr(filename, bsm->data, options, &errors, module);
       }
       module->name = bsm->name;
       module->loc = bsm->loc;
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(bsm->loc, "error in binary module: %s", error.message.c_str());
-        } else {
-          Error(bsm->loc, "error in binary module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, bsm->loc, "binary");
 
       command->script_module = std::move(script_module);
       *out_command = std::move(command);
@@ -3818,14 +3941,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
           filename, qsm->data.data(), qsm->data.size(), &errors);
       auto result = ParseWatModule(lexer.get(), &m, &errors, options_);
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
-        } else {
-          Error(qsm->loc, "error in quoted module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, qsm->loc, "quoted");
       if (Succeeded(result)) {
         *module = std::move(*m.get());
       }
@@ -3953,12 +4069,12 @@ Result WastParser::ParseEither(ConstVector* alternatives) {
   return Result::Ok;
 }
 
-Result WastParser::ParseScriptModule(
+Result WastParser::ParseScriptModuleNoLpar(
     std::unique_ptr<ScriptModule>* out_module) {
-  WABT_TRACE(ParseScriptModule);
-  EXPECT(Lpar);
+  WABT_TRACE(ParseScriptModuleNoLpar);
   Location loc = GetLocation();
   EXPECT(Module);
+  bool is_definition = Match(TokenType::Definition);
   std::string name;
   CHECK_RESULT(ParseBindVarOpt(&name));
 
@@ -4009,8 +4125,17 @@ Result WastParser::ParseScriptModule(
     }
   }
 
+  (*out_module)->is_definition = is_definition;
   EXPECT(Rpar);
   return Result::Ok;
+}
+
+Result WastParser::ParseScriptModule(
+    std::unique_ptr<ScriptModule>* out_module) {
+  WABT_TRACE(ParseScriptModule);
+  EXPECT(Lpar);
+  // Should be a tail call.
+  return ParseScriptModuleNoLpar(out_module);
 }
 
 template <typename T>

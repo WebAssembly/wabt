@@ -123,12 +123,12 @@ Result ParseWasmValue(std::string argument, Value& val) {
   if (strcmp(ptype, "f32") == 0) {
     uint32_t parsed_value;
     result |= ParseFloat(LiteralType::Float, pval, pval_end, &parsed_value);
-    val.Set(parsed_value);
+    val.Set(Bitcast<f32>(parsed_value));
   }
   if (strcmp(ptype, "f64") == 0) {
     uint64_t parsed_value;
     result |= ParseDouble(LiteralType::Float, pval, pval_end, &parsed_value);
-    val.Set(parsed_value);
+    val.Set(Bitcast<f64>(parsed_value));
   }
   return result;
 }
@@ -321,8 +321,7 @@ static Result ReadModule(const char* module_filename,
   const bool kFailOnCustomSectionError = true;
   ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                             kStopOnFirstError, kFailOnCustomSectionError);
-  CHECK_RESULT(ReadBinaryInterp(module_filename, file_data.data(),
-                                file_data.size(), options, errors,
+  CHECK_RESULT(ReadBinaryInterp(module_filename, file_data, options, errors,
                                 &module_desc));
 
   if (s_verbose) {
@@ -423,11 +422,13 @@ static Result ReadAndRunModule(const char* module_filename) {
   CHECK_RESULT(InstantiateModule(imports, module, &instance));
 
   if (s_run_all_exports) {
-    RunAllExports(instance, &errors);
+    // TODO: what should we do about errors?
+    (void)RunAllExports(instance, &errors);
   }
 
   if (!s_run_exports.empty()) {
-    RunSpecificExports(instance, &errors, s_run_exports);
+    // TODO: what should we do about errors?
+    (void)RunSpecificExports(instance, &errors, s_run_exports);
   }
 #ifdef WITH_WASI
   if (s_wasi) {

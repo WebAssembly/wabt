@@ -605,8 +605,13 @@ void MakeTypeBindingReverseMapping(
   out_reverse_mapping->clear();
   out_reverse_mapping->resize(num_types);
   for (const auto& [name, binding] : bindings) {
-    assert(static_cast<size_t>(binding.index) < out_reverse_mapping->size());
-    (*out_reverse_mapping)[binding.index] = name;
+    // A binding index can come straight from the name section's local
+    // subsection, which is not otherwise range-checked against the function's
+    // local count, so skip entries that fall outside the mapping instead of
+    // writing past it.
+    if (static_cast<size_t>(binding.index) < out_reverse_mapping->size()) {
+      (*out_reverse_mapping)[binding.index] = name;
+    }
   }
 }
 

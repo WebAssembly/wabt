@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-threads --enable-memory64
+;;; ARGS: --enable-threads
 (module
   (memory i64 1 1 shared)
   (func

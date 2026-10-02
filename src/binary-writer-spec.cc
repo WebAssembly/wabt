@@ -128,6 +128,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "module",
       "module",
       "action",
+      "instance",
       "register",
       "assert_malformed",
       "assert_invalid",
@@ -471,6 +472,11 @@ void BinaryWriterSpec::WriteCommands() {
       case CommandType::Module: {
         const Module& module = cast<ModuleCommand>(command)->module;
         std::string filename = GetModuleFilename(kWasmExtension);
+        if (cast<ModuleCommand>(command)->is_definition) {
+          WriteKey("definition");
+          WriteString("true");
+          WriteSeparator();
+        }
         WriteLocation(module.loc);
         WriteSeparator();
         if (!module.name.empty()) {
@@ -488,8 +494,14 @@ void BinaryWriterSpec::WriteCommands() {
 
       case CommandType::ScriptModule: {
         auto* script_module_command = cast<ScriptModuleCommand>(command);
+        auto* script_module = script_module_command->script_module.get();
         const auto& module = script_module_command->module;
         std::string filename = GetModuleFilename(kWasmExtension);
+        if (script_module->is_definition) {
+          WriteKey("definition");
+          WriteString("true");
+          WriteSeparator();
+        }
         WriteLocation(module.loc);
         WriteSeparator();
         if (!module.name.empty()) {
@@ -499,7 +511,7 @@ void BinaryWriterSpec::WriteCommands() {
         }
         WriteKey("filename");
         WriteEscapedString(GetBasename(filename));
-        WriteScriptModule(filename, *script_module_command->script_module);
+        WriteScriptModule(filename, *script_module);
         num_modules_++;
         last_module_index = i;
         break;
@@ -513,6 +525,18 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(action);
+        break;
+      }
+
+      case CommandType::Instance: {
+        auto* instance_command = cast<InstanceCommand>(command);
+        WriteLocation(instance_command->loc);
+        WriteSeparator();
+        WriteKey("instance");
+        WriteEscapedString(instance_command->instance_name);
+        WriteSeparator();
+        WriteKey("definition");
+        WriteEscapedString(instance_command->definition_name);
         break;
       }
 

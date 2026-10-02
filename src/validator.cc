@@ -589,8 +589,21 @@ Result Validator::OnReturnCallRefExpr(ReturnCallRefExpr* expr) {
 }
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
-  result_ |= validator_.OnSelect(expr->loc, expr->result_type.size(),
-                                 expr->result_type.data());
+  if (expr->result_type.empty()) {
+    validator_.PrintError(expr->loc, "invalid arity in select instruction: 0.");
+    result_ |= Result::Error;
+    result_ |= validator_.OnSelectCondition(expr->loc);
+    return Result::Ok;
+  }
+
+  Index result_count = 0;
+  Type* result_types = nullptr;
+  if (!expr->IsUntyped()) {
+    result_count = expr->result_type.size();
+    result_types = expr->result_type.data();
+  }
+
+  result_ |= validator_.OnSelect(expr->loc, result_count, result_types);
   return Result::Ok;
 }
 
@@ -946,8 +959,9 @@ Result Validator::CheckModule() {
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        result_ |= validator_.BeginInitExpr(elem_expr.front().loc,
-                                            f->elem_segment.elem_type);
+        const Location& loc =
+            elem_expr.empty() ? field.loc : elem_expr.front().loc;
+        result_ |= validator_.BeginInitExpr(loc, f->elem_segment.elem_type);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(const_cast<ExprList&>(elem_expr));
         result_ |= validator_.EndInitExpr();
@@ -1100,14 +1114,16 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::Module: {
       Validator module_validator(errors_, &cast<ModuleCommand>(command)->module,
                                  options_);
-      module_validator.CheckModule();
+      // TODO: what should we do about errors?
+      (void)module_validator.CheckModule();
       break;
     }
 
     case CommandType::ScriptModule: {
       Validator module_validator(
           errors_, &cast<ScriptModuleCommand>(command)->module, options_);
-      module_validator.CheckModule();
+      // TODO: what should we do about errors?
+      (void)module_validator.CheckModule();
       break;
     }
 
@@ -1116,6 +1132,7 @@ void ScriptValidator::CheckCommand(const Command* command) {
       CheckAction(cast<ActionCommand>(command)->action.get());
       break;
 
+    case CommandType::Instance:
     case CommandType::Register:
     case CommandType::AssertMalformed:
     case CommandType::AssertInvalid:

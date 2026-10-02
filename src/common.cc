@@ -39,9 +39,6 @@
 #define fseek _fseeki64
 #define ftell _ftelli64
 #define S_IFREG _S_IFREG
-#define WABT_FILE_OFFSET __int64
-#else
-#define WABT_FILE_OFFSET long
 #endif
 
 namespace wabt {
@@ -138,7 +135,7 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return res;
   }
 
-  WABT_FILE_OFFSET size = ftell(infile);
+  auto size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
     fclose(infile);
@@ -158,29 +155,13 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     fclose(infile);
     return Result::Error;
   }
-
-  static constexpr size_t kReadChunkSize = 64 * 1024 * 1024;
-  size_t data_size = static_cast<size_t>(size);
-  out_data->resize(data_size);
-  size_t offset = 0;
-  while (offset < data_size) {
-    size_t remaining = data_size - offset;
-    size_t chunk_size = remaining < kReadChunkSize ? remaining : kReadChunkSize;
-    if (fread(out_data->data() + offset, chunk_size, 1, infile) != 1) {
-      fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
-      fclose(infile);
-      return Result::Error;
-    }
-    offset += chunk_size;
-  }
-#else
-  out_data->resize(size);
+#endif
+  out_data->resize(static_cast<size_t>(size));
   if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
     fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
     fclose(infile);
     return Result::Error;
   }
-#endif
 
   fclose(infile);
   return Result::Ok;

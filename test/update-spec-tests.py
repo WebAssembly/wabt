@@ -50,7 +50,7 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
     for removed_test_name in wabt_tests - testsuite_tests:
         test_filename = os.path.join(wabt_test_dir, removed_test_name + '.txt')
         if options.verbose:
-            print('Removing %s' % test_filename)
+            print(f'Removing {test_filename}')
         os.remove(test_filename)
 
     for added_test_name in testsuite_tests - wabt_tests:
@@ -59,17 +59,17 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
             added_test_name + '.wast')
         test_filename = os.path.join(wabt_test_dir, added_test_name + '.txt')
         if options.verbose:
-            print('Adding %s' % test_filename)
+            print(f'Adding {test_filename}')
 
         test_dirname = os.path.dirname(test_filename)
         if not os.path.exists(test_dirname):
             os.makedirs(test_dirname)
 
         with open(test_filename, 'w') as f:
-            f.write(';;; TOOL: %s\n' % tool)
-            f.write(';;; STDIN_FILE: %s\n' % wast_filename.replace(os.sep, '/'))
+            f.write(f';;; TOOL: {tool}\n')
+            f.write(f';;; STDIN_FILE: {wast_filename.replace(os.sep, "/")}\n')
             if flags:
-                f.write(';;; ARGS*: %s\n' % flags)
+                f.write(f';;; ARGS*: {flags}\n')
 
 
 def ProcessProposalDir(name, flags=None, old=False):
@@ -97,27 +97,17 @@ def main(args):
     all_proposals = [e.name for e in os.scandir(PROPOSALS_DIR) if e.is_dir()]
 
     flags = {
-        'multi-memory': '--enable-multi-memory',
-        'exception-handling': '--enable-exceptions',
-        'extended-const': '--enable-extended-const',
-        'tail-call': '--enable-tail-call',
-        'relaxed-simd': '--enable-relaxed-simd',
-        'exception-handling': '--enable-exceptions',
         'custom-page-sizes': '--enable-custom-page-sizes',
         'function-references': '--enable-function-references',
     }
 
-    old_proposal_flags = {
-        'memory64': '--enable-memory64',
-    }
-
-    unimplemented = set([
+    unimplemented = {
         'gc',
         'threads',
         'annotations',
         'wide-arithmetic',
         'wasm-3.0',
-    ])
+    }
 
     # sanity check to verify that all flags are valid
     for proposal in flags:
@@ -130,8 +120,9 @@ def main(args):
     for proposal in proposals:
         ProcessProposalDir(proposal, flags.get(proposal))
 
-    for proposal in old_proposal_flags:
-        ProcessProposalDir(proposal, old_proposal_flags.get(proposal), True)
+    old_proposals = [e.name for e in os.scandir(OLD_PROPOSALS_DIR) if e.is_dir()]
+    for proposal in old_proposals:
+        ProcessProposalDir(proposal, flags.get(proposal), True)
 
     return 0
 

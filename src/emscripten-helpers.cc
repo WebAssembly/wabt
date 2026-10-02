@@ -139,7 +139,8 @@ WabtReadBinaryResult* wabt_read_binary(const void* data,
   // TODO(binji): Pass through from wabt_read_binary parameter.
   const char* filename = "<binary>";
   result->result =
-      wabt::ReadBinaryIr(filename, data, size, options, errors, module);
+      wabt::ReadBinaryIr(filename, {static_cast<const uint8_t*>(data), size},
+                         options, errors, module);
   result->module.reset(module);
   return result;
 }

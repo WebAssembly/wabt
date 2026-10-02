@@ -45,7 +45,9 @@ size_t LexerSource::Fill(void* dest, Offset size) {
 }
 
 Result LexerSource::Seek(Offset offset) {
-  if (offset < size_) {
+  // Seeking to the end is allowed: it is where an empty source starts, and
+  // reading from there just yields nothing (ReadRange already clamps).
+  if (offset <= size_) {
     read_offset_ = offset;
     return Result::Ok;
   }

@@ -977,7 +977,10 @@ Result WatWriter::ExprVisitorDelegate::OnReturnCallRefExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
   writer_->WritePutsSpace(Opcode::Select_Opcode.GetName());
-  if (!expr->result_type.empty()) {
+  if (expr->result_type.empty()) {
+    writer_->WriteOpenSpace("result");
+    writer_->WriteCloseSpace();
+  } else if (!expr->IsUntyped()) {
     writer_->WriteTypes(expr->result_type, "result");
   }
   writer_->WriteNewline(NO_FORCE_NEWLINE);
@@ -1199,17 +1202,19 @@ Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
 }
 
 void WatWriter::WriteExpr(const Expr* expr) {
-  WABT_TRACE(WriteExprList);
+  WABT_TRACE(WriteExpr);
   ExprVisitorDelegate delegate(this);
   ExprVisitor visitor(&delegate);
-  visitor.VisitExpr(const_cast<Expr*>(expr));
+  // TODO: what should we do about errors?
+  (void)visitor.VisitExpr(const_cast<Expr*>(expr));
 }
 
 void WatWriter::WriteExprList(const ExprList& exprs) {
   WABT_TRACE(WriteExprList);
   ExprVisitorDelegate delegate(this);
   ExprVisitor visitor(&delegate);
-  visitor.VisitExprList(const_cast<ExprList&>(exprs));
+  // TODO: what should we do about errors?
+  (void)visitor.VisitExprList(const_cast<ExprList&>(exprs));
 }
 
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
@@ -1434,11 +1439,13 @@ void WatWriter::FlushExprTreeStack() {
 
 void WatWriter::WriteInitExpr(const ExprList& expr) {
   if (!expr.empty()) {
-    WritePuts("(", NextChar::None);
-    WriteExprList(expr);
+    /* Init expressions are always written folded. These positions accept a
+     * single folded expression, so wrapping a sequence of instructions in one
+     * pair of parentheses would produce output that cannot be parsed back. */
+    WriteFoldedExprList(expr);
+    FlushExprTreeStack();
     /* clear the next char, so we don't write a newline after the expr */
-    next_char_ = NextChar::None;
-    WritePuts(")", NextChar::Space);
+    next_char_ = NextChar::Space;
   }
 }
 

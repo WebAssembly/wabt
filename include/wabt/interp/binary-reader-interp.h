@@ -28,7 +28,14 @@ struct ReadBinaryOptions;
 namespace interp {
 
 Result ReadBinaryInterp(std::string_view filename,
-                        const void* data,
+                        ByteSpan data,
+                        const ReadBinaryOptions& options,
+                        Errors*,
+                        ModuleDesc* out_module);
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
+Result ReadBinaryInterp(std::string_view filename,
+                        const uint8_t* data,
                         size_t size,
                         const ReadBinaryOptions& options,
                         Errors*,

@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+;;; ARGS: --stdout --fold-exprs --debug-names
 (module
   (func
     block
@@ -85,5 +85,6 @@
     (try  ;; label = @1
       (do
         (br 0 (;@1;)))
-      (catch_all))))
+      (catch_all)))
+  (@custom "name" "\02\0b\05\00\00\01\00\02\00\03\00\04\00"))
 ;;; STDOUT ;;)

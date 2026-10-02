@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/exception-handling/legacy/try_catch.wast
-;;; ARGS*: --enable-exceptions --enable-tail-call
 (;; STDOUT ;;;
 out/test/spec/exception-handling/legacy/try_catch.wast:185: assert_trap passed: unreachable executed
 out/test/spec/exception-handling/legacy/try_catch.wast:188: assert_trap passed: integer divide by zero

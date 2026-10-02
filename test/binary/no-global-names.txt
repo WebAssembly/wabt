@@ -33,5 +33,6 @@ section("name") {
     return)
   (global (;0;) i32 (i32.const 0))
   (export "bar" (func $bar))
-  (export "d_glob" (global 0)))
+  (export "d_glob" (global 0))
+  (@custom "name" "\01\06\01\00\03bar"))
 ;;; STDOUT ;;)

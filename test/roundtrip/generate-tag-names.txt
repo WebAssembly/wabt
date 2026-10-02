@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; ARGS: --stdout --generate-names --enable-exceptions
+;;; ARGS: --stdout --generate-names
 (module
   (tag (param i32)))
 (;; STDOUT ;;;

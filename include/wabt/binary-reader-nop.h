@@ -409,9 +409,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result BeginDataSegmentInitExpr(Index index) override { return Result::Ok; }
   Result EndDataSegmentInitExpr(Index index) override { return Result::Ok; }
-  Result OnDataSegmentData(Index index,
-                           const void* data,
-                           Address size) override {
+  Result OnDataSegmentData(Index index, ByteSpan data) override {
     return Result::Ok;
   }
   Result EndDataSegment(Index index) override { return Result::Ok; }
@@ -500,9 +498,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCodeMetadataCount(Index function_index, Index count) override {
     return Result::Ok;
   }
-  Result OnCodeMetadata(Offset offset,
-                        const void* data,
-                        Address size) override {
+  Result OnCodeMetadata(Offset offset, ByteSpan data) override {
     return Result::Ok;
   }
   Result EndCodeMetadataSection() override { return Result::Ok; }
@@ -529,6 +525,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnDylinkExport(std::string_view name, uint32_t flags) override {
     return Result::Ok;
   }
+  Result OnDylinkRuntimePathCount(Index count) override { return Result::Ok; }
+  Result OnDylinkRuntimePath(std::string_view path) override {
+    return Result::Ok;
+  }
+  Result OnDylinkTargetArch(std::string_view arch) override {
+    return Result::Ok;
+  }
   Result EndDylinkSection() override { return Result::Ok; }
 
   /* target_features section */
@@ -541,9 +544,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
 
   /* Generic custom section */
   Result BeginGenericCustomSection(Offset size) override { return Result::Ok; }
-  Result OnGenericCustomSection(std::string_view name,
-                                const void* data,
-                                Offset size) override {
+  Result OnGenericCustomSection(std::string_view name, ByteSpan data) override {
     return Result::Ok;
   };
   Result EndGenericCustomSection() override { return Result::Ok; }
@@ -608,6 +609,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnComdatEntry(ComdatType kind, Index index) override {
     return Result::Ok;
   }
+  Result OnTargetArch(std::string_view arch) override { return Result::Ok; }
   Result EndLinkingSection() override { return Result::Ok; }
 };
 

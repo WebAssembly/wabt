@@ -17,6 +17,8 @@
 #ifndef WABT_STRING_FORMAT_H_
 #define WABT_STRING_FORMAT_H_
 
+#include <inttypes.h>
+
 #include <cstdarg>
 #include <string>
 #include <vector>
@@ -27,9 +29,9 @@
 #define WABT_PRINTF_STRING_VIEW_ARG(x) \
   static_cast<int>((x).length()), (x).data()
 
-#define PRItypecode "%s%#x"
+#define PRItypecode "%s%#" PRIx64
 #define WABT_PRINTF_TYPE_CODE(x) \
-  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
+  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int64_t>(x))
 
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \

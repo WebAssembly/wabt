@@ -312,9 +312,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                           uint8_t flags) override;
   Result BeginDataSegmentInitExpr(Index index) override;
   Result EndDataSegmentInitExpr(Index index) override;
-  Result OnDataSegmentData(Index index,
-                           const void* data,
-                           Address size) override;
+  Result OnDataSegmentData(Index index, ByteSpan data) override;
 
   Result OnModuleName(std::string_view module_name) override;
   Result OnFunctionNamesCount(Index num_functions) override;
@@ -328,9 +326,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index index,
                      std::string_view name) override;
 
-  Result OnGenericCustomSection(std::string_view name,
-                                const void* data,
-                                Offset size) override;
+  Result OnGenericCustomSection(std::string_view name, ByteSpan data) override;
 
   Result BeginTagSection(Offset size) override { return Result::Ok; }
   Result OnTagCount(Index count) override { return Result::Ok; }
@@ -358,7 +354,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result BeginCodeMetadataSection(std::string_view name, Offset size) override;
   Result OnCodeMetadataFuncCount(Index count) override;
   Result OnCodeMetadataCount(Index function_index, Index count) override;
-  Result OnCodeMetadata(Offset offset, const void* data, Address size) override;
+  Result OnCodeMetadata(Offset offset, ByteSpan data) override;
 
   Result OnTagSymbol(Index index,
                      uint32_t flags,
@@ -1216,7 +1212,9 @@ Result BinaryReaderIR::OnReturnExpr() {
 
 Result BinaryReaderIR::OnSelectExpr(Index result_count, Type* result_types) {
   auto expr_ptr = std::make_unique<SelectExpr>();
-  expr_ptr->result_type.assign(result_types, result_types + result_count);
+  if (result_count != 0) {
+    expr_ptr->result_type.assign(result_types, result_types + result_count);
+  }
   return AppendExpr(std::move(expr_ptr));
 }
 
@@ -1342,7 +1340,7 @@ Result BinaryReaderIR::OnDelegateExpr(Index depth) {
 
   try_->delegate_target = Var(depth, GetLocation());
 
-  PopLabel();
+  CHECK_RESULT(PopLabel());
   return Result::Ok;
 }
 
@@ -1521,15 +1519,10 @@ Result BinaryReaderIR::EndDataSegmentInitExpr(Index index) {
   return EndInitExpr();
 }
 
-Result BinaryReaderIR::OnDataSegmentData(Index index,
-                                         const void* data,
-                                         Address size) {
+Result BinaryReaderIR::OnDataSegmentData(Index index, ByteSpan data) {
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
-  segment->data.resize(size);
-  if (size > 0) {
-    memcpy(segment->data.data(), data, size);
-  }
+  segment->data.assign(data.begin(), data.end());
   return Result::Ok;
 }
 
@@ -1701,32 +1694,35 @@ Result BinaryReaderIR::OnNameEntry(NameSectionSubsection type,
     case NameSectionSubsection::Field:
       break;
     case NameSectionSubsection::Type:
-      SetTypeName(index, name);
+      return SetTypeName(index, name);
       break;
     case NameSectionSubsection::Tag:
-      SetTagName(index, name);
+      return SetTagName(index, name);
       break;
     case NameSectionSubsection::Global:
-      SetGlobalName(index, name);
+      return SetGlobalName(index, name);
       break;
     case NameSectionSubsection::Table:
-      SetTableName(index, name);
+      return SetTableName(index, name);
       break;
     case NameSectionSubsection::DataSegment:
-      SetDataSegmentName(index, name);
+      return SetDataSegmentName(index, name);
       break;
     case NameSectionSubsection::Memory:
-      SetMemoryName(index, name);
+      return SetMemoryName(index, name);
       break;
     case NameSectionSubsection::ElemSegment:
-      SetElemSegmentName(index, name);
+      return SetElemSegmentName(index, name);
       break;
   }
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
-  assert(index < module_->funcs.size());
+  if (index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, index);
+    return Result::Error;
+  }
   Func* func = module_->funcs[index];
   Index num_params_and_locals = func->GetNumParamsAndLocals();
   if (count > num_params_and_locals) {
@@ -1756,11 +1752,8 @@ Result BinaryReaderIR::OnCodeMetadataCount(Index function_index, Index count) {
   return Result::Error;
 }
 
-Result BinaryReaderIR::OnCodeMetadata(Offset offset,
-                                      const void* data,
-                                      Address size) {
-  std::vector<uint8_t> data_(static_cast<const uint8_t*>(data),
-                             static_cast<const uint8_t*>(data) + size);
+Result BinaryReaderIR::OnCodeMetadata(Offset offset, ByteSpan data) {
+  std::vector<uint8_t> data_(data.begin(), data.end());
   auto meta = std::make_unique<CodeMetadataExpr>(current_metadata_name_,
                                                  std::move(data_));
   meta->loc.offset = offset;
@@ -1775,6 +1768,10 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     return Result::Ok;
   }
 
+  if (func_index >= module_->funcs.size()) {
+    PrintError("invalid function index: %" PRIindex, func_index);
+    return Result::Error;
+  }
   Func* func = module_->funcs[func_index];
   func->bindings.emplace(GetUniqueName(&func->bindings, MakeDollarName(name)),
                          Binding(local_index));
@@ -1883,13 +1880,9 @@ Result BinaryReaderIR::OnTableSymbol(Index index,
 }
 
 Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
-                                              const void* data,
-                                              Offset size) {
+                                              ByteSpan data) {
   Custom custom = Custom(GetLocation(), name);
-  custom.data.resize(size);
-  if (size > 0) {
-    memcpy(custom.data.data(), data, size);
-  }
+  custom.data.assign(data.begin(), data.end());
   module_->customs.push_back(std::move(custom));
   return Result::Ok;
 }
@@ -1897,13 +1890,28 @@ Result BinaryReaderIR::OnGenericCustomSection(std::string_view name,
 }  // end anonymous namespace
 
 Result ReadBinaryIr(const char* filename,
-                    const void* data,
+                    ByteSpan data,
+                    const ReadBinaryOptions& options,
+                    Errors* errors,
+                    Module* out_module) {
+  // BinaryReaderIR does not support skipping function bodies; that option is
+  // for readers such as objdump that do not build a module. Skipping the
+  // bodies here leaves each function's label unclosed, because the end marker
+  // that would pop it is never read.
+  assert(!options.skip_function_bodies);
+  BinaryReaderIR reader(out_module, filename, errors);
+  return ReadBinary(data, &reader, options);
+}
+
+// TODO(sbc): Remove this old API. Use the ByteSpan overload instead.
+Result ReadBinaryIr(const char* filename,
+                    const uint8_t* data,
                     size_t size,
                     const ReadBinaryOptions& options,
                     Errors* errors,
                     Module* out_module) {
-  BinaryReaderIR reader(out_module, filename, errors);
-  return ReadBinary(data, size, &reader, options);
+  return ReadBinaryIr(filename, ByteSpan(data, size), options, errors,
+                      out_module);
 }
 
 }  // namespace wabt

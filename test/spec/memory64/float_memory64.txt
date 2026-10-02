@@ -1,6 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: test/old-spec/proposals/memory64/float_memory64.wast
-;;; ARGS*: --enable-memory64
 (;; STDOUT ;;;
 reset() =>
 f32.store() =>

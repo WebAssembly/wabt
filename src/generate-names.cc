@@ -156,7 +156,7 @@ void NameGenerator::GenerateAndBindName(BindingHash* bindings,
   unsigned disambiguator = 0;
   while (true) {
     GenerateName(prefix, index, disambiguator, str);
-    if (bindings->find(*str) == bindings->end()) {
+    if (!bindings->contains(*str)) {
       bindings->emplace(*str, Binding(index));
       break;
     }
@@ -179,10 +179,16 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
                                         Index index,
                                         std::string* str) {
   if (!HasName(*str)) {
+    if (!HasName(name)) {
+      // An empty import or export name would produce a bare "$", which is not
+      // a valid identifier. Leave the name unset; the index-based pass that
+      // runs afterwards will give it a usable one.
+      return;
+    }
     unsigned disambiguator = 0;
     while (true) {
       GenerateName(name, kInvalidIndex, disambiguator, str);
-      if (bindings->find(*str) == bindings->end()) {
+      if (!bindings->contains(*str)) {
         bindings->emplace(*str, Binding(index));
         break;
       }
@@ -417,14 +423,16 @@ Result NameGenerator::VisitModule(Module* module) {
     CHECK_RESULT(VisitExport(export_));
   }
 
-  VisitAll(module->globals, &NameGenerator::VisitGlobal);
-  VisitAll(module->types, &NameGenerator::VisitType);
-  VisitAll(module->funcs, &NameGenerator::VisitFunc);
-  VisitAll(module->tables, &NameGenerator::VisitTable);
-  VisitAll(module->memories, &NameGenerator::VisitMemory);
-  VisitAll(module->tags, &NameGenerator::VisitTag);
-  VisitAll(module->data_segments, &NameGenerator::VisitDataSegment);
-  VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment);
+  CHECK_RESULT(VisitAll(module->globals, &NameGenerator::VisitGlobal));
+  CHECK_RESULT(VisitAll(module->types, &NameGenerator::VisitType));
+  CHECK_RESULT(VisitAll(module->funcs, &NameGenerator::VisitFunc));
+  CHECK_RESULT(VisitAll(module->tables, &NameGenerator::VisitTable));
+  CHECK_RESULT(VisitAll(module->memories, &NameGenerator::VisitMemory));
+  CHECK_RESULT(VisitAll(module->tags, &NameGenerator::VisitTag));
+  CHECK_RESULT(
+      VisitAll(module->data_segments, &NameGenerator::VisitDataSegment));
+  CHECK_RESULT(
+      VisitAll(module->elem_segments, &NameGenerator::VisitElemSegment));
   module_ = nullptr;
   return Result::Ok;
 }

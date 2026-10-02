@@ -1,6 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/function-references/binary.wast
-;;; ARGS*: --enable-function-references
+;;; ARGS*: --enable-function-references --disable-multi-memory
 (;; STDOUT ;;;
 out/test/spec/function-references/binary.wast:6: assert_malformed passed:
   0000000: error: unable to read uint32_t: magic
@@ -131,9 +131,9 @@ out/test/spec/function-references/binary.wast:650: assert_malformed passed:
 out/test/spec/function-references/binary.wast:661: assert_malformed passed:
   000000e: error: unfinished section (expected end: 0x11)
 out/test/spec/function-references/binary.wast:680: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  000000e: error: unable to read uint8_t: tag attribute
 out/test/spec/function-references/binary.wast:690: assert_malformed passed:
-  000000e: error: invalid import tag kind: exceptions not allowed
+  000000f: error: unable to read u32 leb128: tag signature index
 out/test/spec/function-references/binary.wast:701: assert_malformed passed:
   000000e: error: invalid import external kind: 5
 out/test/spec/function-references/binary.wast:711: assert_malformed passed:

@@ -30,8 +30,7 @@ PLY_DIR = os.path.join(ROOT_DIR, 'third_party', 'ply')
 sys.path.append(PLY_DIR)
 
 try:
-    import ply.lex as lex
-    import ply.yacc as yacc
+    from ply import lex, yacc
 except ImportError:
     raise Error('Unable to import ply. Did you run "git submodule update"?')
 
@@ -77,12 +76,15 @@ NAMED_VALUES = {
     'LINKING_INIT_FUNCTIONS': 6,
     'LINKING_COMDAT_INFO': 7,
     'LINKING_SYMBOL_TABLE': 8,
+    'LINKING_TARGET_ARCH': 9,
 
     # dylink.0 subsection codes
     'DYLINK_MEM_INFO': 1,
     'DYLINK_NEEDED': 2,
     'DYLINK_EXPORT_INFO': 3,
     'DYLINK_IMPORT_INFO': 4,
+    'DYLINK_RUNTIME_PATH': 5,
+    'DYLINK_TARGET_ARCH': 6,
 
     # external kinds
     'func_kind': 0,
@@ -316,7 +318,6 @@ t_ignore = ' \t'
 
 def t_COMMENT(t):
     r';;.*'
-    pass
 
 
 def t_INT(t):
@@ -359,7 +360,7 @@ def t_newline(t):
 
 
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    print(f"Illegal character '{t.value[0]}'")
     t.lexer.skip(1)
 
 
@@ -528,7 +529,7 @@ def p_data_empty(p):
 
 
 def p_error(p):
-    raise Error('%d: syntax error, %s' % (p.lineno, p))
+    raise Error(f'{p.lineno}: syntax error, {p}')
 
 
 parser = yacc.yacc(debug=False, tabmodule='gen_wasm',
