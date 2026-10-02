@@ -169,8 +169,7 @@ class BinaryReader {
   Result ReadCodeMetadataSection(std::string_view name, Offset section_size);
   Result ReadCustomSection(Index section_index, Offset section_size);
   Result ReadTypeSection(Offset section_size);
-  Result ReadImport(Index i,
-                    std::string_view module_name,
+  Result ReadImport(std::string_view module_name,
                     std::string_view field_name,
                     ExternalKind kind);
   Result ReadImportSection(Offset section_size);
@@ -2737,10 +2736,13 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadImport(Index i,
-                                std::string_view module_name,
+Result BinaryReader::ReadImport(std::string_view module_name,
                                 std::string_view field_name,
                                 ExternalKind kind) {
+  // Each import increments exactly one of the per-kind counters below, so
+  // their sum is the index of this import within the import section.
+  Index i = num_func_imports_ + num_table_imports_ + num_memory_imports_ +
+            num_global_imports_ + num_tag_imports_;
   CALLBACK(OnImport, i, kind, module_name, field_name);
   switch (kind) {
     case ExternalKind::Func: {
@@ -2806,7 +2808,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
   Index num_entries;
   CHECK_RESULT(ReadCount(&num_entries, "import count"));
   CALLBACK(OnImportCount, num_entries);
-  Index i = 0;
   for (Index entry = 0; entry < num_entries; ++entry) {
     std::string_view module_name;
     CHECK_RESULT(ReadStr(&module_name, "import module name"));
@@ -2827,7 +2828,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         CHECK_RESULT(ReadCount(&num_compact_imports, "compact import count"));
         for (Index j = 0; j < num_compact_imports; ++j) {
           CHECK_RESULT(ReadStr(&field_name, "compact import field name"));
-          CHECK_RESULT(ReadImport(i++, module_name, field_name, kind));
+          CHECK_RESULT(ReadImport(module_name, field_name, kind));
         }
       } else {
         CHECK_RESULT(ReadCount(&num_compact_imports, "compact import count"));
@@ -2835,7 +2836,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
           CHECK_RESULT(ReadStr(&field_name, "compact import field name"));
           CHECK_RESULT(
               ReadExternalKind(&kind, "compact import kind", "import"));
-          CHECK_RESULT(ReadImport(i++, module_name, field_name, kind));
+          CHECK_RESULT(ReadImport(module_name, field_name, kind));
         }
       }
     } else {
@@ -2844,7 +2845,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       // byte so we can read it with ReadExternalKind
       state_.offset--;
       CHECK_RESULT(ReadExternalKind(&kind, "import kind", "import"));
-      CHECK_RESULT(ReadImport(i++, module_name, field_name, kind));
+      CHECK_RESULT(ReadImport(module_name, field_name, kind));
     }
   }
 
