@@ -36,8 +36,22 @@
 
 using namespace wabt;
 
+namespace {
+
+struct FileCloser {
+  void operator()(FILE* file) const { fclose(file); }
+};
+
+#if defined(_WIN64)
+struct HandleCloser {
+  void operator()(HANDLE handle) const { CloseHandle(handle); }
+};
+#endif
+
+}  // namespace
+
 TEST(FileStream, LargeWriteAndPatch) {
-  std::unique_ptr<FILE, decltype(&fclose)> file(tmpfile(), &fclose);
+  std::unique_ptr<FILE, FileCloser> file(tmpfile());
   ASSERT_NE(nullptr, file);
   constexpr size_t kChunkSize = 64 * 1024 * 1024;
   std::vector<uint8_t> data(kChunkSize + 17, 0x5a);
@@ -70,7 +84,7 @@ TEST(FileStream, LargeWriteAndPatch) {
 
 #if !COMPILER_IS_MSVC
 TEST(FileStream, RejectUnrepresentableSeekOffset) {
-  std::unique_ptr<FILE, decltype(&fclose)> file(tmpfile(), &fclose);
+  std::unique_ptr<FILE, FileCloser> file(tmpfile());
   ASSERT_NE(nullptr, file);
   FileStream stream(file.get());
   const std::array<uint8_t, 1> data{0xab};
@@ -94,10 +108,9 @@ TEST(FileStream, ReadAndPatchAbove2GBOnWindows64) {
     ~TempFile() { DeleteFileW(path.c_str()); }
   } temp{filename};
 
-  std::unique_ptr<void, decltype(&CloseHandle)> handle(
+  std::unique_ptr<void, HandleCloser> handle(
       CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr),
-      &CloseHandle);
+                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
   ASSERT_NE(INVALID_HANDLE_VALUE, handle.get());
   DWORD bytes_returned;
   if (!DeviceIoControl(handle.get(), FSCTL_SET_SPARSE, nullptr, 0, nullptr, 0,
@@ -118,8 +131,7 @@ TEST(FileStream, ReadAndPatchAbove2GBOnWindows64) {
   handle.reset();
 
   {
-    std::unique_ptr<FILE, decltype(&fclose)> file(_wfopen(filename, L"r+b"),
-                                                  &fclose);
+    std::unique_ptr<FILE, FileCloser> file(_wfopen(filename, L"r+b"));
     ASSERT_NE(nullptr, file);
     FileStream stream(file.get());
     const std::array<uint8_t, 1> patch{0xab};
