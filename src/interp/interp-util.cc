@@ -16,6 +16,7 @@
 
 #include "wabt/interp/interp-util.h"
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "wabt/stream.h"
@@ -84,9 +85,10 @@ void WriteValues(Stream* stream,
                  const ValueTypes& types,
                  const Values& values) {
   assert(types.size() == values.size());
-  for (size_t i = 0; i < values.size(); ++i) {
+  size_t count = std::min(types.size(), values.size());
+  for (size_t i = 0; i < count; ++i) {
     WriteValue(stream, TypedValue{types[i], values[i]});
-    if (i != values.size() - 1) {
+    if (i != count - 1) {
       stream->Writef(", ");
     }
   }
