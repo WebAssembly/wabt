@@ -1,0 +1,46 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-annotations --enable-code-metadata
+(module
+  ;; The annotation decorates i32.add. Folding must not move it onto another
+  ;; instruction, and must not fold the operands into i32.add either, since a
+  ;; folded expression expands to its operands first.
+  (func $f (param i32) (result i32)
+    i32.const 1234
+    local.get 0
+    (@metadata.code.test "aa\01a") i32.add
+    return)
+
+  ;; An annotation on an instruction that takes no operands.
+  (func $g
+    (@metadata.code.test "b") nop)
+
+  ;; An annotation on a block-like instruction, which the writer emits at
+  ;; statement level rather than as an operand. A branch hint is this shape.
+  (func $h (param i32)
+    local.get 0
+    i32.const 1
+    i32.eq
+    (@metadata.code.test "c") if
+      nop
+    end))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result i32)))
+  (type (;1;) (func))
+  (type (;2;) (func (param i32)))
+  (func (;0;) (type 0) (param i32) (result i32)
+    (return
+      (@metadata.code.test "aa\01a") (i32.add
+        (i32.const 1234)
+        (local.get 0))))
+  (func (;1;) (type 1)
+    (@metadata.code.test "b") (nop))
+  (func (;2;) (type 2) (param i32)
+    (@metadata.code.test "c") (if  ;; label = @1
+      (i32.eq
+        (local.get 0)
+        (i32.const 1))
+      (then
+        (nop))))
+  (@custom "metadata.code.test" "\03\00\01\06\04aa\01a\01\01\01\01b\02\01\06\01c"))
+;;; STDOUT ;;)
