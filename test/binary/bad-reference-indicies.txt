@@ -5,7 +5,7 @@ magic
 version
 section(TYPE) {
   count[2]
-  function params[1] reference 10 results[1] reference 20
+  function params[1] ref 10 results[1] ref 20
   function params[0] results[0]
 }
 section(FUNCTION) { count[1] sig[1] }
@@ -13,7 +13,7 @@ section(CODE) {
   count[1]
   func {
     local_decls[1]
-    locals[1] reference 30
+    locals[1] ref 30
   }
 }
 (;; STDERR ;;;
