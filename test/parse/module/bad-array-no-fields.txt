@@ -3,7 +3,7 @@
 ;;; ERROR: 1
 (type (array))
 (;; STDERR ;;;
-out/test/parse/module/bad-array-no-fields.txt:4:13: error: unexpected token ")", expected i32, i64, f32, f64, v128, externref, exnref or funcref.
+out/test/parse/module/bad-array-no-fields.txt:4:13: error: unexpected token ")", expected i8, i16, i32, i64, f32, f64, v128, anyref, arrayref, eqref, externref, exnref, funcref, i31ref, nullref, nullexternref or nullfuncref.
 (type (array))
             ^
 ;;; STDERR ;;)

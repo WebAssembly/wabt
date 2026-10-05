@@ -15,4 +15,7 @@ out/test/parse/bad-ref-globals.txt:6:4: error: reference 9998 is out of range (m
 out/test/parse/bad-ref-globals.txt:6:37: error: function type variable out of range: 9998 (max 0)
   (global (ref null 9998) (ref.null 9998))
                                     ^^^^
+out/test/parse/bad-ref-globals.txt:6:28: error: type mismatch in initializer expression, expected [(ref null 9998)] but got [(ref null 9998)]
+  (global (ref null 9998) (ref.null 9998))
+                           ^^^^^^^^
 ;;; STDERR ;;)
