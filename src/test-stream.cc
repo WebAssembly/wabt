@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <array>
 #include <climits>
+#include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <vector>
@@ -29,9 +30,9 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+#include <io.h>
 #include <windows.h>
 #include <winioctl.h>
-#include <filesystem>
 #endif
 
 using namespace wabt;
@@ -41,14 +42,44 @@ namespace {
 struct FileCloser {
   void operator()(FILE* file) const { fclose(file); }
 };
-
-#if COMPILER_IS_MSVC && defined(_WIN64)
-struct HandleCloser {
-  void operator()(HANDLE handle) const { CloseHandle(handle); }
-};
-#endif
-
 }  // namespace
+
+#if SIZE_MAX > UINT32_MAX
+TEST(FileStream, SeekAndPatchAbove4GB) {
+  std::unique_ptr<FILE, FileCloser> file(tmpfile());
+  ASSERT_NE(nullptr, file);
+#if COMPILER_IS_MSVC
+  // Keep the disk footprint small when seeking beyond the end on NTFS.
+  HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(file.get())));
+  DWORD bytes_returned;
+  if (!DeviceIoControl(handle, FSCTL_SET_SPARSE, nullptr, 0, nullptr, 0,
+                       &bytes_returned, nullptr)) {
+    GTEST_SKIP() << "This large-file test requires sparse-file support";
+  }
+#endif
+  constexpr size_t kOffset = size_t{1} << 32;
+  FileStream stream(file.get());
+  const std::array<uint8_t, 1> initial{0x12};
+  stream.WriteDataAt(kOffset, initial);
+  ASSERT_EQ(Result::Ok, stream.result());
+  const std::array<uint8_t, 1> patch{0xab};
+  stream.WriteDataAt(kOffset, patch);
+  ASSERT_EQ(Result::Ok, stream.result());
+  stream.Flush();
+#if COMPILER_IS_MSVC
+  ASSERT_EQ(0, _fseeki64(file.get(), 0, SEEK_END));
+  EXPECT_EQ(kOffset + 1, static_cast<size_t>(_ftelli64(file.get())));
+  ASSERT_EQ(0, _fseeki64(file.get(), kOffset, SEEK_SET));
+#else
+  ASSERT_EQ(0, fseek(file.get(), 0, SEEK_END));
+  EXPECT_EQ(kOffset + 1, static_cast<size_t>(ftell(file.get())));
+  ASSERT_EQ(0, fseek(file.get(), kOffset, SEEK_SET));
+#endif
+  EXPECT_EQ(0xab, fgetc(file.get()));
+  EXPECT_EQ(EOF, fgetc(file.get()));
+  EXPECT_EQ(0, ferror(file.get()));
+}
+#endif
 
 TEST(FileStream, LargeWriteAndPatch) {
   std::unique_ptr<FILE, FileCloser> file(tmpfile());
@@ -99,21 +130,24 @@ TEST(FileStream, RejectUnrepresentableSeekOffset) {
 
 #if COMPILER_IS_MSVC && defined(_WIN64)
 TEST(FileStream, ReadAndPatchAbove2GBOnWindows64) {
-  wchar_t directory[MAX_PATH];
-  ASSERT_NE(0u, GetTempPathW(MAX_PATH, directory));
-  wchar_t filename[MAX_PATH];
-  ASSERT_NE(0u, GetTempFileNameW(directory, L"wbt", 0, filename));
+  const char* filename = "large_file.dat";
   struct TempFile {
-    std::filesystem::path path;
-    ~TempFile() { DeleteFileW(path.c_str()); }
-  } temp{filename};
+    const char* path = nullptr;
+    ~TempFile() {
+      if (path) {
+        remove(path);
+      }
+    }
+  } temp;
+  // Exclusive creation avoids overwriting an existing file in the test dir.
+  std::unique_ptr<FILE, FileCloser> file(fopen(filename, "w+bx"));
+  ASSERT_NE(nullptr, file);
+  temp.path = filename;
 
-  std::unique_ptr<void, HandleCloser> handle(
-      CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
-                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-  ASSERT_NE(INVALID_HANDLE_VALUE, handle.get());
+  // Only sparse-file setup needs the Windows API; stdio handles the file IO.
+  HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(file.get())));
   DWORD bytes_returned;
-  if (!DeviceIoControl(handle.get(), FSCTL_SET_SPARSE, nullptr, 0, nullptr, 0,
+  if (!DeviceIoControl(handle, FSCTL_SET_SPARSE, nullptr, 0, nullptr, 0,
                        &bytes_returned, nullptr)) {
     GTEST_SKIP() << "This large-file test requires sparse-file support";
   }
@@ -121,27 +155,21 @@ TEST(FileStream, ReadAndPatchAbove2GBOnWindows64) {
   // A sparse file avoids allocating 2GB of disk space. Only Windows x64 runs
   // this test because ReadFile still needs a buffer of roughly 2GB.
   constexpr size_t kOffset = static_cast<size_t>(INT_MAX) + 1;
-  LARGE_INTEGER position;
-  position.QuadPart = kOffset;
-  ASSERT_TRUE(SetFilePointerEx(handle.get(), position, nullptr, FILE_BEGIN));
-  const uint8_t initial = 0x12;
-  DWORD bytes_written;
-  ASSERT_TRUE(WriteFile(handle.get(), &initial, 1, &bytes_written, nullptr));
-  ASSERT_EQ(1u, bytes_written);
-  handle.reset();
+  ASSERT_EQ(0, _fseeki64(file.get(), kOffset, SEEK_SET));
+  ASSERT_NE(EOF, fputc(0x12, file.get()));
+  ASSERT_EQ(0, fflush(file.get()));
 
   {
-    std::unique_ptr<FILE, FileCloser> file(_wfopen(filename, L"r+b"));
-    ASSERT_NE(nullptr, file);
     FileStream stream(file.get());
     const std::array<uint8_t, 1> patch{0xab};
     stream.WriteDataAt(kOffset, patch);
     ASSERT_EQ(Result::Ok, stream.result());
     stream.Flush();
   }
+  file.reset();
 
   std::vector<uint8_t> data;
-  ASSERT_EQ(Result::Ok, ReadFile(temp.path.string(), &data));
+  ASSERT_EQ(Result::Ok, ReadFile(filename, &data));
   ASSERT_EQ(kOffset + 1, data.size());
   EXPECT_EQ(0, data.front());
   EXPECT_EQ(0, data[kOffset - 1]);

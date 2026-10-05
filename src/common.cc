@@ -23,10 +23,6 @@
 #include <cstdio>
 #include <cstring>
 
-#if COMPILER_IS_MSVC
-#include <limits>
-#endif
-
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -34,6 +30,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <stdlib.h>
+#include <limits>
 #define PATH_MAX _MAX_PATH
 #define stat _stat64
 #define fseek _fseeki64
