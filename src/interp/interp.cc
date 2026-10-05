@@ -537,7 +537,15 @@ Result DefinedFunc::DoCall(Thread& thread,
                            const Values& params,
                            Values& results,
                            Trap::Ptr* out_trap) {
-  assert(params.size() == type_.params.size());
+  if (params.size() != type_.params.size()) {
+    *out_trap =
+        Trap::New(thread.store(),
+                  StringPrintf("argument count mismatch: expected %" PRIindex
+                               ", got %" PRIindex,
+                               static_cast<Index>(type_.params.size()),
+                               static_cast<Index>(params.size())));
+    return Result::Error;
+  }
   thread.PushValues(type_.params, params);
   RunResult result = thread.PushCall(*this, out_trap);
   if (result == RunResult::Trap) {
