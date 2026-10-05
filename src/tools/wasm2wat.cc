@@ -119,7 +119,7 @@ int ProgramMain(int argc, char** argv) {
         result = ValidateModule(&module, &errors, options);
       }
 
-      if (s_generate_names) {
+      if (Succeeded(result) && s_generate_names) {
         result = GenerateNames(&module);
       }
 
