@@ -150,6 +150,12 @@ static bool u64_mult_overflow(uint64_t a, uint64_t b, uint64_t* result) {
   return false;
 }
 
+// On 32-bit hosts a byte length can exceed SIZE_MAX, which calloc and realloc
+// would silently truncate.
+static bool u64_fits_size_t(uint64_t size) {
+  return (size_t)size == size;
+}
+
 // Include operations for memory
 #define WASM_RT_MEM_OPS
 #include "wasm-rt-mem-impl-helper.inc"
