@@ -1,0 +1,18 @@
+;;; TOOL: run-spec-wasm2c
+;; Growing to 65536 pages makes the memory 4 GiB long, which a 32-bit size_t
+;; cannot hold. The grow may succeed or fail, but the memory must stay usable.
+(module
+  (memory 1)
+  (func (export "grow_to_4gib") (result i32)
+    (i32.store8 (i32.const 0) (i32.const 42))
+    (if (i32.ne (memory.grow (i32.const 65535)) (i32.const -1))
+      (then
+        (i32.store8 (i32.const -1) (i32.const 7))
+        (if (i32.ne (i32.load8_u (i32.const -1)) (i32.const 7))
+          (then (return (i32.const 0))))))
+    (i32.load8_u (i32.const 0)))
+)
+(assert_return (invoke "grow_to_4gib") (i32.const 42))
+(;; STDOUT ;;;
+1/1 tests passed.
+;;; STDOUT ;;)
