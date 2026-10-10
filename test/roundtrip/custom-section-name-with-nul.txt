@@ -1,0 +1,14 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (@custom "\00leading" "a")
+  (@custom "middle\00middle" "b")
+  (@custom "trailing\00" "c")
+  (@custom "\00" "d"))
+(;; STDOUT ;;;
+(module
+  (@custom "\00leading" "a")
+  (@custom "middle\00middle" "b")
+  (@custom "trailing\00" "c")
+  (@custom "\00" "d"))
+;;; STDOUT ;;)
