@@ -19,6 +19,11 @@
 #include <cassert>
 #include <cctype>
 #include <cerrno>
+#include <climits>
+
+#if COMPILER_IS_MSVC
+#define fseek _fseeki64
+#endif
 
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
@@ -273,8 +278,16 @@ Result FileStream::WriteDataImpl(size_t at, ByteSpan data) {
     return Result::Ok;
   }
   if (at != offset_) {
+#if !COMPILER_IS_MSVC
+    // fseek takes a long offset on this path; do not truncate a larger size_t.
+    if (at > static_cast<size_t>(LONG_MAX)) {
+      errno = EINVAL;
+      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", at, errno);
+      return Result::Error;
+    }
+#endif
     if (fseek(file_, at, SEEK_SET) != 0) {
-      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", data.size(), errno);
+      ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", at, errno);
       return Result::Error;
     }
     offset_ = at;

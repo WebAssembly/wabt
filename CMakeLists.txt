@@ -721,6 +721,7 @@ if (BUILD_TESTS)
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
+    src/test-stream.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc
