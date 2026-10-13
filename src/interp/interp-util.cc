@@ -84,7 +84,6 @@ void WriteValue(Stream* stream, const TypedValue& tv) {
 void WriteValues(Stream* stream,
                  const ValueTypes& types,
                  const Values& values) {
-  assert(types.size() == values.size());
   size_t count = std::min(types.size(), values.size());
   for (size_t i = 0; i < count; ++i) {
     WriteValue(stream, TypedValue{types[i], values[i]});
