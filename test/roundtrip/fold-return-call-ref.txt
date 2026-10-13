@@ -1,0 +1,26 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-function-references
+(module
+  (type $i_i (func (param i32) (result i32)))
+
+  (func $callee (type $i_i)
+    local.get 0)
+
+  (elem declare funcref (ref.func $callee))
+
+  (func $fold-return-call-ref (param i32) (result i32)
+    local.get 0
+    ref.func $callee
+    return_call_ref $i_i)
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result i32)))
+  (func (;0;) (type 0) (param i32) (result i32)
+    (local.get 0))
+  (func (;1;) (type 0) (param i32) (result i32)
+    (return_call_ref 0
+      (local.get 0)
+      (ref.func 0)))
+  (elem (;0;) declare funcref (ref.func 0)))
+;;; STDOUT ;;)
