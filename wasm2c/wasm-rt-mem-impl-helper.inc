@@ -69,7 +69,8 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
                                               bool is64,
                                               uint32_t page_size) {
   uint64_t byte_length;
-  if (u64_mult_overflow(initial_pages, page_size, &byte_length)) {
+  if (u64_mult_overflow(initial_pages, page_size, &byte_length) ||
+      !u64_fits_size_t(byte_length)) {
     abort();
   }
   memory->size = byte_length;
@@ -157,7 +158,8 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
   uint64_t old_size, new_size, delta_size;
   if (u64_mult_overflow(old_pages, memory->page_size, &old_size) ||
       u64_mult_overflow(new_pages, memory->page_size, &new_size) ||
-      u64_mult_overflow(delta, memory->page_size, &delta_size)) {
+      u64_mult_overflow(delta, memory->page_size, &delta_size) ||
+      !u64_fits_size_t(new_size)) {
     return (uint64_t)-1;
   }
 
