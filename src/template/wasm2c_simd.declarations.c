@@ -13,7 +13,7 @@
 #elif defined(__powerpc64__) || defined(__ppc64__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"v"(var));
 #else
-#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
+#define SIMD_FORCE_READ(var) __asm__("" ::"m"(var));
 #endif
 #else
 #error \

@@ -28,7 +28,7 @@ R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"v"(var));
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"
-R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
+R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"m"(var));
 )w2c_template"
 R"w2c_template(#endif
 )w2c_template"
