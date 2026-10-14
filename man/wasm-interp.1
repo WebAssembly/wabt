@@ -8,7 +8,6 @@
 .Nm wasm-interp
 .Op options
 .Ar filename
-.Ar [arg]...
 .Sh DESCRIPTION
 .Nm
 read a file in the wasm binary format, and run in it a stack-based  interpreter.
@@ -75,12 +74,6 @@ Trace execution
 Run exported function by name
 .It Fl a , Fl Fl argument=ARGUMENT
 Add argument to an exported function execution
-.It Fl Fl wasi
-Assume input module is WASI compliant (Export  WASI API the the module and invoke _start function)
-.It Fl e , Fl Fl env=ENV
-Pass the given environment string in the WASI runtime
-.It Fl d , Fl Fl dir=DIR
-Pass the given directory the the WASI runtime
 .It Fl Fl run-all-exports
 Run all the exported functions, in order. Useful for testing
 .It Fl Fl host-print
