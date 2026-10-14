@@ -11,7 +11,7 @@
 #elif defined(__s390x__)
 #define SIMD_FORCE_READ(var) __asm__("" ::"d"(var));
 #else
-#define SIMD_FORCE_READ(var) __asm__("" ::"f"(var));
+#define SIMD_FORCE_READ(var) __asm__("" ::"m"(var));
 #endif
 #else
 #error \
