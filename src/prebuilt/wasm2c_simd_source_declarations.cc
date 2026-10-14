@@ -14,7 +14,7 @@ R"w2c_template(#elif defined(__aarch64__)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"w"(var));
 )w2c_template"
-R"w2c_template(#elif defined(__riscv)
+R"w2c_template(#elif defined(__riscv) && defined(__riscv_vector)
 )w2c_template"
 R"w2c_template(#define SIMD_FORCE_READ(var) __asm__("" ::"vr"(var));
 )w2c_template"
