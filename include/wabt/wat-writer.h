@@ -22,6 +22,7 @@
 
 namespace wabt {
 
+class Component;
 struct Module;
 class Stream;
 
@@ -35,6 +36,7 @@ struct WriteWatOptions {
 };
 
 Result WriteWat(Stream*, const Module*, const WriteWatOptions&);
+Result WriteComponentWat(Stream*, const Component*, const WriteWatOptions&);
 
 }  // namespace wabt
 
