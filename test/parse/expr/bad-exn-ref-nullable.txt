@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func (param exnref) (result (ref exn))
+    (local.get 0)))
+(;; STDERR ;;;
+out/test/parse/expr/bad-exn-ref-nullable.txt:6:6: error: type mismatch in implicit return, expected [(ref exn)] but got [exnref]
+    (local.get 0)))
+     ^^^^^^^^^
+;;; STDERR ;;)
