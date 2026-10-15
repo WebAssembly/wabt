@@ -6,6 +6,27 @@
 
 #include "dhrystone.h"
 
+#if WABT_BIG_ENDIAN
+static inline uint16_t wasm2c_bswap16(uint16_t value) {
+  return (uint16_t)((value << 8) | (value >> 8));
+}
+
+static inline uint32_t wasm2c_bswap32(uint32_t value) {
+  return ((value & 0x000000ffu) << 24) | ((value & 0x0000ff00u) << 8) |
+         ((value & 0x00ff0000u) >> 8) | ((value & 0xff000000u) >> 24);
+}
+
+static inline uint64_t wasm2c_bswap64(uint64_t value) {
+  return ((uint64_t)wasm2c_bswap32((uint32_t)value) << 32) |
+         wasm2c_bswap32((uint32_t)(value >> 32));
+}
+
+#define htole16 wasm2c_bswap16
+#define htole32 wasm2c_bswap32
+#define htole64 wasm2c_bswap64
+#endif
+
+
 struct w2c_wasi__snapshot__preview1 {
   wasm_rt_memory_t* w2c_memory;
   uvwasi_t* uvwasi;
@@ -17,13 +38,7 @@ struct w2c_wasi__snapshot__preview1 {
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-#if WABT_BIG_ENDIAN
-#define MEM_ADDR(mem, addr, n) ((mem)->data_end - (addr) - (n))
-#else
-#define MEM_ADDR(mem, addr, n) &((mem)->data[addr])
-#endif
-
-#define MEM_ADDR_MEMOP(mem, addr, n) MEM_ADDR(mem, addr, n)
+#define MEM_ADDR_MEMOP(mem, addr) (&(mem)->data[addr])
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
@@ -33,10 +48,21 @@ typedef uint64_t u64;
 
 static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
   RANGE_CHECK(mem, d, n);
-  memset(MEM_ADDR(mem, d, n), val, n);
+  memset(&mem->data[d], val, n);
 }
 
 #define MEMCHECK(mem, a, t) RANGE_CHECK(mem, a, sizeof(t))
+
+#define WASM_ADJUST_ENDIAN_u8(value) (value)
+#if WABT_BIG_ENDIAN
+#define WASM_ADJUST_ENDIAN_u16 htole16
+#define WASM_ADJUST_ENDIAN_u32 htole32
+#define WASM_ADJUST_ENDIAN_u64 htole64
+#else
+#define WASM_ADJUST_ENDIAN_u16(value) (value)
+#define WASM_ADJUST_ENDIAN_u32(value) (value)
+#define WASM_ADJUST_ENDIAN_u64(value) (value)
+#endif
 
 #ifdef __GNUC__
 #define FORCE_READ_INT(var) __asm__("" ::"r"(var));
@@ -48,8 +74,8 @@ static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
   static inline t3 name(wasm_rt_memory_t* mem, u64 addr) {         \
     MEMCHECK(mem, addr, t1);                                       \
     t1 result;                                                     \
-    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), \
-                   sizeof(t1));                                    \
+    wasm_rt_memcpy(&result, MEM_ADDR_MEMOP(mem, addr), sizeof(t1)); \
+    result = WASM_ADJUST_ENDIAN_##t1(result);                      \
     force_read(result);                                            \
     return (t3)(t2)result;                                         \
   }
@@ -58,8 +84,8 @@ static inline void memory_fill(wasm_rt_memory_t* mem, u32 d, u32 val, u32 n) {
   static inline void name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
     MEMCHECK(mem, addr, t1);                                           \
     t1 wrapped = (t1)value;                                            \
-    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr, sizeof(t1)), &wrapped,    \
-                   sizeof(t1));                                        \
+    wrapped = WASM_ADJUST_ENDIAN_##t1(wrapped);                        \
+    wasm_rt_memcpy(MEM_ADDR_MEMOP(mem, addr), &wrapped, sizeof(t1));   \
   }
 
 DEFINE_LOAD(i8_load, u8, u8, u8, FORCE_READ_INT)
@@ -106,7 +132,7 @@ u32 w2c_wasi__snapshot__preview1_fd_write(
     u32 wasi_iovs_i = iovs_offset + i * sizeof(uvwasi_size_t[2]);
     u32 buf_loc = i32_load(a->w2c_memory, wasi_iovs_i);
     u32 buf_len = i32_load(a->w2c_memory, wasi_iovs_i + sizeof(uvwasi_size_t));
-    iovs[i].buf = MEM_ADDR(a->w2c_memory, buf_loc, buf_len);
+    iovs[i].buf = &a->w2c_memory->data[buf_loc];
     iovs[i].buf_len = buf_len;
   }
 
