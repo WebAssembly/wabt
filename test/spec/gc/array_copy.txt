@@ -1,0 +1,25 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/array_copy.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/array_copy.wast:6: assert_invalid passed:
+  out/test/spec/gc/array_copy/array_copy.0.wasm:0000049: error: array is immutable
+  0000049: error: OnArrayCopyExpr callback failed
+out/test/spec/gc/array_copy.wast:18: assert_invalid passed:
+  out/test/spec/gc/array_copy/array_copy.1.wasm:000004e: error: type mismatch: array types do not match
+  000004e: error: OnArrayCopyExpr callback failed
+out/test/spec/gc/array_copy.wast:30: assert_invalid passed:
+  out/test/spec/gc/array_copy/array_copy.2.wasm:000004e: error: type mismatch: array types do not match
+  000004e: error: OnArrayCopyExpr callback failed
+out/test/spec/gc/array_copy.wast:42: assert_invalid passed:
+  out/test/spec/gc/array_copy/array_copy.3.wasm:0000052: error: type mismatch: array types do not match
+  0000052: error: OnArrayCopyExpr callback failed
+out/test/spec/gc/array_copy.wast:97: assert_trap passed: null array ref
+out/test/spec/gc/array_copy.wast:98: assert_trap passed: null array ref
+out/test/spec/gc/array_copy.wast:101: assert_trap passed: invalid range
+out/test/spec/gc/array_copy.wast:102: assert_trap passed: invalid range
+out/test/spec/gc/array_copy.wast:105: assert_trap passed: invalid range
+out/test/spec/gc/array_copy.wast:106: assert_trap passed: invalid range
+out/test/spec/gc/array_copy.wast:116: assert_trap passed: invalid index
+35/35 tests passed.
+;;; STDOUT ;;)
