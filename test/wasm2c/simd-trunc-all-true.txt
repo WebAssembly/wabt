@@ -1,0 +1,45 @@
+;;; TOOL: run-spec-wasm2c
+(module
+  (func (export "trunc") (param v128) (result v128)
+    (i32x4.trunc_sat_f32x4_u (local.get 0)))
+  (func (export "all_true") (param v128) (result i32)
+    (i64x2.all_true (local.get 0))))
+
+;; Exact integers in the upper half of the unsigned range, plus a fraction.
+(assert_return
+  (invoke "trunc" (v128.const i32x4 0x4f32d05e 0x4f000001 0x4f7fffff 0x3fc00000))
+  (v128.const i32x4 3000000000 2147483904 4294967040 1))
+;; Exercise the same values in the other lanes.
+(assert_return
+  (invoke "trunc" (v128.const i32x4 0x3fc00000 0x4f7fffff 0x4f000001 0x4f32d05e))
+  (v128.const i32x4 1 4294967040 2147483904 3000000000))
+;; Values at and around 2^31 and 2^32.
+(assert_return
+  (invoke "trunc" (v128.const f32x4 2147483520 2147483648 4294967296 4294967808))
+  (v128.const i32x4 2147483520 2147483648 4294967295 4294967295))
+(assert_return
+  (invoke "trunc" (v128.const f32x4 -inf inf nan -nan))
+  (v128.const i32x4 0 4294967295 0 0))
+(assert_return
+  (invoke "trunc" (v128.const f32x4 -1.5 -0 0 1.5))
+  (v128.const i32x4 0 0 0 1))
+
+;; INT64_MIN has the bit pattern of double negative zero, but is nonzero.
+(assert_return (invoke "all_true" (v128.const i64x2 0x8000000000000000 1))
+  (i32.const 1))
+(assert_return (invoke "all_true" (v128.const i64x2 1 0x8000000000000000))
+  (i32.const 1))
+(assert_return
+  (invoke "all_true" (v128.const i64x2 0x8000000000000000 0x8000000000000000))
+  (i32.const 1))
+(assert_return (invoke "all_true" (v128.const i64x2 0 1)) (i32.const 0))
+(assert_return (invoke "all_true" (v128.const i64x2 1 0)) (i32.const 0))
+(assert_return (invoke "all_true" (v128.const i64x2 1 1)) (i32.const 1))
+(assert_return (invoke "all_true" (v128.const i64x2 0 0)) (i32.const 0))
+(assert_return (invoke "all_true" (v128.const i64x2 0 0x8000000000000000))
+  (i32.const 0))
+(assert_return (invoke "all_true" (v128.const i64x2 0x8000000000000000 0))
+  (i32.const 0))
+(;; STDOUT ;;;
+14/14 tests passed.
+;;; STDOUT ;;)
