@@ -319,9 +319,7 @@ void WatWriter::WriteName(std::string_view str, NextChar next_char) {
       str.begin(), str.end(), [](uint8_t c) { return !s_valid_name_chars[c]; });
 
   if (has_invalid_chars) {
-    std::string valid_str;
-    std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
-                   [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+    std::string valid_str = MakeValidWatName(str);
     WriteDataWithNextChar(valid_str.data(), valid_str.length());
   } else {
     WriteDataWithNextChar(str.data(), str.length());
@@ -1964,6 +1962,14 @@ void WatWriter::WriteInlineImport(ExternalKind kind, Index index) {
 }
 
 }  // end anonymous namespace
+
+std::string MakeValidWatName(std::string_view str) {
+  std::string valid_str;
+  valid_str.reserve(str.size());
+  std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
+                 [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+  return valid_str;
+}
 
 Result WriteWat(Stream* stream,
                 const Module* module,
