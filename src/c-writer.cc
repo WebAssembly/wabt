@@ -3314,9 +3314,9 @@ void CWriter::WriteTailCallee(const Func& func) {
     Write(CloseBrace(), Newline());
   }
 
-  size_t stack_vars_section = func_sections_.size() - 1;
   WriteLocals(index_to_name);
 
+  size_t stack_vars_section = func_sections_.size() - 1;
   PushFuncSection();
 
   std::string label = DefineLabelName(kImplicitFuncLabel);
