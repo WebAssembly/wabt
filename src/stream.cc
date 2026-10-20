@@ -150,8 +150,8 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
   }
 
   if (fclose(file) != 0) {
-    ERROR("failed to write %" PRIzd " bytes to %s: %s\n", data.size(),
-          filename_str.c_str(), strerror(errno));
+    ERROR("failed to close file: %s: %s\n", filename_str.c_str(),
+          strerror(errno));
     return Result::Error;
   }
   return Result::Ok;
@@ -228,15 +228,18 @@ Result MemoryStream::TruncateImpl(size_t size) {
 }
 
 FileStream::FileStream(std::string_view filename, Stream* log_stream)
-    : Stream(log_stream), file_(nullptr), offset_(0), should_close_(false) {
-  std::string filename_str(filename);
-  file_ = fopen(filename_str.c_str(), "wb");
+    : Stream(log_stream),
+      file_(nullptr),
+      filename_(filename),
+      offset_(0),
+      should_close_(false) {
+  file_ = fopen(filename_.c_str(), "wb");
 
   // TODO(binji): this is pretty cheesy, should come up with a better API.
   if (file_) {
     should_close_ = true;
   } else {
-    ERROR("unable to open %s for writing: %s\n", filename_str.c_str(),
+    ERROR("unable to open %s for writing: %s\n", filename_.c_str(),
           strerror(errno));
   }
 }
@@ -250,6 +253,7 @@ FileStream::FileStream(FileStream&& other) {
 
 FileStream& FileStream::operator=(FileStream&& other) {
   file_ = other.file_;
+  filename_ = std::move(other.filename_);
   offset_ = other.offset_;
   should_close_ = other.should_close_;
   other.file_ = nullptr;
@@ -276,7 +280,8 @@ Result FileStream::Close() {
   if (should_close_) {
     should_close_ = false;
     if (fclose(file_) != 0) {
-      ERROR("failed to close output file: %s\n", strerror(errno));
+      ERROR("failed to close file: %s: %s\n", filename_.c_str(),
+            strerror(errno));
       result = Result::Error;
     }
     file_ = nullptr;

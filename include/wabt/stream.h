@@ -20,6 +20,7 @@
 #include <cassert>
 #include <memory>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "wabt/common.h"
@@ -231,6 +232,7 @@ class FileStream : public Stream {
 
  private:
   FILE* file_;
+  std::string filename_;
   size_t offset_;
   bool should_close_;
 };

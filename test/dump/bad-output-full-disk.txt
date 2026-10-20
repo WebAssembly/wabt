@@ -12,9 +12,9 @@
 ;;; ERROR: 1
 (module)
 (;; STDERR ;;;
-wabt: failed to write 8 bytes to /dev/full: No space left on device
-wabt: failed to write 8 bytes to /dev/full: No space left on device
-wabt: failed to close output file: No space left on device
-wabt: failed to close output file: No space left on device
-wabt: failed to close output file: No space left on device
+wabt: failed to close file: /dev/full: No space left on device
+wabt: failed to close file: /dev/full: No space left on device
+wabt: failed to close file: /dev/full: No space left on device
+wabt: failed to close file: /dev/full: No space left on device
+wabt: failed to close file: /dev/full: No space left on device
 ;;; STDERR ;;)
