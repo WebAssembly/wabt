@@ -139,20 +139,21 @@ Result OutputBuffer::WriteToFile(std::string_view filename) const {
     return Result::Error;
   }
 
-  if (data.empty()) {
-    fclose(file);
-    return Result::Ok;
+  if (!data.empty()) {
+    ssize_t bytes = fwrite(data.data(), 1, data.size(), file);
+    if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
+      ERROR("failed to write %" PRIzd " bytes to %s\n", data.size(),
+            filename_str.c_str());
+      fclose(file);
+      return Result::Error;
+    }
   }
 
-  ssize_t bytes = fwrite(data.data(), 1, data.size(), file);
-  if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
-    ERROR("failed to write %" PRIzd " bytes to %s\n", data.size(),
-          filename_str.c_str());
-    fclose(file);
+  if (fclose(file) != 0) {
+    ERROR("failed to write %" PRIzd " bytes to %s: %s\n", data.size(),
+          filename_str.c_str(), strerror(errno));
     return Result::Error;
   }
-
-  fclose(file);
   return Result::Ok;
 }
 
