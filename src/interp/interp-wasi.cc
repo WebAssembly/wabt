@@ -228,8 +228,8 @@ class WasiInstance {
     uint32_t path_ptr = params[2].Get<u32>();
     __wasi_size_t path_len = params[3].Get<u32>();
     __wasi_oflags_t oflags = params[4].Get<u32>();
-    __wasi_rights_t fs_rights_base = params[5].Get<u32>();
-    __wasi_rights_t fs_rights_inherting = params[6].Get<u32>();
+    __wasi_rights_t fs_rights_base = params[5].Get<u64>();
+    __wasi_rights_t fs_rights_inherting = params[6].Get<u64>();
     __wasi_fdflags_t fs_flags = params[7].Get<u32>();
     uint32_t out_ptr = params[8].Get<u32>();
     char* path;
