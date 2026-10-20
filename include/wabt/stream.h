@@ -146,8 +146,6 @@ class Stream {
                               size_t size) = 0;
   virtual Result TruncateImpl(size_t size) = 0;
 
-  void set_result(Result result) { result_ = result; }
-
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
@@ -162,7 +160,11 @@ class Stream {
   }
 
   size_t offset_;
+
+ protected:
   Result result_;
+
+ private:
   // Not owned. If non-null, log all writes to this stream.
   Stream* log_stream_;
 };
@@ -221,9 +223,9 @@ class FileStream : public Stream {
 
   void Flush() override;
 
-  // Closes the file if this stream opened it. Returns an error if an earlier
-  // write failed or if closing the file failed.
-  Result Close();
+  // Closes the file if this stream opened it. Check result() afterwards for
+  // an earlier write failure or a failure to close.
+  void Close();
 
  protected:
   Result WriteDataImpl(size_t offset, ByteSpan data) override;

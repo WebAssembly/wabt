@@ -277,17 +277,16 @@ void FileStream::Flush() {
   }
 }
 
-Result FileStream::Close() {
+void FileStream::Close() {
   if (should_close_) {
     should_close_ = false;
     if (fclose(file_) != 0) {
       ERROR("failed to close file: %s: %s\n", filename_.c_str(),
             strerror(errno));
-      set_result(Result::Error);
+      result_ = Result::Error;
     }
     file_ = nullptr;
   }
-  return result();
 }
 
 Result FileStream::WriteDataImpl(size_t at, ByteSpan data) {

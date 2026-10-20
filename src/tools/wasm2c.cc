@@ -179,18 +179,22 @@ Result Wasm2cMain(Errors& errors) {
                       std::string(header_name).c_str(),
                       std::string(header_impl_name).c_str(), &module,
                       s_write_c_options);
-      result |= h_impl_stream.Close();
+      h_impl_stream.Close();
+      result |= h_impl_stream.result();
     }
     for (FileStream& c_stream : c_streams) {
-      result |= c_stream.Close();
+      c_stream.Close();
+      result |= c_stream.result();
     }
-    result |= h_stream.Close();
+    h_stream.Close();
+    result |= h_stream.result();
     CHECK_RESULT(result);
   } else {
     FileStream stream(stdout);
     CHECK_RESULT(WriteC({&stream}, &stream, &stream, "wasm.h", "", &module,
                         s_write_c_options));
-    CHECK_RESULT(stream.Close());
+    stream.Close();
+    CHECK_RESULT(stream.result());
   }
 
   return Result::Ok;

@@ -166,7 +166,8 @@ int ProgramMain(int argc, char** argv) {
     }
   }
 
-  result |= stream.Close();
+  stream.Close();
+  result |= stream.result();
 
   return result != Result::Ok;
 }
