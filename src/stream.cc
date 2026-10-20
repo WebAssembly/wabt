@@ -278,17 +278,16 @@ void FileStream::Flush() {
 }
 
 Result FileStream::Close() {
-  Result result = this->result();
   if (should_close_) {
     should_close_ = false;
     if (fclose(file_) != 0) {
       ERROR("failed to close file: %s: %s\n", filename_.c_str(),
             strerror(errno));
-      result = Result::Error;
+      set_result(Result::Error);
     }
     file_ = nullptr;
   }
-  return result;
+  return result();
 }
 
 Result FileStream::WriteDataImpl(size_t at, ByteSpan data) {

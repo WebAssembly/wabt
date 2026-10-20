@@ -146,6 +146,8 @@ class Stream {
                               size_t size) = 0;
   virtual Result TruncateImpl(size_t size) = 0;
 
+  void set_result(Result result) { result_ = result; }
+
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
