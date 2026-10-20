@@ -265,6 +265,8 @@ FileStream& FileStream::operator=(FileStream&& other) {
 FileStream::~FileStream() {
   // We don't want to close existing files (stdout/sterr, for example).
   if (should_close_) {
+    // A file we opened has to be closed with Close() so a failure is reported.
+    assert(false && "FileStream destroyed without calling Close()");
     fclose(file_);
   }
 }
