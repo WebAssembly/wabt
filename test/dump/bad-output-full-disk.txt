@@ -4,8 +4,17 @@
 ;;; RUN: %(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm
 ;;; RUN: %(wasm-strip)s -o /dev/full %(temp_file)s.wasm
 ;;; ERROR: 1
+;;; RUN: %(wasm2wat)s -o /dev/full %(temp_file)s.wasm
+;;; ERROR: 1
+;;; RUN: %(wasm-stats)s -o /dev/full %(temp_file)s.wasm
+;;; ERROR: 1
+;;; RUN: %(wat-desugar)s %(in_file)s -o /dev/full
+;;; ERROR: 1
 (module)
 (;; STDERR ;;;
 wabt: failed to write 8 bytes to /dev/full: No space left on device
 wabt: failed to write 8 bytes to /dev/full: No space left on device
+wabt: failed to close output file: No space left on device
+wabt: failed to close output file: No space left on device
+wabt: failed to close output file: No space left on device
 ;;; STDERR ;;)

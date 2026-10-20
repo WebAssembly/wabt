@@ -166,6 +166,8 @@ int ProgramMain(int argc, char** argv) {
     }
   }
 
+  result |= stream.Close();
+
   return result != Result::Ok;
 }
 

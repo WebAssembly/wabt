@@ -138,6 +138,7 @@ int ProgramMain(int argc, char** argv) {
         FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
                                              : FileStream(stdout));
         result = WriteWat(&stream, &module, wat_options);
+        result |= stream.Close();
       }
     }
     FormatErrorsToFile(errors, Location::Type::Binary);

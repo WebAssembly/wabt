@@ -218,6 +218,10 @@ class FileStream : public Stream {
 
   void Flush() override;
 
+  // Closes the file if this stream opened it. Returns an error if an earlier
+  // write failed or if closing the file failed.
+  Result Close();
+
  protected:
   Result WriteDataImpl(size_t offset, ByteSpan data) override;
   Result MoveDataImpl(size_t dst_offset,

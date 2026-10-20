@@ -178,11 +178,17 @@ Result Wasm2cMain(Errors& errors) {
                           std::string(header_name).c_str(),
                           std::string(header_impl_name).c_str(), &module,
                           s_write_c_options));
+      CHECK_RESULT(h_impl_stream.Close());
     }
+    for (FileStream& c_stream : c_streams) {
+      CHECK_RESULT(c_stream.Close());
+    }
+    CHECK_RESULT(h_stream.Close());
   } else {
     FileStream stream(stdout);
     CHECK_RESULT(WriteC({&stream}, &stream, &stream, "wasm.h", "", &module,
                         s_write_c_options));
+    CHECK_RESULT(stream.Close());
   }
 
   return Result::Ok;

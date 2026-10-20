@@ -120,6 +120,7 @@ int ProgramMain(int argc, char** argv) {
       wat_options.inline_export = s_inline_export;
       FileStream stream(s_outfile ? FileStream(s_outfile) : FileStream(stdout));
       result = WriteWat(&stream, module, wat_options);
+      result |= stream.Close();
     }
   }
 
