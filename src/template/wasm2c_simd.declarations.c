@@ -373,3 +373,31 @@ DEFINE_SIMD_STORE_LANE(v128_store64_lane1, simde_wasm_v128_store64_lane, u64, 1)
 #define v128_f64x2_convert_low_u32x4 simde_wasm_f64x2_convert_low_u32x4
 #endif
 // clang-format on
+
+#if defined(SIMDE_X86_SSE2_NATIVE) && !defined(SIMDE_X86_AVX512VL_NATIVE)
+static inline v128 v128_u32x4_trunc_sat_f32x4(v128 a) {
+  // SIMDe's SSE2 unsigned conversion doesn't handle values between 2^31 and
+  // 2^32. Split at 2^31 so each half uses a signed saturating conversion.
+  const v128 threshold = simde_wasm_f32x4_splat(2147483648.f);
+  const v128 high = simde_wasm_f32x4_ge(a, threshold);
+  const v128 low =
+      simde_wasm_f32x4_sub(a, simde_wasm_v128_and(high, threshold));
+  const v128 result = simde_wasm_v128_xor(simde_wasm_i32x4_trunc_sat_f32x4(low),
+                                          simde_wasm_i32x4_shl(high, 31));
+  return simde_wasm_v128_and(
+      result, simde_wasm_f32x4_gt(a, simde_wasm_f32x4_splat(0.f)));
+}
+#else
+#define v128_u32x4_trunc_sat_f32x4 simde_wasm_u32x4_trunc_sat_f32x4
+#endif
+
+#if defined(SIMDE_X86_SSE2_NATIVE) && !defined(SIMDE_X86_SSE4_1_NATIVE)
+static inline u32 v128_i64x2_all_true(v128 a) {
+  // Use integer comparisons, as SIMDe's SSE2 all_true treats INT64_MIN as
+  // floating-point negative zero.
+  return !simde_wasm_v128_any_true(
+      simde_wasm_i64x2_eq(a, simde_wasm_i64x2_splat(0)));
+}
+#else
+#define v128_i64x2_all_true simde_wasm_i64x2_all_true
+#endif

@@ -735,4 +735,58 @@ R"w2c_template(#endif
 )w2c_template"
 R"w2c_template(// clang-format on
 )w2c_template"
+R"w2c_template(
+#if defined(SIMDE_X86_SSE2_NATIVE) && !defined(SIMDE_X86_AVX512VL_NATIVE)
+)w2c_template"
+R"w2c_template(static inline v128 v128_u32x4_trunc_sat_f32x4(v128 a) {
+)w2c_template"
+R"w2c_template(  // SIMDe's SSE2 unsigned conversion doesn't handle values between 2^31 and
+)w2c_template"
+R"w2c_template(  // 2^32. Split at 2^31 so each half uses a signed saturating conversion.
+)w2c_template"
+R"w2c_template(  const v128 threshold = simde_wasm_f32x4_splat(2147483648.f);
+)w2c_template"
+R"w2c_template(  const v128 high = simde_wasm_f32x4_ge(a, threshold);
+)w2c_template"
+R"w2c_template(  const v128 low =
+)w2c_template"
+R"w2c_template(      simde_wasm_f32x4_sub(a, simde_wasm_v128_and(high, threshold));
+)w2c_template"
+R"w2c_template(  const v128 result = simde_wasm_v128_xor(simde_wasm_i32x4_trunc_sat_f32x4(low),
+)w2c_template"
+R"w2c_template(                                          simde_wasm_i32x4_shl(high, 31));
+)w2c_template"
+R"w2c_template(  return simde_wasm_v128_and(
+)w2c_template"
+R"w2c_template(      result, simde_wasm_f32x4_gt(a, simde_wasm_f32x4_splat(0.f)));
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define v128_u32x4_trunc_sat_f32x4 simde_wasm_u32x4_trunc_sat_f32x4
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
+R"w2c_template(
+#if defined(SIMDE_X86_SSE2_NATIVE) && !defined(SIMDE_X86_SSE4_1_NATIVE)
+)w2c_template"
+R"w2c_template(static inline u32 v128_i64x2_all_true(v128 a) {
+)w2c_template"
+R"w2c_template(  // Use integer comparisons, as SIMDe's SSE2 all_true treats INT64_MIN as
+)w2c_template"
+R"w2c_template(  // floating-point negative zero.
+)w2c_template"
+R"w2c_template(  return !simde_wasm_v128_any_true(
+)w2c_template"
+R"w2c_template(      simde_wasm_i64x2_eq(a, simde_wasm_i64x2_splat(0)));
+)w2c_template"
+R"w2c_template(}
+)w2c_template"
+R"w2c_template(#else
+)w2c_template"
+R"w2c_template(#define v128_i64x2_all_true simde_wasm_i64x2_all_true
+)w2c_template"
+R"w2c_template(#endif
+)w2c_template"
 ;
