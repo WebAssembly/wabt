@@ -34,7 +34,7 @@
 namespace wabt {
 
 Stream::Stream(Stream* log_stream)
-    : offset_(0), result_(Result::Ok), log_stream_(log_stream) {}
+    : result_(Result::Ok), offset_(0), log_stream_(log_stream) {}
 
 void Stream::AddOffset(ssize_t delta) {
   offset_ += delta;

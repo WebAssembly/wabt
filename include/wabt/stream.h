@@ -146,6 +146,8 @@ class Stream {
                               size_t size) = 0;
   virtual Result TruncateImpl(size_t size) = 0;
 
+  Result result_;
+
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
@@ -160,11 +162,6 @@ class Stream {
   }
 
   size_t offset_;
-
- protected:
-  Result result_;
-
- private:
   // Not owned. If non-null, log all writes to this stream.
   Stream* log_stream_;
 };
