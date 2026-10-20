@@ -230,6 +230,8 @@ typename FloatParser<T>::Uint FloatParser<T>::ShiftAndRoundToNearest(
     int shift,
     bool seen_trailing_non_zero) {
   assert(shift > 0);
+  // The bits below the rounding bit tell a tie from a value above half.
+  seen_trailing_non_zero |= (significand & ((Uint(1) << (shift - 1)) - 1)) != 0;
   // Round ties to even.
   if ((significand & (Uint(1) << shift)) || seen_trailing_non_zero) {
     significand += Uint(1) << (shift - 1);

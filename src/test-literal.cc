@@ -644,6 +644,30 @@ TEST(ParseFloat, RoundingSpec) {
   }
 }
 
+// Rounding drops three or four bits here, so the bits below the rounding bit
+// tell a tie from a value above half.
+TEST(ParseFloat, RoundingExtraBits) {
+  static const struct {
+    const char* input;
+    uint32_t output;
+  } kTests[] = {
+      {"0xf000007p0", 0x4d700000},         // below half
+      {"0xf000008p0", 0x4d700000},         // tie, rounds to even
+      {"0xf000009p0", 0x4d700001},         // above half
+      {"0xf00000fp0", 0x4d700001},         // above half
+      {"0xf000018p0", 0x4d700002},         // tie, rounds to even
+      {"0xf000019p0", 0x4d700002},         // above half
+      {"-0xf000009p0", 0xcd700001},        // above half
+      {"0xf.000009p-4", 0x3f700001},       // above half
+      {"0x7fffff7p0", 0x4cffffff},         // above half
+      {"0xf0000080000001p0", 0x5b700001},  // tie, then a non-zero digit
+  };
+
+  for (auto test : kTests) {
+    AssertHexFloatEquals(test.output, test.input);
+  }
+}
+
 TEST(ParseFloat, OutOfRange) {
   AssertHexFloatFails("0x1p128");
   AssertHexFloatFails("-0x1p128");
@@ -825,6 +849,25 @@ TEST(ParseDouble, RoundingSpec) {
       {"-0x1.fffffffffffff4p1023", 18442240474082181119ull},
       {"+0x1.fffffffffffff7ffffffp1023", 9218868437227405311ull},
       {"-0x1.fffffffffffff7ffffffp1023", 18442240474082181119ull},
+  };
+
+  for (auto test : kTests) {
+    AssertHexDoubleEquals(test.output, test.input);
+  }
+}
+
+TEST(ParseDouble, RoundingExtraBits) {
+  static const struct {
+    const char* input;
+    uint64_t output;
+  } kTests[] = {
+      {"0x1.00000000000007p0", 0x3ff0000000000000},   // below half
+      {"0x1.00000000000008p0", 0x3ff0000000000000},   // tie, rounds to even
+      {"0x1.00000000000009p0", 0x3ff0000000000001},   // above half
+      {"0x1.0000000000000fp0", 0x3ff0000000000001},   // above half
+      {"0x1.00000000000018p0", 0x3ff0000000000002},   // tie, rounds to even
+      {"-0x1.00000000000009p0", 0xbff0000000000001},  // above half
+      {"0xf.ffffffffffff9p-3", 0x3fffffffffffffff},   // above half
   };
 
   for (auto test : kTests) {
