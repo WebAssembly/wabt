@@ -70,6 +70,17 @@ namespace wabt {
 
 namespace {
 
+// The type of an import, as it is written after its names: with compact
+// imports one of these is shared by every name of a group.
+struct ImportType {
+  ExternalKind kind;
+  Index sig_index;     // Func, Tag
+  Limits limits;       // Table, Memory
+  Type type;           // Table (element type), Global
+  uint32_t page_size;  // Memory
+  bool mutable_;       // Global
+};
+
 class BinaryReader {
  public:
   struct ReadModuleOptions {
@@ -169,7 +180,6 @@ class BinaryReader {
   Result ReadCodeMetadataSection(std::string_view name, Offset section_size);
   Result ReadCustomSection(Index section_index, Offset section_size);
   Result ReadTypeSection(Offset section_size);
-  struct ImportType;
   Result ReadImportType(ExternalKind kind, ImportType* out);
   Result EmitImport(std::string_view module_name,
                     std::string_view field_name,
@@ -2737,17 +2747,6 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
   CALLBACK0(EndTypeSection);
   return Result::Ok;
 }
-
-// The type of an import, as it is written after its names: with compact
-// imports one of these is shared by every name of a group.
-struct BinaryReader::ImportType {
-  ExternalKind kind;
-  Index sig_index;      // Func, Tag
-  Limits limits;        // Table, Memory
-  Type type;            // Table (element type), Global
-  uint32_t page_size;   // Memory
-  bool mutable_;        // Global
-};
 
 Result BinaryReader::ReadImportType(ExternalKind kind, ImportType* out) {
   out->kind = kind;
