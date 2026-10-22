@@ -1,0 +1,41 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS2: --enable-code-metadata
+magic
+version
+section(TYPE) { count[1] function params[1] i32 results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section("metadata.code.a b) (c;") {
+  function_count[1]
+  function_index[0]
+  ann_count[1]
+  ann_offset[3]
+  ann_data_size[1]
+  ann_data[1]
+}
+section(CODE) {
+  count[1]
+  func {
+    locals[decl_count[1] i32_count[1] i32]
+    i32.const 42
+  }
+}
+section("name") {
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[2]
+    index[0]
+    str("p) (result")
+    index[1]
+    str("l i32) ;;")
+  }
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result i32)))
+  (func (;0;) (type 0) (param $p___result i32) (result i32)
+    (local $l_i32____ i32)
+    (@metadata.code.a_b___c_ "\01") i32.const 42)
+  (@custom "metadata.code.a b) (c;" "\01\00\01\03\01\01")
+  (@custom "name" "\02\1a\01\00\02\00\0ap) (result\01\09l i32) ;;"))
+;;; STDOUT ;;)
