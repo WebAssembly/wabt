@@ -6,6 +6,8 @@ magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
 section(IMPORT) {
+  ;; The number of entries, not of imports: a compact group is one entry.
+  ;; Here 5 entries make 1 + 3 + 2 + 0 + 1 = 7 imports.
   count[5]
   str("mod") str("func") func_kind type[0]
   str("mod") str("") compact[0x7F]
@@ -13,11 +15,13 @@ section(IMPORT) {
   str("func2") func_kind type[0]
   str("func3") func_kind type[0]
   str("func4") func_kind type[0]
+  ;; 0x7E: one type, then the names that share it
   str("mod") str("") compact[0x7E]
   func_kind type[0]
   count[2]
   str("func5")
   str("func6")
+  ;; a group without names is an entry that makes no import
   str("mod") str("") compact[0x7E]
   func_kind type[0]
   count[0]
