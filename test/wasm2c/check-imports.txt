@@ -241,7 +241,7 @@ static inline uint64_t checked_add_u64(uint64_t a, uint64_t b) {
 #if __has_builtin(__builtin_add_overflow)
   if (__builtin_add_overflow(a, b, &ret))
     TRAP(OOB);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_M_X64)
   if (_addcarry_u64(0, a, b, &ret))
     TRAP(OOB);
 #else

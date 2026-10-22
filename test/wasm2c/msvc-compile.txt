@@ -1,0 +1,14 @@
+;;; TOOL: run-spec-wasm2c
+;; Compiles and runs the wasm2c output of a module with a 64-bit memory with the
+;; C compiler of the platform, MSVC on Windows: the accesses to a 64-bit memory
+;; use checked_add_u64.
+(module
+  (memory i64 1)
+  (func (export "store-load") (param i64 i32) (result i32)
+    (i32.store (local.get 0) (local.get 1))
+    (i32.load (local.get 0))))
+(assert_return (invoke "store-load" (i64.const 8) (i32.const 42)) (i32.const 42))
+(assert_trap (invoke "store-load" (i64.const 0xffffffffffffffff) (i32.const 1)) "out of bounds memory access")
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
