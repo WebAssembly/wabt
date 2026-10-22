@@ -4380,7 +4380,10 @@ void CWriter::Write(const ExprList& exprs) {
         std::tie(ci->decl, ci->table) = std::make_pair(inst->decl, inst->table);
         Write(ExprList{std::move(ci)});
         if (in_tail_callee_) {
-          Write("next->fn = NULL;", Newline());
+          // The callee has no tail-callable form, so its result is on the
+          // stack. Leave through the function label, which puts it on the
+          // tail call stack for the caller before ending the chain.
+          Write(GotoLabel(Var(label_stack_.size() - 1, {})), Newline());
         }
         Write(CloseBrace(), " else ", OpenBrace());
 

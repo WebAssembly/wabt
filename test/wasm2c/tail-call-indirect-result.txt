@@ -1,0 +1,27 @@
+;;; TOOL: run-spec-wasm2c
+;; A return_call_indirect in a function that is itself called by a tail call,
+;; to a function that has no tail-callable form of its own: the result of that
+;; function must reach the caller of the chain.
+(module
+  (type $t (func (result i32)))
+  (type $v (func))
+  (table $tab 4 funcref)
+  (func $ok (type $t) (i32.const 5))
+  (func $tc (type $t) (return_call_indirect $tab (type $t) (i32.const 0)))
+  ;; extra values below the operands of the call are dropped by the tail call
+  (func $tc-below (type $t)
+    (i32.const 99) (i32.const 0) (return_call_indirect $tab (type $t)))
+  (func $nop (type $v))
+  (func $tc-void (type $v) (return_call_indirect $tab (type $v) (i32.const 3)))
+  (elem (table $tab) (i32.const 0) func $ok $tc $tc-below $nop)
+  (func (export "chain") (result i32)
+    (return_call_indirect $tab (type $t) (i32.const 1)))
+  (func (export "chain-below") (result i32)
+    (return_call_indirect $tab (type $t) (i32.const 2)))
+  (func (export "chain-void") (return_call $tc-void)))
+(assert_return (invoke "chain") (i32.const 5))
+(assert_return (invoke "chain-below") (i32.const 5))
+(assert_return (invoke "chain-void"))
+(;; STDOUT ;;;
+3/3 tests passed.
+;;; STDOUT ;;)
