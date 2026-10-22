@@ -363,3 +363,12 @@ sudo apt install wabt
 
 You can also download prebuilt binaries for many platforms directly from the
 github releases page.
+
+For use from Python, the unofficial
+[`wabt-package`](https://github.com/natify-sh/wabt-package) on PyPI provides the
+tools and the `wasm2c` runtime files as prebuilt wheels, with versions that
+follow WABT's own:
+```sh
+pip install wabt-package
+```
+It is maintained outside this repository.
