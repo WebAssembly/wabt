@@ -1,0 +1,19 @@
+;;; TOOL: run-spec-wasm2c
+;; An imported function put in a table by an element segment, called with
+;; call_indirect: the host function must get the instance of the import (the
+;; prefix of the spec tests checks it in spectest.print_i32), as it does when
+;; it is called directly.
+(module
+  (import "spectest" "print_i32" (func $print (param i32)))
+  (type $t (func (param i32)))
+  (table 2 funcref)
+  (elem (i32.const 0) $print)
+  (func (export "direct") (call $print (i32.const 1)))
+  (func (export "indirect") (call_indirect (type $t) (i32.const 2) (i32.const 0))))
+(assert_return (invoke "direct"))
+(assert_return (invoke "indirect"))
+(;; STDOUT ;;;
+spectest.print_i32(1)
+spectest.print_i32(2)
+2/2 tests passed.
+;;; STDOUT ;;)

@@ -832,7 +832,12 @@ static inline void memory_init(wasm_rt_memory_t* dest,
   LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 }
 
-typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+typedef enum {
+  RefFunc,
+  RefNull,
+  GlobalGet,
+  RefImportFunc
+} wasm_elem_segment_expr_type_t;
 
 typedef struct {
   wasm_elem_segment_expr_type_t expr_type;
@@ -860,6 +865,11 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
         *dest_val = (wasm_rt_funcref_t){
             src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
+        break;
+      case RefImportFunc:
+        *dest_val = (wasm_rt_funcref_t){
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
+            *(void**)((char*)module_instance + src_expr->module_offset)};
         break;
       case RefNull:
         *dest_val = wasm_rt_funcref_null_value;
@@ -985,7 +995,7 @@ static void wrap_w2c_spectest_print_i32_f32(void *instance, u32 var_0, f32 var_1
 }
 
 static const wasm_elem_segment_expr_t elem_segment_exprs_w2c_test_e0[] = {
-  {RefFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)wrap_w2c_spectest_print_i32_f32, {wasm_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
+  {RefImportFunc, w2c_test_i32_f32, (wasm_rt_function_ptr_t)wrap_w2c_spectest_print_i32_f32, {wasm_tailcall_w2c_spectest_print_i32_f32}, offsetof(w2c_test, w2c_spectest_instance)},
 };
 
 static void init_tables(w2c_test* instance) {
