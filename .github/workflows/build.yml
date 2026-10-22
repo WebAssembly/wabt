@@ -87,7 +87,7 @@ jobs:
       with:
         submodules: true
     - name: cmake
-      run: cmake -S . -B out -A ${{ matrix.cmake_arch }} -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF -DWABT_RUN_TESTS_ARGS=msvc-compile
+      run: cmake -S . -B out -A ${{ matrix.cmake_arch }} -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF -DWABT_RUN_TESTS_ARGS=address64
     - name: build
       run: cmake --build out
     - name: tests
