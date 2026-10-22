@@ -1315,7 +1315,17 @@ R"w2c_template(  LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 R"w2c_template(}
 )w2c_template"
 R"w2c_template(
-typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+typedef enum {
+)w2c_template"
+R"w2c_template(  RefFunc,
+)w2c_template"
+R"w2c_template(  RefNull,
+)w2c_template"
+R"w2c_template(  GlobalGet,
+)w2c_template"
+R"w2c_template(  RefImportFunc
+)w2c_template"
+R"w2c_template(} wasm_elem_segment_expr_type_t;
 )w2c_template"
 R"w2c_template(
 typedef struct {
@@ -1368,6 +1378,16 @@ R"w2c_template(        *dest_val = (wasm_rt_funcref_t){
 R"w2c_template(            src_expr->type, src_expr->func, src_expr->func_tailcallee,
 )w2c_template"
 R"w2c_template(            (char*)module_instance + src_expr->module_offset};
+)w2c_template"
+R"w2c_template(        break;
+)w2c_template"
+R"w2c_template(      case RefImportFunc:
+)w2c_template"
+R"w2c_template(        *dest_val = (wasm_rt_funcref_t){
+)w2c_template"
+R"w2c_template(            src_expr->type, src_expr->func, src_expr->func_tailcallee,
+)w2c_template"
+R"w2c_template(            *(void**)((char*)module_instance + src_expr->module_offset)};
 )w2c_template"
 R"w2c_template(        break;
 )w2c_template"
