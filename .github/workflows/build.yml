@@ -67,7 +67,7 @@ jobs:
     - name: tests
       run: cmake --build out --target run-tests
   build-msvc-other-archs:
-    name: build (windows ${{ matrix.arch }})
+    name: build (windows ${{ matrix.arch }}) (minimal tests)
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
