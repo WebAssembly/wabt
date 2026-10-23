@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/type-canon.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+2/2 tests passed.
+;;; STDOUT ;;)
