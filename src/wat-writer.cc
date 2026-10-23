@@ -721,7 +721,12 @@ Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
     CodeMetadataExpr* expr) {
   writer_->WriteOpen("@metadata.code.", NextChar::None);
-  writer_->WriteDataWithNextChar(expr->name.data(), expr->name.size());
+  // The name comes from a custom section name, so replace any characters that
+  // would end the annotation id, as WriteName does.
+  std::string name;
+  std::transform(expr->name.begin(), expr->name.end(), std::back_inserter(name),
+                 [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+  writer_->WriteDataWithNextChar(name.data(), name.size());
   writer_->WritePutc(' ');
   writer_->WriteQuotedData(expr->data.data(), expr->data.size());
   writer_->WriteCloseSpace();
@@ -1472,7 +1477,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
       WriteOpenSpace(prefix);
     }
     if (has_name) {
-      WriteString(name, NextChar::Space);
+      WriteName(name, NextChar::Space);
     }
     WriteType(type, NextChar::Space);
     prev_has_name = has_name;
