@@ -479,6 +479,7 @@ class CWriter {
   void Write(const StoreExpr&);
   void Write(const UnaryExpr&);
   void Write(const TernaryExpr&);
+  void Write(const QuaternaryExpr&);
   void Write(const SimdLaneOpExpr&);
   void Write(const SimdLoadLaneExpr&);
   void Write(const SimdStoreLaneExpr&);
@@ -4184,6 +4185,10 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<TernaryExpr>(&expr));
         break;
 
+      case ExprType::Quaternary:
+        Write(*cast<QuaternaryExpr>(&expr));
+        break;
+
       case ExprType::SimdLaneOp: {
         Write(*cast<SimdLaneOpExpr>(&expr));
         break;
@@ -4413,7 +4418,6 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
       case ExprType::ReturnCallRef:
-      case ExprType::Quaternary:
         UNIMPLEMENTED("...");
         break;
     }
@@ -4923,6 +4927,11 @@ void CWriter::Write(const BinaryExpr& expr) {
     case Opcode::V128Xor:
       WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_xor");
       break;
+
+    case Opcode::I64MulWideS:
+    case Opcode::I64MulWideU:
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
 
     default:
       WABT_UNREACHABLE;
@@ -5807,6 +5816,17 @@ void CWriter::Write(const TernaryExpr& expr) {
       PushType(result_type);
       break;
     }
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::Write(const QuaternaryExpr& expr) {
+  switch (expr.opcode) {
+    case Opcode::I64Add128:
+    case Opcode::I64Sub128:
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
     default:
       WABT_UNREACHABLE;
   }

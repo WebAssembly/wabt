@@ -1,0 +1,14 @@
+;;; RUN: %(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm
+;;; RUN: %(wasm2c)s %(temp_file)s.wasm -o %(temp_file)s.c
+;;; ERROR: 1
+(module
+  (func (result i64)
+    i64.const -1
+    i64.const 0
+    i64.const 43
+    i64.const 0
+    i64.add128
+    drop))
+(;; STDERR ;;;
+error: wasm2c does not support the i64.add128 instruction
+;;; STDERR ;;)
