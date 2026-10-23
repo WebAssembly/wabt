@@ -643,7 +643,7 @@ std::unordered_map<Instance*, WasiInstance*> wasiInstances;
     return wasi_instance->NAME(params, results, trap);                      \
   }
 
-#define WASI_FUNC(NAME) WASI_CALLBACK(NAME)
+#define WASI_FUNC(NAME, NUM_PARAMS, NUM_RESULTS) WASI_CALLBACK(NAME)
 #include "wasi_api.def"
 #undef WASI_FUNC
 
@@ -676,11 +676,21 @@ Result WasiBindImports(const Module::Ptr& module,
                                     import.type.name.c_str());
     HostFunc::Ptr host_func;
 
-    // TODO(sbc): Validate signatures of imports.
-#define WASI_FUNC(NAME)                                 \
-  if (import.type.name == #NAME) {                      \
-    host_func = HostFunc::New(*store, func_type, NAME); \
-    goto found;                                         \
+    // The host callbacks index params/results by the arity of the real WASI
+    // function, but the vectors are sized from the module-declared type, so an
+    // import declared with a smaller arity makes the callback read/write past
+    // those vectors. Reject any mismatch before binding.
+    // TODO(sbc): Validate parameter/result types too, not just the arity.
+#define WASI_FUNC(NAME, NUM_PARAMS, NUM_RESULTS)                         \
+  if (import.type.name == #NAME) {                                       \
+    if (func_type.params.size() != NUM_PARAMS ||                         \
+        func_type.results.size() != NUM_RESULTS) {                       \
+      stream->Writef("wasi error: invalid signature for import: `%s`\n", \
+                     import_name.c_str());                               \
+      return Result::Error;                                              \
+    }                                                                    \
+    host_func = HostFunc::New(*store, func_type, NAME);                  \
+    goto found;                                                          \
   }
 #include "wasi_api.def"
 #undef WASI_FUNC
