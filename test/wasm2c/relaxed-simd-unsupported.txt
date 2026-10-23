@@ -1,0 +1,21 @@
+;;; RUN: %(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm
+;;; RUN: %(wasm2c)s %(temp_file)s.wasm -o %(temp_file)s.c
+;;; ERROR: 1
+(module
+  (func (result v128)
+    v128.const i32x4 1 2 3 4
+    v128.const i32x4 1 2 3 4
+    i8x16.relaxed_swizzle)
+  (func (result v128)
+    v128.const f32x4 1 2 3 4
+    i32x4.relaxed_trunc_f32x4_s)
+  (func (result v128)
+    v128.const i32x4 1 2 3 4
+    v128.const i32x4 1 2 3 4
+    v128.const i32x4 1 2 3 4
+    f32x4.relaxed_madd))
+(;; STDERR ;;;
+error: wasm2c does not support the i8x16.relaxed_swizzle instruction
+error: wasm2c does not support the i32x4.relaxed_trunc_f32x4_s instruction
+error: wasm2c does not support the f32x4.relaxed_madd instruction
+;;; STDERR ;;)

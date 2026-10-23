@@ -260,6 +260,8 @@ class CWriter {
   void PushTypes(const TypeVector&);
   void DropTypes(size_t count);
 
+  void WriteUnsupportedOpcode(Opcode, size_t num_params);
+
   void PushLabel(LabelType,
                  const std::string& name,
                  const FuncSignature&,
@@ -4461,6 +4463,17 @@ void CWriter::WriteSignedBinaryExpr(Opcode opcode, const char* op) {
   PushType(result_type);
 }
 
+// The C writer has no translation for this opcode (relaxed SIMD, for one).
+// Report it and keep the type stack consistent so that the rest of the module
+// can still be written; wasm2c then exits with an error.
+void CWriter::WriteUnsupportedOpcode(Opcode opcode, size_t num_params) {
+  fprintf(stderr, "error: wasm2c does not support the %s instruction\n",
+          opcode.GetName());
+  result_ = Result::Error;
+  DropTypes(num_params);
+  PushType(opcode.GetResultType());
+}
+
 void CWriter::Write(const BinaryExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Add:
@@ -4925,7 +4938,7 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WriteUnsupportedOpcode(expr.opcode, 2);
   }
 }
 
@@ -5373,7 +5386,7 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WriteUnsupportedOpcode(expr.opcode, 1);
   }
 }
 
@@ -5793,7 +5806,7 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WriteUnsupportedOpcode(expr.opcode, 1);
   }
 }
 
@@ -5808,7 +5821,7 @@ void CWriter::Write(const TernaryExpr& expr) {
       break;
     }
     default:
-      WABT_UNREACHABLE;
+      WriteUnsupportedOpcode(expr.opcode, 3);
   }
 }
 
