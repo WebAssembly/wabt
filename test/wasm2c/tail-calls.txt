@@ -1114,7 +1114,7 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
-    next->fn = NULL;
+    goto var_Bfunc;
   } else {
     {
       struct wasm_multi_if tmp;
