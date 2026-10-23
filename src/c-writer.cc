@@ -4925,7 +4925,8 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5373,7 +5374,8 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5793,7 +5795,8 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5808,7 +5811,8 @@ void CWriter::Write(const TernaryExpr& expr) {
       break;
     }
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
