@@ -230,6 +230,8 @@ typename FloatParser<T>::Uint FloatParser<T>::ShiftAndRoundToNearest(
     int shift,
     bool seen_trailing_non_zero) {
   assert(shift > 0);
+  // The bits below the rounding bit tell a tie from a value above half.
+  seen_trailing_non_zero |= (significand & ((Uint(1) << (shift - 1)) - 1)) != 0;
   // Round ties to even.
   if ((significand & (Uint(1) << shift)) || seen_trailing_non_zero) {
     significand += Uint(1) << (shift - 1);
@@ -384,33 +386,24 @@ Result FloatParser<T>::ParseHex(const char* s,
 
   if (exponent <= Traits::kMinExp) {
     // Maybe subnormal.
-    auto update_seen_trailing_non_zero = [&](int shift) {
-      assert(shift > 0);
-      auto mask = (Uint(1) << (shift - 1)) - 1;
-      seen_trailing_non_zero |= (significand & mask) != 0;
-    };
-
-    // Normalize significand.
-    if (significand_bits > Traits::kSigBits) {
-      int shift = significand_bits - Traits::kSigBits;
-      update_seen_trailing_non_zero(shift);
-      significand >>= shift;
-    } else if (significand_bits < Traits::kSigBits) {
-      significand <<= (Traits::kSigBits - significand_bits);
-    }
-
-    int shift = Traits::kMinExp - exponent;
-    if (shift <= Traits::kSigBits) {
-      if (shift) {
-        update_seen_trailing_non_zero(shift);
+    int subnormal_shift = Traits::kMinExp - exponent;
+    if (subnormal_shift <= Traits::kSigBits) {
+      // Round once, from every bit parsed, to the kSigBits of a subnormal.
+      int shift = significand_bits - Traits::kSigBits + subnormal_shift;
+      if (shift > 0) {
         significand =
-            ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero) &
-            Traits::kSigMask;
+            ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero);
+      } else {
+        significand <<= -shift;
       }
-      exponent = Traits::kMinExp;
 
+      if (significand > Traits::kSigMask) {
+        // Rounded up to the smallest normal value.
+        *out_bits = Make(is_neg, Traits::kMinExp + 1, 0);
+        return Result::Ok;
+      }
       if (significand != 0) {
-        *out_bits = Make(is_neg, exponent, significand);
+        *out_bits = Make(is_neg, Traits::kMinExp, significand);
         return Result::Ok;
       }
     }
