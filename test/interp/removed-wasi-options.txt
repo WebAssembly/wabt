@@ -1,0 +1,26 @@
+;;; RUN: %(wasm-interp)s input.wasm --wasi
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s input.wasm --env=FOO=bar
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s input.wasm --dir=.
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s input.wasm -e
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s input.wasm -d
+;;; ERROR: 1
+;;; RUN: %(wasm-interp)s input.wasm extra
+;;; ERROR: 1
+(;; STDERR ;;;
+wasm-interp: unknown option '--wasi'
+Try '--help' for more information.
+wasm-interp: unknown option '--env=FOO=bar'
+Try '--help' for more information.
+wasm-interp: unknown option '--dir=.'
+Try '--help' for more information.
+wasm-interp: unknown option '-e'
+Try '--help' for more information.
+wasm-interp: unknown option '-d'
+Try '--help' for more information.
+wasm-interp: unexpected argument 'extra'
+Try '--help' for more information.
+;;; STDERR ;;)

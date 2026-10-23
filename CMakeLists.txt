@@ -71,9 +71,15 @@ option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 option(WERROR "Build with warnings as errors" OFF)
 option(WABT_INSTALL_RULES "Include WABT's install() rules" "${PROJECT_IS_TOP_LEVEL}")
-# WASI support is still a work in progress.
-# Only a handful of syscalls are supported at this point.
-option(WITH_WASI "Build WASI support via uvwasi" OFF)
+option(BUILD_UVWASI "Build bundled uvwasi for wasm2c benchmarks" OFF)
+
+# Accept old build configurations, but do not silently promise WASI support.
+if (WITH_WASI)
+  message(WARNING
+    "WITH_WASI is no longer supported: WASI support has been removed from "
+    "wasm-interp. Remove -DWITH_WASI from your build configuration. "
+    "Use -DBUILD_UVWASI=ON only to build uvwasi for wasm2c benchmarks.")
+endif ()
 option(USE_INTERNAL_SHA256 "Use internal PicoSHA2 for SHA-256 support instead of OpenSSL libcrypto" OFF)
 
 if (MSVC)
@@ -537,6 +543,21 @@ function(wabt_executable)
   endif ()
 endfunction()
 
+# Keep uvwasi available for the standalone wasm2c benchmarks.
+if (BUILD_UVWASI)
+  # uvwasi uses the deprecated FetchContent_Populate function, disable it to avoid build error
+  set(CMAKE_POLICY_DEFAULT_CMP0169_BACK ${CMAKE_POLICY_DEFAULT_CMP0169})
+  set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
+  add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
+  set(CMAKE_POLICY_DEFAULT_CMP0169 ${CMAKE_POLICY_DEFAULT_CMP0169_BACK})
+
+  if (COMPILER_IS_GNU)
+    target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
+  elseif (COMPILER_IS_CLANG)
+    target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
+  endif()
+endif()
+
 if (BUILD_TOOLS)
   # wat2wasm
   wabt_executable(
@@ -580,30 +601,11 @@ if (BUILD_TOOLS)
     INSTALL
   )
 
-  if(WITH_WASI)
-    # uvwasi uses the deprecated FetchContent_Populate function, disable it to avoid build error
-    set(CMAKE_POLICY_DEFAULT_CMP0169_BACK ${CMAKE_POLICY_DEFAULT_CMP0169})
-    set(CMAKE_POLICY_DEFAULT_CMP0169 OLD)
-    add_subdirectory("third_party/uvwasi" EXCLUDE_FROM_ALL)
-    set(CMAKE_POLICY_DEFAULT_CMP0169 ${CMAKE_POLICY_DEFAULT_CMP0169_BACK})
-    include_directories(third_party/uvwasi/include)
-    add_definitions(-DWITH_WASI)
-    set(INTERP_LIBS uvwasi_a)
-    set(EXTRA_INTERP_SRC src/interp/interp-wasi.cc)
-
-    if (COMPILER_IS_GNU)
-      target_compile_options(uv_a PRIVATE "-Wno-sign-compare")
-    elseif (COMPILER_IS_CLANG)
-      target_compile_options(uv_a PRIVATE "-Wno-implicit-fallthrough")
-    endif()
-  endif()
-
   # wasm-interp
 
   wabt_executable(
     NAME wasm-interp
-    SOURCES src/tools/wasm-interp.cc ${EXTRA_INTERP_SRC}
-    LIBS ${INTERP_LIBS}
+    SOURCES src/tools/wasm-interp.cc
     WITH_LIBM
     INSTALL
   )

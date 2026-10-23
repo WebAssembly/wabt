@@ -27,15 +27,10 @@
 #include "wabt/feature.h"
 #include "wabt/interp/binary-reader-interp.h"
 #include "wabt/interp/interp-util.h"
-#include "wabt/interp/interp-wasi.h"
 #include "wabt/interp/interp.h"
 #include "wabt/literal.h"
 #include "wabt/option-parser.h"
 #include "wabt/stream.h"
-
-#ifdef WITH_WASI
-#include "uvwasi.h"
-#endif
 
 using namespace wabt;
 using namespace wabt::interp;
@@ -61,11 +56,7 @@ static bool s_run_all_exports;
 static bool s_host_print;
 static bool s_dummy_import_func;
 static Features s_features;
-static bool s_wasi;
 static std::vector<FunctionCall> s_run_exports;
-static std::vector<std::string> s_wasi_env;
-static std::vector<std::string> s_wasi_argv;
-static std::vector<std::string> s_wasi_dirs;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -175,17 +166,6 @@ static void ParseOptions(int argc, char** argv) {
                                        argument.c_str());
                      s_run_exports.back().args.push_back(val);
                    });
-  parser.AddOption("wasi",
-                   "Assume input module is WASI compliant (Export "
-                   " WASI API the the module and invoke _start function)",
-                   []() { s_wasi = true; });
-  parser.AddOption(
-      'e', "env", "ENV",
-      "Pass the given environment string in the WASI runtime",
-      [](const std::string& argument) { s_wasi_env.push_back(argument); });
-  parser.AddOption(
-      'd', "dir", "DIR", "Pass the given directory the the WASI runtime",
-      [](const std::string& argument) { s_wasi_dirs.push_back(argument); });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -202,9 +182,6 @@ static void ParseOptions(int argc, char** argv) {
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
-  parser.AddArgument(
-      "arg", OptionParser::ArgumentCount::ZeroOrMore,
-      [](const char* argument) { s_wasi_argv.push_back(argument); });
   parser.Parse(argc, argv);
 }
 
@@ -354,69 +331,7 @@ static Result ReadAndRunModule(const char* module_filename) {
   }
 
   RefVec imports;
-
-#if WITH_WASI
-  uvwasi_t uvwasi;
-#endif
-
-  if (s_wasi) {
-#if WITH_WASI
-    uvwasi_errno_t err;
-    uvwasi_options_t init_options;
-
-    std::vector<const char*> argv;
-    argv.push_back(module_filename);
-    for (auto& s : s_wasi_argv) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: arg: \"%s\"\n", s.c_str());
-      }
-      argv.push_back(s.c_str());
-    }
-    argv.push_back(nullptr);
-
-    std::vector<const char*> envp;
-    for (auto& s : s_wasi_env) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: env: \"%s\"\n", s.c_str());
-      }
-      envp.push_back(s.c_str());
-    }
-    envp.push_back(nullptr);
-
-    std::vector<uvwasi_preopen_t> dirs;
-    for (auto& dir : s_wasi_dirs) {
-      if (s_trace_stream) {
-        s_trace_stream->Writef("wasi: dir: \"%s\"\n", dir.c_str());
-      }
-      dirs.push_back({dir.c_str(), dir.c_str()});
-    }
-
-    /* Setup the initialization options. */
-    init_options.in = 0;
-    init_options.out = 1;
-    init_options.err = 2;
-    init_options.fd_table_size = 3;
-    init_options.argc = argv.size() - 1;
-    init_options.argv = argv.data();
-    init_options.envp = envp.data();
-    init_options.preopenc = dirs.size();
-    init_options.preopens = dirs.data();
-    init_options.allocator = NULL;
-
-    err = uvwasi_init(&uvwasi, &init_options);
-    if (err != UVWASI_ESUCCESS) {
-      s_stderr_stream.get()->Writef("error initialiazing uvwasi: %d\n", err);
-      return Result::Error;
-    }
-    CHECK_RESULT(WasiBindImports(module, imports, s_stderr_stream.get(),
-                                 s_trace_stream));
-#else
-    s_stderr_stream.get()->Writef("wasi support not compiled in\n");
-    return Result::Error;
-#endif
-  } else {
-    BindImports(module, imports);
-  }
+  BindImports(module, imports);
 
   Instance::Ptr instance;
   CHECK_RESULT(InstantiateModule(imports, module, &instance));
@@ -430,12 +345,6 @@ static Result ReadAndRunModule(const char* module_filename) {
     // TODO: what should we do about errors?
     (void)RunSpecificExports(instance, &errors, s_run_exports);
   }
-#ifdef WITH_WASI
-  if (s_wasi) {
-    CHECK_RESULT(
-        WasiRunStart(instance, &uvwasi, s_stderr_stream.get(), s_trace_stream));
-  }
-#endif
 
   return Result::Ok;
 }
