@@ -1,0 +1,38 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS2: --generate-names
+magic
+version
+section(TYPE) {
+  count[1]
+  function params[0] results[0]
+}
+section(FUNCTION) {
+  count[3]
+  type[0]
+  type[0]
+  type[0]
+}
+section(EXPORT) {
+  ;; These export names differ only in characters that cannot appear in a
+  ;; name, so all three are written as $a_b and have to be disambiguated.
+  count[3]
+  str("a b") func_kind func[0]
+  str("a,b") func_kind func[1]
+  str("a(b") func_kind func[2]
+}
+section(CODE) {
+  count[3]
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+}
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $a_b (type $t0))
+  (func $a_b_1 (type $t0))
+  (func $a_b_2 (type $t0))
+  (export "a b" (func $a_b))
+  (export "a,b" (func $a_b_1))
+  (export "a(b" (func $a_b_2)))
+;;; STDOUT ;;)
