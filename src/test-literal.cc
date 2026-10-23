@@ -29,6 +29,16 @@ using namespace wabt;
 
 namespace {
 
+TEST(WriteHexTest, ZeroSizeDoesNotAccessOutput) {
+  char output = 'x';
+
+  WriteFloatHex(&output, 0, 0);
+  EXPECT_EQ('x', output);
+
+  WriteDoubleHex(&output, 0, 0);
+  EXPECT_EQ('x', output);
+}
+
 enum ParseIntTypeCombo {
   UnsignedOnly,
   SignedAndUnsigned,
@@ -851,6 +861,13 @@ TEST(WriteUint128, Basic) {
   AssertWriteUint128Equals({0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
                            "340282366920938463463374607431768211455");
   AssertWriteUint128Equals({0, 0, 1, 0}, "18446744073709551616");
+}
+
+TEST(WriteUint128, ZeroSizeDoesNotAccessOutput) {
+  char output = 'x';
+
+  WriteUint128(&output, 0, {0, 0, 0, 0});
+  EXPECT_EQ('x', output);
 }
 
 TEST(WriteUint128, BufferTooSmall) {
