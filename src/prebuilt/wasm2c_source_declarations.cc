@@ -200,7 +200,7 @@ R"w2c_template(  if (__builtin_add_overflow(a, b, &ret))
 )w2c_template"
 R"w2c_template(    TRAP(OOB);
 )w2c_template"
-R"w2c_template(#elif defined(_MSC_VER)
+R"w2c_template(#elif defined(_MSC_VER) && defined(_M_X64)
 )w2c_template"
 R"w2c_template(  if (_addcarry_u64(0, a, b, &ret))
 )w2c_template"
