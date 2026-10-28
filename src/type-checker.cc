@@ -277,6 +277,7 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
     switch (actual_type) {
       case Type::ExternRef:
       case Type::FuncRef:
+      case Type::ExnRef:
         return (expected.IsNullableNonTypedRef() ||
                 !actual.IsNullableNonTypedRef())
                    ? Result::Ok
@@ -617,7 +618,8 @@ Result TypeChecker::OnBrIf(Index depth) {
 }
 
 static Type convertRefNullToRef(Type type) {
-  if (type == Type::ExternRef || type == Type::FuncRef) {
+  if (type == Type::ExternRef || type == Type::FuncRef ||
+      type == Type::ExnRef) {
     return Type(type, Type::ReferenceNonNull);
   }
 

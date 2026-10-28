@@ -1,0 +1,12 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (func (param (ref exn))
+    (throw_ref (local.get 0)))
+  (func (param (ref null exn))
+    (throw_ref (local.get 0)))
+  (func (param exnref)
+    (throw_ref (local.get 0)))
+  (func (result (ref exn))
+    (unreachable))
+)
