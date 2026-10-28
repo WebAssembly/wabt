@@ -1,0 +1,74 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --debug-names --enable-threads
+(module
+  (memory 1 1 shared)
+  (memory $m 1 1 shared)
+  (func
+    (drop (i32.atomic.load 1 (i32.const 0)))
+    (i32.atomic.store 1 (i32.const 0) (i32.const 0))
+    (drop (i32.atomic.rmw.add 1 (i32.const 0) (i32.const 0)))
+    (drop (i32.atomic.rmw.cmpxchg 1 (i32.const 0) (i32.const 0) (i32.const 0)))
+    (drop (memory.atomic.notify 1 (i32.const 0) (i32.const 0)))
+    (drop (memory.atomic.wait32 1 (i32.const 0) (i32.const 0) (i64.const 0)))
+    (drop (i32.atomic.load $m (i32.const 0)))
+    (i32.atomic.store $m (i32.const 0) (i32.const 0))
+    (drop (i32.atomic.rmw.add $m (i32.const 0) (i32.const 0)))
+    (drop (i32.atomic.rmw.cmpxchg $m (i32.const 0) (i32.const 0) (i32.const 0)))
+    (drop (memory.atomic.notify $m (i32.const 0) (i32.const 0)))
+    (drop (memory.atomic.wait32 $m (i32.const 0) (i32.const 0) (i64.const 0)))))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (drop
+      (i32.atomic.load 1
+        (i32.const 0)))
+    (i32.atomic.store 1
+      (i32.const 0)
+      (i32.const 0))
+    (drop
+      (i32.atomic.rmw.add 1
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (i32.atomic.rmw.cmpxchg 1
+        (i32.const 0)
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (memory.atomic.notify 1
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (memory.atomic.wait32 1
+        (i32.const 0)
+        (i32.const 0)
+        (i64.const 0)))
+    (drop
+      (i32.atomic.load 1
+        (i32.const 0)))
+    (i32.atomic.store 1
+      (i32.const 0)
+      (i32.const 0))
+    (drop
+      (i32.atomic.rmw.add 1
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (i32.atomic.rmw.cmpxchg 1
+        (i32.const 0)
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (memory.atomic.notify 1
+        (i32.const 0)
+        (i32.const 0)))
+    (drop
+      (memory.atomic.wait32 1
+        (i32.const 0)
+        (i32.const 0)
+        (i64.const 0))))
+  (memory (;0;) 1 1 shared)
+  (memory $m 1 1 shared)
+  (@custom "name" "\02\03\01\00\00\06\04\01\01\01m"))
+;;; STDOUT ;;)
