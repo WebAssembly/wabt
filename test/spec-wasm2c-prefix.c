@@ -371,6 +371,13 @@ void w2c_spectest_print(w2c_spectest* instance) {
 }
 
 void w2c_spectest_print_i32(w2c_spectest* instance, uint32_t i) {
+  // A call through a table must hand the host function the instance of the
+  // import, as a direct call does.
+  if (instance != &spectest_instance) {
+    printf("spectest.print_i32: wrong instance %p, expected %p\n",
+           (void*)instance, (void*)&spectest_instance);
+    abort();
+  }
   printf("spectest.print_i32(%d)\n", i);
 }
 

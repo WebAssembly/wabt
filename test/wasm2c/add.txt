@@ -809,7 +809,12 @@ static inline void memory_init(wasm_rt_memory_t* dest,
   LOAD_DATA((*dest), dest_addr, src + src_addr, n);
 }
 
-typedef enum { RefFunc, RefNull, GlobalGet } wasm_elem_segment_expr_type_t;
+typedef enum {
+  RefFunc,
+  RefNull,
+  GlobalGet,
+  RefImportFunc
+} wasm_elem_segment_expr_type_t;
 
 typedef struct {
   wasm_elem_segment_expr_type_t expr_type;
@@ -837,6 +842,11 @@ static inline void funcref_table_init(wasm_rt_funcref_table_t* dest,
         *dest_val = (wasm_rt_funcref_t){
             src_expr->type, src_expr->func, src_expr->func_tailcallee,
             (char*)module_instance + src_expr->module_offset};
+        break;
+      case RefImportFunc:
+        *dest_val = (wasm_rt_funcref_t){
+            src_expr->type, src_expr->func, src_expr->func_tailcallee,
+            *(void**)((char*)module_instance + src_expr->module_offset)};
         break;
       case RefNull:
         *dest_val = wasm_rt_funcref_null_value;

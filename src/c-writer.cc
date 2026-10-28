@@ -2489,8 +2489,13 @@ void CWriter::WriteElemInitializers() {
         case ExprType::RefFunc: {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
-          Write("{RefFunc, ", FuncTypeExpr(func_type),
-                ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
+          // The entry of an imported function reads the pointer to the
+          // instance of the import from the module instance (see
+          // funcref_table_init); a function defined here uses the module
+          // instance itself.
+          Write(IsImport(func->name) ? "{RefImportFunc, " : "{RefFunc, ",
+                FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
+                WrapperRef(func->name), ", {");
           if (options_.features.tail_call_enabled() &&
               (IsImport(func->name) || func->features_used.tailcall)) {
             Write(TailCallRef(func->name));
