@@ -24,6 +24,7 @@
 #include "wabt/cast.h"
 #include "wabt/expr-visitor.h"
 #include "wabt/ir.h"
+#include "wabt/wat-writer.h"
 
 namespace wabt {
 
@@ -188,6 +189,10 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
     unsigned disambiguator = 0;
     while (true) {
       GenerateName(name, kInvalidIndex, disambiguator, str);
+      // The writer replaces the characters a name cannot contain, so two
+      // names differing only in those would come out the same however many
+      // times this loop ran. Settle on the written form before comparing.
+      *str = MakeValidWatName(*str);
       if (!bindings->contains(*str)) {
         bindings->emplace(*str, Binding(index));
         break;
