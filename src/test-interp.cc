@@ -174,6 +174,21 @@ TEST_F(InterpTest, Fac) {
   EXPECT_EQ(120u, results[0].Get<u32>());
 }
 
+TEST_F(InterpTest, CallArgCountMismatch) {
+  ReadModule(s_fac_module);
+  Instantiate();
+  auto func = GetFuncExport(0);
+
+  // Calling the one-parameter export with no arguments must trap rather than
+  // read past the end of the params vector.
+  Values results;
+  Trap::Ptr trap;
+  Result result = func->Call(store_, {}, results, &trap);
+
+  ASSERT_EQ(Result::Error, result);
+  ASSERT_TRUE(trap);
+}
+
 TEST_F(InterpTest, Fac_Trace) {
   ReadModule(s_fac_module);
   Instantiate();
