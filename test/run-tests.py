@@ -88,11 +88,6 @@ TOOLS = {
         ('RUN', '%(wasm-interp)s %(temp_file)s.wasm --run-all-exports'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
-    'run-interp-wasi': [
-        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
-        ('RUN', '%(wasm-interp)s --wasi %(temp_file)s.wasm'),
-        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
-    ],
     'run-interp-spec': [
         ('RUN', '%(wast2json)s %(in_file)s -o %(temp_file)s.json'),
         ('RUN', '%(spectest-interp)s %(temp_file)s.json'),
@@ -945,10 +940,6 @@ def main(args):
             fnmatch.translate(f'*{p}*') for p in options.patterns)
     else:
         pattern_re = '.*'
-        # By default, exclude wasi tests because WASI support is not include
-        # by int the build by default.
-        # TODO(sbc): Find some way to detect the WASI support.
-        exclude_dirs += ['wasi']
 
     test_names = FindTestFiles('.txt', pattern_re, exclude_dirs)
 
