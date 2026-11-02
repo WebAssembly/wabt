@@ -23,7 +23,6 @@
 #include <windows.h>
 #else
 #include <sys/mman.h>
-#include <unistd.h>
 #endif
 
 #ifdef WASM_RT_GROW_FAILED_HANDLER
@@ -63,12 +62,6 @@ static bool u64_mult_overflow(uint64_t a, uint64_t b, uint64_t* result) {
 #if WASM_RT_USE_MMAP
 
 #ifdef _WIN32
-static size_t os_page_size(void) {
-  SYSTEM_INFO info;
-  GetSystemInfo(&info);
-  return info.dwPageSize;
-}
-
 static void* os_mmap(size_t size) {
   void* ret = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
   return ret;
@@ -113,14 +106,6 @@ static void os_print_last_error(const char* msg) {
 
 #else /* !_WIN32 */
 
-#define DEFAULT_OS_PAGE_SIZE 4096
-
-static size_t os_page_size(void) {
-  long size = sysconf(_SC_PAGESIZE);
-  // Fall back to a default size if sysconf returns bad data for any reason
-  return size > 0 ? (size_t)size : DEFAULT_OS_PAGE_SIZE;
-}
-
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
@@ -148,10 +133,15 @@ static void os_print_last_error(const char* msg) {
 #endif /* _WIN32 */
 
 static uint64_t round_up_to_os_page_size(uint64_t size) {
-  uint64_t page_size = os_page_size();
-  uint64_t remainder = size % page_size;
+  // page size should be initialized
+  assert(g_native_page_size);
+  // Keep an explicit check that isn't removed from the release builds
+  if (!g_native_page_size) {
+    return 0;
+  }
+  uint64_t remainder = size % g_native_page_size;
   if (remainder != 0) {
-    uint64_t increment = page_size - remainder;
+    uint64_t increment = g_native_page_size - remainder;
     uint64_t new_size = size + increment;
     if (new_size < size) {
       // overflow. Return 0 on error
