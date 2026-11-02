@@ -80,6 +80,8 @@ static WASM_RT_THREAD_LOCAL void* g_alt_stack = NULL;
 
 size_t g_native_page_size = 0;
 
+static bool g_wasm_rt_initialized = false;
+
 #ifndef WASM_RT_TRAP_HANDLER
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 #endif
@@ -100,6 +102,12 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 #else
   WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
+}
+
+// Unrecoverable internal runtime error that is not a Wasm trap
+static void wasm_rt_fatal(const char* msg) {
+  fprintf(stderr, "wasm-rt error: %s\n", msg);
+  abort();
 }
 
 #ifdef _WIN32
@@ -181,22 +189,12 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 #if WASM_RT_STACK_EXHAUSTION_HANDLER
-static bool os_has_altstack_installed() {
-  /* check for altstack already in place */
-  stack_t ss;
-  if (sigaltstack(NULL, &ss) != 0) {
-    perror("os_has_altstack_installed: sigaltstack failed");
-    abort();
-  }
-
-  return !(ss.ss_flags & SS_DISABLE);
-}
-
 /* These routines set up an altstack to handle SIGSEGV from stack overflow. */
 static void os_allocate_and_install_altstack(void) {
   /* verify altstack not already allocated */
-  assert(!g_alt_stack &&
-         "wasm-rt error: tried to re-allocate thread-local alternate stack");
+  if (g_alt_stack) {
+    wasm_rt_fatal("tried to re-allocate thread-local alternate stack");
+  }
 
   /* We could check and warn if an altstack is already installed, but some
    * sanitizers install their own altstack, so this warning would fire
@@ -221,9 +219,10 @@ static void os_allocate_and_install_altstack(void) {
 }
 
 static void os_disable_and_deallocate_altstack(void) {
-  /* in debug build, verify altstack allocated */
-  assert(g_alt_stack &&
-         "wasm-rt error: thread-local alternate stack not allocated");
+  /* verify altstack allocated */
+  if (!g_alt_stack) {
+    wasm_rt_fatal("thread-local alternate stack not allocated");
+  }
 
   /* verify altstack was still in place */
   stack_t ss;
@@ -248,7 +247,6 @@ static void os_disable_and_deallocate_altstack(void) {
     perror("sigaltstack disable failed");
     abort();
   }
-  assert(!os_has_altstack_installed());
   free(g_alt_stack);
   g_alt_stack = NULL;
 }
@@ -304,29 +302,23 @@ void wasm_rt_init(void) {
 #endif
 #endif
 
-  assert(wasm_rt_is_initialized());
+  g_wasm_rt_initialized = true;
 }
 
 bool wasm_rt_is_initialized(void) {
-#if WASM_RT_STACK_EXHAUSTION_HANDLER
-  if (!os_has_altstack_installed()) {
-    return false;
-  }
-#endif
-#if WASM_RT_INSTALL_SIGNAL_HANDLER
-  return g_signal_handler_installed;
-#else
-  return true;
-#endif
+  return g_wasm_rt_initialized;
 }
 
 void wasm_rt_free(void) {
-  assert(wasm_rt_is_initialized());
+  if (!wasm_rt_is_initialized()) {
+    wasm_rt_fatal("wasm_rt_free called before wasm_rt_init");
+  }
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
   g_signal_handler_installed = false;
 #endif
   wasm_rt_free_thread();
+  g_wasm_rt_initialized = false;
 }
 
 void wasm_rt_init_thread(void) {

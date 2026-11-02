@@ -951,7 +951,9 @@ u32 w2c_test_add(w2c_test* instance, u32 var_p0, u32 var_p1) {
 }
 
 void wasm2c_test_instantiate(w2c_test* instance) {
-  assert(wasm_rt_is_initialized());
+  if (!wasm_rt_is_initialized()) {
+    abort();
+  }
 }
 
 void wasm2c_test_free(w2c_test* instance) {
