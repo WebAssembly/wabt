@@ -207,6 +207,7 @@ static Result CheckType(Type actual, Type expected) {
     switch (actual_type) {
       case Type::ExternRef:
       case Type::FuncRef:
+      case Type::ExnRef:
         return (expected.IsNullableNonTypedRef() ||
                 !actual.IsNullableNonTypedRef())
                    ? Result::Ok
