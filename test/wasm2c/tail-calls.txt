@@ -1020,7 +1020,9 @@ static void init_instance_import(w2c_test* instance, struct w2c_spectest* w2c_sp
 }
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_spectest* w2c_spectest_instance) {
-  assert(wasm_rt_is_initialized());
+  if (!wasm_rt_is_initialized()) {
+    abort();
+  }
   init_instance_import(instance, w2c_spectest_instance);
   init_tables(instance);
   init_elem_instances(instance);
