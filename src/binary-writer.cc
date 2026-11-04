@@ -1497,7 +1497,32 @@ Result BinaryWriter::WriteModule() {
 
   if (module_->imports.size()) {
     BeginKnownSection(BinarySection::Import);
-    WriteU32Leb128(stream_, module_->imports.size(), "num imports");
+
+    // Returns the number of consecutive imports, starting at index `i`, that
+    // share the same module name.  When compact imports are enabled, a run of
+    // more than one such import is written as a single (compact) entry.
+    auto get_group_size = [&](size_t i) -> size_t {
+      size_t group_size = 1;
+      if (options_.features.compact_imports_enabled()) {
+        // Currently we only support grouping by module name (0x7F mode)
+        // and not the module name + kind grouping (0x7E mode).
+        const std::string& module_name = module_->imports[i]->module_name;
+        while (i + group_size < module_->imports.size() &&
+               module_->imports[i + group_size]->module_name == module_name) {
+          group_size++;
+        }
+      }
+      return group_size;
+    };
+
+    // The import section count is the number of entries in the section, not
+    // the number of imports, since a single compact entry can contain many
+    // imports.
+    size_t num_entries = 0;
+    for (size_t i = 0; i < module_->imports.size(); i += get_group_size(i)) {
+      num_entries++;
+    }
+    WriteU32Leb128(stream_, num_entries, "num imports");
 
     size_t i = 0;
     while (i < module_->imports.size()) {
@@ -1505,37 +1530,23 @@ Result BinaryWriter::WriteModule() {
       WriteHeader("import header", i);
       WriteStr(stream_, import->module_name, "import module name",
                PrintChars::Yes);
-      bool compact = false;
-      if (options_.features.compact_imports_enabled()) {
-        // Write compact imports when they are available.
-        // Currently we only support grouping by module name (0x7F mode)
-        // and not the module name + kind grouping (0x7E mode).
-        size_t group_size = 1;
-        size_t j = i + 1;
-        while (j < module_->imports.size() &&
-               import->module_name == module_->imports[j]->module_name) {
-          group_size++;
-          j++;
+      // Use compact imports iff we have a continuous sequence of more than
+      // one import with the same module name.
+      size_t group_size = get_group_size(i);
+      if (group_size > 1) {
+        WriteStr(stream_, "", "empty field name", PrintChars::Yes);
+        stream_->WriteU8(0x7F, "compact import marker");
+        WriteU32Leb128(stream_, group_size, "import group size");
+        while (group_size--) {
+          WriteHeader("compact import header", i);
+          const Import* import = module_->imports[i];
+          WriteStr(stream_, import->field_name, "import field name",
+                   PrintChars::Yes);
+          stream_->WriteU8Enum(import->kind(), "import kind");
+          WriteImport(import);
+          i++;
         }
-        // Use compact imports iff we have a continuous sequence of more than
-        // one import with the same module name.
-        if (group_size > 1) {
-          compact = true;
-          WriteStr(stream_, "", "empty field name", PrintChars::Yes);
-          stream_->WriteU8(0x7F, "compact import marker");
-          WriteU32Leb128(stream_, group_size, "import group size");
-          while (group_size--) {
-            WriteHeader("compact import header", i);
-            const Import* import = module_->imports[i];
-            WriteStr(stream_, import->field_name, "import field name",
-                     PrintChars::Yes);
-            stream_->WriteU8Enum(import->kind(), "import kind");
-            WriteImport(import);
-            i++;
-          }
-        }
-      }
-      if (!compact) {
+      } else {
         WriteStr(stream_, import->field_name, "import field name",
                  PrintChars::Yes);
         stream_->WriteU8Enum(import->kind(), "import kind");

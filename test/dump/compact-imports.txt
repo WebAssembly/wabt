@@ -8,6 +8,7 @@
   (import "mod2" "testtable" (table 0 funcref))
   (import "mod1" "testtag" (tag (param i32)))
   (import "mod1" "func" (func (param i32 i64 f32 f64)))
+  (import "mod3" "global" (global i32))
 )
 (;; STDERR ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
@@ -39,7 +40,7 @@
 ; section "Import" (2)
 000001b: 02                                        ; section code
 000001c: 00                                        ; section size (guess)
-000001d: 06                                        ; num imports
+000001d: 04                                        ; num imports
 ; import header 0
 000001e: 04                                        ; string length
 000001f: 6d6f 6431                                mod1  ; import module name
@@ -92,7 +93,15 @@
 000006a: 6675 6e63                                func  ; import field name
 000006e: 00                                        ; import kind
 000006f: 00                                        ; import signature index
-000001c: 53                                        ; FIXUP section size
+; import header 6
+0000070: 04                                        ; string length
+0000071: 6d6f 6433                                mod3  ; import module name
+0000075: 06                                        ; string length
+0000076: 676c 6f62 616c                           global  ; import field name
+000007c: 03                                        ; import kind
+000007d: 7f                                        ; i32
+000007e: 00                                        ; global mutability
+000001c: 62                                        ; FIXUP section size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -104,13 +113,14 @@ Type[3]:
  - type[0] (i32, i64, f32, f64) -> nil
  - type[1] (i32) -> i32
  - type[2] (i32) -> nil
-Import[6]:
+Import[7]:
  - func[0] sig=0 <mod1.test> <- mod1.test
  - func[1] sig=1 <mod1.test2> <- mod1.test2
  - memory[0] pages: initial=0 <- mod2.testmem
  - table[0] type=funcref initial=0 <- mod2.testtable
  - tag[0] sig=2 <mod1.testtag> <- mod1.testtag
  - func[2] sig=0 <mod1.func> <- mod1.func
+ - global[0] i32 mutable=0 <- mod3.global
 
 Code Disassembly:
 

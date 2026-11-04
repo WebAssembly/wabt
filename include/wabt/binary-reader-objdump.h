@@ -87,6 +87,9 @@ struct ObjdumpState {
   std::vector<ObjdumpSymbol> symtab;
   std::map<Index, Index> function_param_counts;
   std::map<Index, Index> function_types;
+  // Total number of imports.  This can differ from the import section count
+  // when compact imports are used.
+  Index num_imports = 0;
 };
 
 Result ReadBinaryObjdump(ByteSpan data,

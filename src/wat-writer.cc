@@ -1192,12 +1192,12 @@ Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadSplatExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadSplatExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadZeroExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadZeroExpr>(expr);
   return Result::Ok;
 }
 

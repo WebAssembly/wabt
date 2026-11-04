@@ -1,0 +1,23 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (type (func (param (ref func))))
+  (type (func (param (ref 0))))
+  (type (func (param (ref $t))))
+  (type $t (func))
+  (func (local (ref $t)) nop)
+)
+(;; STDERR ;;;
+out/test/parse/function-references-disabled.txt:4:22: error: unexpected token (, expected ).
+  (type (func (param (ref func))))
+                     ^
+out/test/parse/function-references-disabled.txt:5:22: error: unexpected token (, expected ).
+  (type (func (param (ref 0))))
+                     ^
+out/test/parse/function-references-disabled.txt:6:22: error: unexpected token (, expected ).
+  (type (func (param (ref $t))))
+                     ^
+out/test/parse/function-references-disabled.txt:8:16: error: unexpected token (, expected ).
+  (func (local (ref $t)) nop)
+               ^
+;;; STDERR ;;)
