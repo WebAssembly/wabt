@@ -107,6 +107,18 @@ check_include_file("setjmp.h" HAVE_SETJMP_H)
 check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
+if (WIN32)
+  if(${CMAKE_GENERATOR_PLATFORM} MATCHES "ARM64")
+    # https://discourse.cmake.org/t/visual-studio-error-unable-to-deploy-local-file-c-x64-release-zero-check/2072
+    # Target ZERO_CHECK blocks remote debugger of ARM64 in Visual Studio
+    set(CMAKE_SUPPRESS_REGENERATION ON)
+  endif()
+  check_symbol_exists(ENABLE_VIRTUAL_TERMINAL_PROCESSING "windows.h" HAVE_WIN32_VT100)
+  # https://github.com/WebAssembly/wabt/issues/2609
+  # Fix issue where Windows 11 doesn't ship with expected libcrypto DLL and so wasm2c doesn't work.
+  set(USE_INTERNAL_SHA256 ON)
+endif ()
+
 if (NOT USE_INTERNAL_SHA256)
   find_package(OpenSSL QUIET)
   if (OpenSSL_FOUND)
@@ -117,15 +129,6 @@ if (NOT USE_INTERNAL_SHA256)
     endif()
   endif()
 endif()
-
-if (WIN32)
-  if(${CMAKE_GENERATOR_PLATFORM} MATCHES "ARM64")
-    # https://discourse.cmake.org/t/visual-studio-error-unable-to-deploy-local-file-c-x64-release-zero-check/2072
-    # Target ZERO_CHECK blocks remote debugger of ARM64 in Visual Studio
-    set(CMAKE_SUPPRESS_REGENERATION ON)
-  endif()
-  check_symbol_exists(ENABLE_VIRTUAL_TERMINAL_PROCESSING "windows.h" HAVE_WIN32_VT100)
-endif ()
 
 include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
