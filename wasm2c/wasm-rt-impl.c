@@ -27,13 +27,13 @@
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
 #include <signal.h>
-#include <unistd.h>
 #endif
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/mman.h>
+#include <unistd.h>
 #endif
 
 #ifndef NDEBUG
@@ -78,6 +78,8 @@ WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 static WASM_RT_THREAD_LOCAL void* g_alt_stack = NULL;
 #endif
 
+size_t g_native_page_size = 0;
+
 #ifndef WASM_RT_TRAP_HANDLER
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 #endif
@@ -102,6 +104,12 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 
 #ifdef _WIN32
 
+static size_t os_page_size(void) {
+  SYSTEM_INFO info;
+  GetSystemInfo(&info);
+  return info.dwPageSize;
+}
+
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 
 static LONG os_signal_handler(PEXCEPTION_POINTERS info) {
@@ -125,6 +133,14 @@ static void os_cleanup_signal_handler(void) {
 #endif
 
 #else
+
+#define DEFAULT_OS_PAGE_SIZE 4096
+
+static size_t os_page_size(void) {
+  long size = sysconf(_SC_PAGESIZE);
+  // Fall back to a default size if sysconf returns bad data for any reason
+  return size > 0 ? (size_t)size : DEFAULT_OS_PAGE_SIZE;
+}
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
@@ -254,6 +270,7 @@ static void call_cpuid(uint64_t* rax,
 #endif
 
 void wasm_rt_init(void) {
+  g_native_page_size = os_page_size();
   wasm_rt_init_thread();
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   if (!g_signal_handler_installed) {

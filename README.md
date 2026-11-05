@@ -361,5 +361,11 @@ And you use an apt-based linux distribution you can use:
 sudo apt install wabt
 ```
 
+For use from Python, an unofficial PyPI package is available
+([`wabt-package`](https://github.com/natify-sh/wabt-package)):
+```sh
+pip install wabt-package
+```
+
 You can also download prebuilt binaries for many platforms directly from the
 github releases page.

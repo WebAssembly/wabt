@@ -1720,6 +1720,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       Ref new_func_ref = inst_->funcs()[instr.imm_u32];
       Frame& current_frame = frames_.back();
       current_frame.func = new_func_ref;
+      // The preceding drop_keep has left the callee's arguments at the base of
+      // the reused frame, so re-cache the value stack height for the function
+      // we are switching to, exactly as PushCall does for a non-tail call.
+      current_frame.values = values_.size();
       break;
     }
 

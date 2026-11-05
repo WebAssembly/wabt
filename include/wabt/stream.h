@@ -20,6 +20,7 @@
 #include <cassert>
 #include <memory>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "wabt/common.h"
@@ -145,6 +146,8 @@ class Stream {
                               size_t size) = 0;
   virtual Result TruncateImpl(size_t size) = 0;
 
+  Result result_;
+
  private:
   template <typename T>
   void Write(const T& data, const char* desc, PrintChars print_chars) {
@@ -159,7 +162,6 @@ class Stream {
   }
 
   size_t offset_;
-  Result result_;
   // Not owned. If non-null, log all writes to this stream.
   Stream* log_stream_;
 };
@@ -218,6 +220,10 @@ class FileStream : public Stream {
 
   void Flush() override;
 
+  // Closes the file if this stream opened it. Check result() afterwards for
+  // an earlier write failure or a failure to close.
+  void Close();
+
  protected:
   Result WriteDataImpl(size_t offset, ByteSpan data) override;
   Result MoveDataImpl(size_t dst_offset,
@@ -227,6 +233,7 @@ class FileStream : public Stream {
 
  private:
   FILE* file_;
+  std::string filename_;
   size_t offset_;
   bool should_close_;
 };

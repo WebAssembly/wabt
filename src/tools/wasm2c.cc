@@ -165,24 +165,36 @@ Result Wasm2cMain(Errors& errors) {
         s_write_c_options.module_name = StripExtension(GetBasename(s_infile));
       }
     }
+    Result result;
     if (s_num_outputs == 1) {
-      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, c_stream_ptrs[0],
-                          std::string(header_name).c_str(), "", &module,
-                          s_write_c_options));
+      result = WriteC(std::move(c_stream_ptrs), &h_stream, c_stream_ptrs[0],
+                      std::string(header_name).c_str(), "", &module,
+                      s_write_c_options);
     } else {
       std::string header_impl_name_full =
           std::string(wabt::StripExtension(s_outfile)) + "-impl.h";
       FileStream h_impl_stream(header_impl_name_full);
       std::string_view header_impl_name = GetBasename(header_impl_name_full);
-      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, &h_impl_stream,
-                          std::string(header_name).c_str(),
-                          std::string(header_impl_name).c_str(), &module,
-                          s_write_c_options));
+      result = WriteC(std::move(c_stream_ptrs), &h_stream, &h_impl_stream,
+                      std::string(header_name).c_str(),
+                      std::string(header_impl_name).c_str(), &module,
+                      s_write_c_options);
+      h_impl_stream.Close();
+      result |= h_impl_stream.result();
     }
+    for (FileStream& c_stream : c_streams) {
+      c_stream.Close();
+      result |= c_stream.result();
+    }
+    h_stream.Close();
+    result |= h_stream.result();
+    CHECK_RESULT(result);
   } else {
     FileStream stream(stdout);
     CHECK_RESULT(WriteC({&stream}, &stream, &stream, "wasm.h", "", &module,
                         s_write_c_options));
+    stream.Close();
+    CHECK_RESULT(stream.result());
   }
 
   return Result::Ok;
