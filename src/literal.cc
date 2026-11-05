@@ -230,8 +230,11 @@ typename FloatParser<T>::Uint FloatParser<T>::ShiftAndRoundToNearest(
     int shift,
     bool seen_trailing_non_zero) {
   assert(shift > 0);
-  // Round ties to even.
-  if ((significand & (Uint(1) << shift)) || seen_trailing_non_zero) {
+  // Bit shift - 1 is the rounding bit, which the addition below handles. Round
+  // up when the result is odd (bit shift) or any bit under the rounding bit is
+  // set. Otherwise the value is exactly half, and ties round to even.
+  Uint mask = (Uint(1) << shift) | ((Uint(1) << (shift - 1)) - 1);
+  if ((significand & mask) || seen_trailing_non_zero) {
     significand += Uint(1) << (shift - 1);
   }
   significand >>= shift;
@@ -384,35 +387,24 @@ Result FloatParser<T>::ParseHex(const char* s,
 
   if (exponent <= Traits::kMinExp) {
     // Maybe subnormal.
-    auto update_seen_trailing_non_zero = [&](int shift) {
-      assert(shift > 0);
-      auto mask = (Uint(1) << (shift - 1)) - 1;
-      seen_trailing_non_zero |= (significand & mask) != 0;
-    };
-
-    // Normalize significand.
-    if (significand_bits > Traits::kSigBits) {
-      int shift = significand_bits - Traits::kSigBits;
-      update_seen_trailing_non_zero(shift);
-      significand >>= shift;
-    } else if (significand_bits < Traits::kSigBits) {
-      significand <<= (Traits::kSigBits - significand_bits);
-    }
-
     int shift = Traits::kMinExp - exponent;
     if (shift <= Traits::kSigBits) {
-      if (shift) {
-        update_seen_trailing_non_zero(shift);
+      // Round once, from every bit parsed, to the kSigBits of a subnormal.
+      shift += significand_bits - Traits::kSigBits;
+      if (shift > 0) {
         significand =
-            ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero) &
-            Traits::kSigMask;
+            ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero);
+      } else {
+        significand <<= -shift;
       }
-      exponent = Traits::kMinExp;
 
-      if (significand != 0) {
-        *out_bits = Make(is_neg, exponent, significand);
-        return Result::Ok;
-      }
+      // Rounding up from the largest subnormal gives 1 << kSigBits, which
+      // carries into the exponent and becomes the smallest normal value.
+      assert(significand <= (Uint(1) << Traits::kSigBits));
+      *out_bits =
+          Make(is_neg, Traits::kMinExp + int(significand >> Traits::kSigBits),
+               significand & Traits::kSigMask);
+      return Result::Ok;
     }
 
     // Not subnormal, too small; return 0 or -0.
