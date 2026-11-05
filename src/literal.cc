@@ -399,8 +399,8 @@ Result FloatParser<T>::ParseHex(const char* s,
       }
 
       if (significand != 0) {
-        if (significand > Traits::kSigMask) {
-          // Rounded up to 1 << kSigBits, the smallest normal value.
+        if (significand == Uint(1) << Traits::kSigBits) {
+          // The largest subnormal rounded up to the smallest normal value.
           *out_bits = Make(is_neg, Traits::kMinExp + 1, 0);
         } else {
           *out_bits = Make(is_neg, Traits::kMinExp, significand);
