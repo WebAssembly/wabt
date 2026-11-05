@@ -398,15 +398,13 @@ Result FloatParser<T>::ParseHex(const char* s,
         significand <<= -shift;
       }
 
-      if (significand != 0) {
-        if (significand == Uint(1) << Traits::kSigBits) {
-          // The largest subnormal rounded up to the smallest normal value.
-          *out_bits = Make(is_neg, Traits::kMinExp + 1, 0);
-        } else {
-          *out_bits = Make(is_neg, Traits::kMinExp, significand);
-        }
-        return Result::Ok;
-      }
+      // Rounding up from the largest subnormal gives 1 << kSigBits, which
+      // carries into the exponent and becomes the smallest normal value.
+      assert(significand <= (Uint(1) << Traits::kSigBits));
+      *out_bits =
+          Make(is_neg, Traits::kMinExp + int(significand >> Traits::kSigBits),
+               significand & Traits::kSigMask);
+      return Result::Ok;
     }
 
     // Not subnormal, too small; return 0 or -0.
