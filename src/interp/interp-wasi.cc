@@ -35,13 +35,20 @@
 
 #include "uvwasi.h"
 
+#include <algorithm>
 #include <cinttypes>
+#include <climits>
 #include <unordered_map>
 
 using namespace wabt;
 using namespace wabt::interp;
 
 namespace {
+
+int TraceStringLength(uint32_t length) {
+  // A negative printf precision would remove the bound on the string read.
+  return static_cast<int>(std::min(length, uint32_t{INT_MAX}));
+}
 
 // Types that align with WASI spec on size and alignment.  These are
 // copied directly from wasi-lib's auto-generated api.h
@@ -221,14 +228,15 @@ class WasiInstance {
     uint32_t path_ptr = params[2].Get<u32>();
     __wasi_size_t path_len = params[3].Get<u32>();
     __wasi_oflags_t oflags = params[4].Get<u32>();
-    __wasi_rights_t fs_rights_base = params[5].Get<u32>();
-    __wasi_rights_t fs_rights_inherting = params[6].Get<u32>();
+    __wasi_rights_t fs_rights_base = params[5].Get<u64>();
+    __wasi_rights_t fs_rights_inherting = params[6].Get<u64>();
     __wasi_fdflags_t fs_flags = params[7].Get<u32>();
     uint32_t out_ptr = params[8].Get<u32>();
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
-      trace_stream->Writef("path_open : %s\n", path);
+      trace_stream->Writef("path_open : %.*s\n", TraceStringLength(path_len),
+                           path);
     }
     uvwasi_fd_t outfd;
     results[0].Set<u32>(uvwasi_path_open(
@@ -258,7 +266,8 @@ class WasiInstance {
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
-      trace_stream->Writef("path_filestat_get : %d %s\n", fd, path);
+      trace_stream->Writef("path_filestat_get : %d %.*s\n", fd,
+                           TraceStringLength(path_len), path);
     }
     uvwasi_filestat_t buf;
     results[0].Set<u32>(
@@ -292,7 +301,9 @@ class WasiInstance {
     CHECK_RESULT(getMemPtr<char>(old_path_ptr, old_path_len, &old_path, trap));
     CHECK_RESULT(getMemPtr<char>(new_path_ptr, new_path_len, &new_path, trap));
     if (trace_stream) {
-      trace_stream->Writef("path_symlink %d %s : %s\n", fd, old_path, new_path);
+      trace_stream->Writef("path_symlink %d %.*s : %.*s\n", fd,
+                           TraceStringLength(old_path_len), old_path,
+                           TraceStringLength(new_path_len), new_path);
     }
     results[0].Set<u32>(uvwasi_path_symlink(uvwasi, old_path, old_path_len, fd,
                                             new_path, new_path_len));
@@ -334,7 +345,8 @@ class WasiInstance {
     char* path;
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     if (trace_stream) {
-      trace_stream->Writef("path_unlink_file %d %s\n", fd, path);
+      trace_stream->Writef("path_unlink_file %d %.*s\n", fd,
+                           TraceStringLength(path_len), path);
     }
     results[0].Set<u32>(uvwasi_path_unlink_file(uvwasi, fd, path, path_len));
     return Result::Ok;
@@ -376,8 +388,9 @@ class WasiInstance {
     CHECK_RESULT(getMemPtr<char>(path_ptr, path_len, &path, trap));
     results[0].Set<u32>(uvwasi_fd_prestat_dir_name(uvwasi, fd, path, path_len));
     if (trace_stream) {
-      trace_stream->Writef("fd_prestat_dir_name %d -> %d %s %d\n", fd,
-                           results[0].Get<u32>(), path, path_len);
+      trace_stream->Writef("fd_prestat_dir_name %d -> %d %.*s %d\n", fd,
+                           results[0].Get<u32>(), TraceStringLength(path_len),
+                           path, path_len);
     }
     return Result::Ok;
   }
