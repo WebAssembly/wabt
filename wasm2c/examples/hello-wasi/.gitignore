@@ -1,0 +1,5 @@
+*.o
+hello-wasi
+hello-wasi.wasm
+hello-wasi-wasm.*
+test.out
