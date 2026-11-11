@@ -22,19 +22,19 @@ out/test/spec/exception-handling/try_table.wast:364: assert_invalid passed:
   out/test/spec/exception-handling/try_table/try_table.7.wasm:000001e: error: type mismatch in try table, expected [i32] but got [i64]
   000001e: error: OnEndExpr callback failed
 out/test/spec/exception-handling/try_table.wast:369: assert_invalid passed:
-  out/test/spec/exception-handling/try_table/try_table.8.wasm:0000022: error: catch signature doesn't match target: expected [exnref], got []
+  out/test/spec/exception-handling/try_table/try_table.8.wasm:0000022: error: catch signature doesn't match target: expected [(ref exn)], got []
   0000022: error: OnTryTableExpr callback failed
 out/test/spec/exception-handling/try_table.wast:373: assert_invalid passed:
   out/test/spec/exception-handling/try_table/try_table.9.wasm:0000026: error: catch signature doesn't match target: expected [], got [exnref]
   0000026: error: OnTryTableExpr callback failed
 out/test/spec/exception-handling/try_table.wast:377: assert_invalid passed:
-  out/test/spec/exception-handling/try_table/try_table.10.wasm:000001c: error: catch signature doesn't match target: expected [exnref], got []
+  out/test/spec/exception-handling/try_table/try_table.10.wasm:000001c: error: catch signature doesn't match target: expected [(ref exn)], got []
   000001c: error: OnTryTableExpr callback failed
 out/test/spec/exception-handling/try_table.wast:381: assert_invalid passed:
   out/test/spec/exception-handling/try_table/try_table.11.wasm:000001d: error: catch signature doesn't match target: expected [], got [exnref]
   000001d: error: OnTryTableExpr callback failed
 out/test/spec/exception-handling/try_table.wast:385: assert_invalid passed:
-  out/test/spec/exception-handling/try_table/try_table.12.wasm:0000028: error: catch signature doesn't match target: expected [i64, exnref], got [i32, exnref]
+  out/test/spec/exception-handling/try_table/try_table.12.wasm:0000028: error: catch signature doesn't match target: expected [i64, (ref exn)], got [i32, exnref]
   0000028: error: OnTryTableExpr callback failed
 53/53 tests passed.
 ;;; STDOUT ;;)
