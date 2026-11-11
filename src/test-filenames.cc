@@ -48,6 +48,9 @@ TEST(filenames, GetExtension) {
   assert_string_view_eq(".txt", GetExtension("/bar/dir/foo.txt"));
   assert_string_view_eq(".txt", GetExtension("bar/dir/foo.txt"));
   assert_string_view_eq(".txt", GetExtension("foo.txt"));
+  assert_string_view_eq("", GetExtension("dir.with.dots/foo"));
+  assert_string_view_eq("", GetExtension("dir.with.dots\\foo"));
+  assert_string_view_eq("", GetExtension("dir.with.dots/"));
   assert_string_view_eq("", GetExtension("foo"));
   assert_string_view_eq("", GetExtension(""));
 }
@@ -57,5 +60,10 @@ TEST(filenames, StripExtension) {
   assert_string_view_eq("bar/dir/foo", StripExtension("bar/dir/foo.txt"));
   assert_string_view_eq("foo", StripExtension("foo.txt"));
   assert_string_view_eq("foo", StripExtension("foo"));
+  assert_string_view_eq("dir.with.dots/foo",
+                        StripExtension("dir.with.dots/foo"));
+  assert_string_view_eq("dir.with.dots\\foo",
+                        StripExtension("dir.with.dots\\foo"));
+  assert_string_view_eq("dir.with.dots/", StripExtension("dir.with.dots/"));
   assert_string_view_eq("", StripExtension(""));
 }
