@@ -23,7 +23,7 @@ const char* kWasmExtension = ".wasm";
 const char* kWatExtension = ".wat";
 
 std::string_view StripExtension(std::string_view filename) {
-  return filename.substr(0, filename.find_last_of('.'));
+  return filename.substr(0, filename.size() - GetExtension(filename).size());
 }
 
 std::string_view GetBasename(std::string_view filename) {
@@ -47,6 +47,7 @@ std::string_view GetBasename(std::string_view filename) {
 }
 
 std::string_view GetExtension(std::string_view filename) {
+  filename = GetBasename(filename);
   size_t pos = filename.find_last_of('.');
   if (pos == std::string_view::npos) {
     return "";
