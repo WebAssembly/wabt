@@ -27,9 +27,11 @@ using namespace wabt::interp;
 
 class InterpTest : public ::testing::Test {
  public:
-  void ReadModule(const std::vector<u8>& data) {
+  void ReadModule(const std::vector<u8>& data,
+                  const Features& features = Features()) {
     Errors errors;
     ReadBinaryOptions options;
+    options.features = features;
     Result result =
         ReadBinaryInterp("<internal>", data, options, &errors, &module_desc_);
     ASSERT_EQ(Result::Ok, result)
@@ -401,6 +403,104 @@ TEST_F(InterpTest, HostTrap) {
 
   ASSERT_TRUE(trap);
   ASSERT_EQ("boom", trap->message());
+}
+
+TEST_F(InterpTest, HostTrap_ReturnCall) {
+  // (type $t (func))
+  // (import "host" "a" (func $a (type $t)))
+  // (table 1 funcref)
+  // (elem (i32.const 0) func $a)
+  // (elem declare func $a)
+  // (func (export "indirect")
+  //   (return_call_indirect (type $t) (i32.const 0)))
+  // (func (export "ref") (return_call_ref $t (ref.func $a)))
+  // (func (export "direct") (return_call $a))
+  Features features;
+  features.enable_function_references();
+  ReadModule(
+      {
+          0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x04, 0x01,
+          0x60, 0x00, 0x00, 0x02, 0x0a, 0x01, 0x04, 0x68, 0x6f, 0x73, 0x74,
+          0x01, 0x61, 0x00, 0x00, 0x03, 0x04, 0x03, 0x00, 0x00, 0x00, 0x04,
+          0x04, 0x01, 0x70, 0x00, 0x01, 0x07, 0x1b, 0x03, 0x08, 0x69, 0x6e,
+          0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x00, 0x01, 0x03, 0x72, 0x65,
+          0x66, 0x00, 0x02, 0x06, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x00,
+          0x03, 0x09, 0x0b, 0x02, 0x00, 0x41, 0x00, 0x0b, 0x01, 0x00, 0x03,
+          0x00, 0x01, 0x00, 0x0a, 0x15, 0x03, 0x07, 0x00, 0x41, 0x00, 0x13,
+          0x00, 0x00, 0x0b, 0x06, 0x00, 0xd2, 0x00, 0x15, 0x00, 0x0b, 0x04,
+          0x00, 0x12, 0x00, 0x0b,
+      },
+      features);
+
+  auto host_func =
+      HostFunc::New(store_, FuncType{{}, {}},
+                    [&](Thread& thread, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      *out_trap = Trap::New(store_, "boom");
+                      return Result::Error;
+                    });
+
+  Instantiate({host_func->self()});
+
+  for (interp::Index i = 0; i < 3; ++i) {
+    Values results;
+    Trap::Ptr trap;
+    Result result = GetFuncExport(i)->Call(store_, {}, results, &trap);
+
+    ASSERT_EQ(Result::Error, result) << "export " << i;
+    ASSERT_TRUE(trap) << "export " << i;
+    EXPECT_EQ("boom", trap->message()) << "export " << i;
+  }
+}
+
+TEST_F(InterpTest, HostFunc_PingPong_ReturnCallIndirect) {
+  // (type $t (func (param i32) (result i32)))
+  // (import "" "f" (func $f (type $t)))
+  // (table 1 funcref)
+  // (elem (i32.const 0) func $f)
+  // (func (export "g") (param i32) (result i32)
+  //   (return_call_indirect (type $t) (local.get 0) (i32.const 0)))
+  // (func (export "h") (param i32) (result i32)
+  //   (call $f (local.get 0)))
+  ReadModule({
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x06, 0x01,
+      0x60, 0x01, 0x7f, 0x01, 0x7f, 0x02, 0x06, 0x01, 0x00, 0x01, 0x66,
+      0x00, 0x00, 0x03, 0x03, 0x02, 0x00, 0x00, 0x04, 0x04, 0x01, 0x70,
+      0x00, 0x01, 0x07, 0x09, 0x02, 0x01, 0x67, 0x00, 0x01, 0x01, 0x68,
+      0x00, 0x02, 0x09, 0x07, 0x01, 0x00, 0x41, 0x00, 0x0b, 0x01, 0x00,
+      0x0a, 0x12, 0x02, 0x09, 0x00, 0x20, 0x00, 0x41, 0x00, 0x13, 0x00,
+      0x00, 0x0b, 0x06, 0x00, 0x20, 0x00, 0x10, 0x00, 0x0b,
+  });
+
+  Thread thread(store_);
+
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [&](Thread& t, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      auto val = params[0].Get<u32>();
+                      if (val < 10) {
+                        return GetFuncExport(0)->Call(t, {Value::Make(val * 2)},
+                                                      results, out_trap);
+                      }
+                      results[0] = Value::Make(val);
+                      return Result::Ok;
+                    });
+
+  Instantiate({host_func->self()});
+
+  // Should produce the following calls, where g tail calls f:
+  //  h(1) -> f(1) -> g(2) -> f(2) -> g(4) -> f(4) -> g(8) -> f(8) -> g(16)
+  //  -> f(16) -> return 16
+
+  Values results;
+  Trap::Ptr trap;
+  Result result =
+      GetFuncExport(1)->Call(thread, {Value::Make(1)}, results, &trap);
+
+  ASSERT_EQ(Result::Ok, result);
+  EXPECT_EQ(1u, results.size());
+  EXPECT_EQ(16u, results[0].Get<u32>());
 }
 
 TEST_F(InterpTest, Rot13) {

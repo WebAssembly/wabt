@@ -1222,9 +1222,13 @@ RunResult Thread::PopCall() {
 }
 
 RunResult Thread::DoReturnCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
-  PopCall();
-  DoCall(func, out_trap);
-  return frames_.empty() ? RunResult::Return : RunResult::Ok;
+  RunResult result = PopCall();
+  if (DoCall(func, out_trap) == RunResult::Trap) {
+    return RunResult::Trap;
+  }
+  // A host function has already returned. Return to the host if that is what
+  // called the frame we popped.
+  return isa<HostFunc>(func.get()) ? result : RunResult::Ok;
 }
 
 void Thread::PopValues(const ValueTypes& types, Values* out_values) {
