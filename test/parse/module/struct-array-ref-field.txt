@@ -1,0 +1,7 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(type $t (func))
+(type (struct (field (ref $t)) (field (mut (ref null 0))) (field i32)))
+(type (array (mut (ref $t))))
+(type (struct (field (ref $late))))
+(type $late (func))
