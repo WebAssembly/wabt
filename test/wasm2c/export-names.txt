@@ -1062,7 +1062,9 @@ const u8 wasm2c_test_is64_0x5Cmodule_import0x200x2A0x2F = 0;
 const u32 wasm2c_test_pagesize_0x5Cmodule_import0x200x2A0x2F = 65536;
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_0x5Cmodule* w2c_0x5Cmodule_instance) {
-  assert(wasm_rt_is_initialized());
+  if (!wasm_rt_is_initialized()) {
+    abort();
+  }
   init_instance_import(instance, w2c_0x5Cmodule_instance);
   init_memories(instance);
 #if WASM_RT_USE_SEGUE_FOR_THIS_MODULE
