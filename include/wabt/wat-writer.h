@@ -17,6 +17,9 @@
 #ifndef WABT_WAT_WRITER_H_
 #define WABT_WAT_WRITER_H_
 
+#include <string>
+#include <string_view>
+
 #include "wabt/common.h"
 #include "wabt/feature.h"
 
@@ -24,6 +27,11 @@ namespace wabt {
 
 struct Module;
 class Stream;
+
+// Returns str with every character the text format cannot put in a name
+// replaced by '_'. WriteWat() applies this to every name it writes, so a pass
+// that invents names has to agree with it to keep them distinct.
+std::string MakeValidWatName(std::string_view str);
 
 struct WriteWatOptions {
   WriteWatOptions() = default;
