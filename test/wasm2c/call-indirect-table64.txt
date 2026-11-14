@@ -1,0 +1,16 @@
+;;; TOOL: run-spec-wasm2c
+(module
+  (type $t (func (result i32)))
+  (table i64 1 funcref)
+  (elem (i64.const 0) $f)
+  (func $f (type $t) (i32.const 42))
+  (func (export "call") (param i64) (result i32)
+    (call_indirect (type $t) (local.get 0)))
+)
+(assert_return (invoke "call" (i64.const 0)) (i32.const 42))
+(assert_trap (invoke "call" (i64.const 1)) "undefined element")
+(assert_trap (invoke "call" (i64.const 0x100000000)) "undefined element")
+(assert_trap (invoke "call" (i64.const 0x800000000000000)) "undefined element")
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)

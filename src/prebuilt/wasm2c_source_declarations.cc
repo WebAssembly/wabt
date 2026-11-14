@@ -140,7 +140,7 @@ R"w2c_template(    const wasm_rt_funcref_table_t* table,
 )w2c_template"
 R"w2c_template(    const wasm_rt_func_type_t expected_type,
 )w2c_template"
-R"w2c_template(    uint32_t index) {
+R"w2c_template(    uint64_t index) {
 )w2c_template"
 R"w2c_template(  const size_t sha256size = 32;
 )w2c_template"

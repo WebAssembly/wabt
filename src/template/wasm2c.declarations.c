@@ -75,7 +75,7 @@ static inline void wasm_rt_segue_write_base(void* base) {
 W2C_COLD_FUNC static bool func_types_eq_slowpath(
     const wasm_rt_funcref_table_t* table,
     const wasm_rt_func_type_t expected_type,
-    uint32_t index) {
+    uint64_t index) {
   const size_t sha256size = 32;
   if (index >= table->size) {
     // Table index out of bounds. Raise Wasm trap.
