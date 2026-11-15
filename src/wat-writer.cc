@@ -34,6 +34,7 @@
 #include "wabt/ir.h"
 #include "wabt/literal.h"
 #include "wabt/stream.h"
+#include "wabt/utf8.h"
 
 #define WABT_TRACING 0
 #include "wabt/tracing.h"
@@ -318,7 +319,13 @@ void WatWriter::WriteName(std::string_view str, NextChar next_char) {
   bool has_invalid_chars = std::any_of(
       str.begin(), str.end(), [](uint8_t c) { return !s_valid_name_chars[c]; });
 
-  if (has_invalid_chars) {
+  if (has_invalid_chars && options_.features.annotations_enabled() &&
+      IsValidUtf8(str.data() + 1, str.length() - 1)) {
+    // Write the name as a quoted identifier so it is kept exactly.
+    WriteNextChar();
+    WritePutc('$');
+    WriteQuotedData(str.data() + 1, str.length() - 1);
+  } else if (has_invalid_chars) {
     std::string valid_str;
     std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
                    [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
@@ -721,7 +728,12 @@ Result WatWriter::ExprVisitorDelegate::OnCallRefExpr(CallRefExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnCodeMetadataExpr(
     CodeMetadataExpr* expr) {
   writer_->WriteOpen("@metadata.code.", NextChar::None);
-  writer_->WriteDataWithNextChar(expr->name.data(), expr->name.size());
+  // The name comes from a custom section name, so replace any characters that
+  // would end the annotation id, as WriteName does.
+  std::string name;
+  std::transform(expr->name.begin(), expr->name.end(), std::back_inserter(name),
+                 [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+  writer_->WriteDataWithNextChar(name.data(), name.size());
   writer_->WritePutc(' ');
   writer_->WriteQuotedData(expr->data.data(), expr->data.size());
   writer_->WriteCloseSpace();
@@ -1472,7 +1484,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
       WriteOpenSpace(prefix);
     }
     if (has_name) {
-      WriteString(name, NextChar::Space);
+      WriteName(name, NextChar::Space);
     }
     WriteType(type, NextChar::Space);
     prev_has_name = has_name;
