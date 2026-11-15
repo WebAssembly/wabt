@@ -139,8 +139,6 @@ class WatWriter : ModuleContext {
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
   template <typename T>
-  void WriteLoadStoreExpr(const Expr* expr);
-  template <typename T>
   void WriteMemoryLoadStoreExpr(const Expr* expr);
   void WriteExprList(const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
@@ -516,19 +514,6 @@ void WatWriter::WriteConst(const Const& const_) {
       assert(0);
       break;
   }
-}
-
-template <typename T>
-void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
-  auto typed_expr = cast<T>(expr);
-  WritePutsSpace(typed_expr->opcode.GetName());
-  if (typed_expr->offset) {
-    Writef("offset=%" PRIaddress, typed_expr->offset);
-  }
-  if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
-    Writef("align=%" PRIaddress, typed_expr->align);
-  }
-  WriteNewline(NO_FORCE_NEWLINE);
 }
 
 template <typename T>
@@ -1100,7 +1085,7 @@ Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicWaitExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicWaitExpr>(expr);
   return Result::Ok;
 }
 
@@ -1113,29 +1098,29 @@ Result WatWriter::ExprVisitorDelegate::OnAtomicFenceExpr(
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicNotifyExpr(
     AtomicNotifyExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicNotifyExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicNotifyExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicLoadExpr(AtomicLoadExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicLoadExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicLoadExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicStoreExpr(
     AtomicStoreExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicStoreExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicStoreExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicRmwExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicRmwExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicRmwCmpxchgExpr(
     AtomicRmwCmpxchgExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
   return Result::Ok;
 }
 

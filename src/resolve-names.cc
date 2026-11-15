@@ -86,6 +86,12 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnSimdLoadLaneExpr(SimdLoadLaneExpr*) override;
   Result OnSimdStoreLaneExpr(SimdStoreLaneExpr*) override;
+  Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
+  Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override;
+  Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
+  Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
+  Result OnAtomicRmwExpr(AtomicRmwExpr*) override;
+  Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -529,6 +535,36 @@ Result NameResolver::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
 }
 
 Result NameResolver::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicNotifyExpr(AtomicNotifyExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicLoadExpr(AtomicLoadExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicStoreExpr(AtomicStoreExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
+  ResolveMemoryVar(&expr->memidx);
+  return Result::Ok;
+}
+
+Result NameResolver::OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr* expr) {
   ResolveMemoryVar(&expr->memidx);
   return Result::Ok;
 }
