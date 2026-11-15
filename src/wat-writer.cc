@@ -34,6 +34,7 @@
 #include "wabt/ir.h"
 #include "wabt/literal.h"
 #include "wabt/stream.h"
+#include "wabt/utf8.h"
 
 #define WABT_TRACING 0
 #include "wabt/tracing.h"
@@ -318,7 +319,13 @@ void WatWriter::WriteName(std::string_view str, NextChar next_char) {
   bool has_invalid_chars = std::any_of(
       str.begin(), str.end(), [](uint8_t c) { return !s_valid_name_chars[c]; });
 
-  if (has_invalid_chars) {
+  if (has_invalid_chars && options_.features.annotations_enabled() &&
+      IsValidUtf8(str.data() + 1, str.length() - 1)) {
+    // Write the name as a quoted identifier so it is kept exactly.
+    WriteNextChar();
+    WritePutc('$');
+    WriteQuotedData(str.data() + 1, str.length() - 1);
+  } else if (has_invalid_chars) {
     std::string valid_str;
     std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
                    [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });

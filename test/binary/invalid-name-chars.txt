@@ -33,8 +33,8 @@ section("name") {
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (param i32) (result i32)))
-  (func (;0;) (type 0) (param $p___result i32) (result i32)
-    (local $l_i32____ i32)
+  (func (;0;) (type 0) (param $"p) (result" i32) (result i32)
+    (local $"l i32) ;;" i32)
     (@metadata.code.a_b___c_ "\01") i32.const 42)
   (@custom "metadata.code.a b) (c;" "\01\00\01\03\01\01")
   (@custom "name" "\02\1a\01\00\02\00\0ap) (result\01\09l i32) ;;"))
