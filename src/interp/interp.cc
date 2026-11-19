@@ -572,6 +572,7 @@ Result HostFunc::DoCall(Thread& thread,
                         const Values& params,
                         Values& results,
                         Trap::Ptr* out_trap) {
+  results.resize(type_.results.size());
   return callback_(thread, params, results, out_trap);
 }
 
