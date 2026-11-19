@@ -1,2 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/relaxed-simd/relaxed_dot_product.wast
+(;; STDOUT ;;;
+11/11 tests passed.
+;;; STDOUT ;;)
