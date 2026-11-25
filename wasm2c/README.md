@@ -356,17 +356,19 @@ bool wasm_rt_is_initialized(void);
 void wasm_rt_free(void);
 void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 const char* wasm_rt_strerror(wasm_rt_trap_t trap);
-void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64, uint32_t page_size);
-uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
+void wasm_rt_allocate_memory(wasm_rt_memory_t*, uint64_t initial_pages, uint64_t max_pages, bool is64, uint32_t page_size);
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint64_t pages);
 void wasm_rt_free_memory(wasm_rt_memory_t*);
-void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*, uint32_t initial_pages, uint32_t max_pages, bool is64, uint32_t page_size);
-uint32_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint32_t pages);
+void wasm_rt_allocate_memory_shared(wasm_rt_shared_memory_t*, uint64_t initial_pages, uint64_t max_pages, bool is64, uint32_t page_size);
+uint64_t wasm_rt_grow_memory_shared(wasm_rt_shared_memory_t*, uint64_t pages);
 void wasm_rt_free_memory_shared(wasm_rt_shared_memory_t*);
-void wasm_rt_allocate_funcref_table(wasm_rt_table_t*, uint32_t elements, uint32_t max_elements);
+void wasm_rt_allocate_funcref_table(wasm_rt_funcref_table_t*, uint32_t elements, uint32_t max_elements);
 void wasm_rt_allocate_externref_table(wasm_rt_externref_table_t*, uint32_t elements, uint32_t max_elements);
-void wasm_rt_free_funcref_table(wasm_rt_table_t*);
-void wasm_rt_free_externref_table(wasm_rt_table_t*);
-uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
+uint32_t wasm_rt_grow_funcref_table(wasm_rt_funcref_table_t*, uint32_t delta, wasm_rt_funcref_t init);
+uint32_t wasm_rt_grow_externref_table(wasm_rt_externref_table_t*, uint32_t delta, wasm_rt_externref_t init);
+void wasm_rt_free_funcref_table(wasm_rt_funcref_table_t*);
+void wasm_rt_free_externref_table(wasm_rt_externref_table_t*);
+WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
 void wasm_rt_init_thread(void);
 void wasm_rt_free_thread(void);
 ```
@@ -394,7 +396,7 @@ indexed with an i32 or i64 address.
 `wasm_rt_grow_memory` must grow the given memory instance by the given number of
 pages. If there isn't enough memory to do so, or the new page count would be
 greater than the maximum page count, the function must fail by returning
-`0xffffffff`. If the function succeeds, it must return the previous size of the
+`UINT64_MAX`. If the function succeeds, it must return the previous size of the
 memory instance, in pages. The host can optionally be notified of failures by
 compiling the runtime with `WASM_RT_GROW_FAILED_HANDLER` defined to the name of
 a handler function.  The handler function should be a function taking no
@@ -418,6 +420,13 @@ initialize a table instance of the given type, and allocate at least
 enough space for the given number of initial elements. The elements
 must be cleared to zero.
 
+`wasm_rt_grow_funcref_table` and the similar `..._externref_table` must grow
+the given table instance by `delta` elements, giving each new element the value
+`init`. If there isn't enough memory to do so, or the new element count would be
+greater than the maximum element count, the function must fail by returning
+`UINT32_MAX`. If the function succeeds, it must return the previous size of the
+table instance, in elements.
+
 `wasm_rt_free_funcref_table` and `..._externref_table` free the table instance.
 
 `wasm_rt_call_stack_depth` is the current stack call depth. Since this is
@@ -437,15 +446,18 @@ for exceptions (Use `--disable-exceptions` if you want to avoid these). These
 are defined in `wasm-rt-exceptions.h`. These symbols are:
 
 ```c
-void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);
+void wasm_rt_load_exception(const wasm_rt_tag_t tag, uint32_t size, const void* values);
 WASM_RT_NO_RETURN void wasm_rt_throw(void);
 WASM_RT_UNWIND_TARGET
 WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void);
 void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target);
-uint32_t wasm_rt_exception_tag(void);
+wasm_rt_tag_t wasm_rt_exception_tag(void);
 uint32_t wasm_rt_exception_size(void);
 void* wasm_rt_exception(void);
 wasm_rt_try(target)
+void wasm_rt_allocate_exnref_table(wasm_rt_exnref_table_t*, uint32_t elements, uint32_t max_elements);
+uint32_t wasm_rt_grow_exnref_table(wasm_rt_exnref_table_t*, uint32_t delta, wasm_rt_exnref_t init);
+void wasm_rt_free_exnref_table(wasm_rt_exnref_table_t*);
 ```
 
 A C implementation of these functions is also available in
@@ -469,6 +481,10 @@ Three functions provide access to the active exception:
 `wasm_rt_try(target)` is a macro that captures the current calling
 environment as an unwind target and stores it into `target`, which
 must be of type `WASM_RT_UNWIND_TARGET`.
+
+`wasm_rt_allocate_exnref_table`, `wasm_rt_grow_exnref_table` and
+`wasm_rt_free_exnref_table` are the exnref versions of the funcref table
+functions above.
 
 ## Exported symbols
 

@@ -666,15 +666,16 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t*,
 
 /**
  * Grow a Memory object by `pages`, and return the previous page count. If
- * this new page count is greater than the maximum page count, the grow fails
- * and 0xffffffffu (UINT32_MAX) is returned instead.
+ * this new page count is greater than the maximum page count, or the memory
+ * cannot be allocated, the grow fails and UINT64_MAX ((uint64_t)-1) is returned
+ * instead.
  *
  *  ```
  *    wasm_rt_memory_t my_memory;
  *    ...
  *    // Grow memory by 10 pages.
- *    uint32_t old_page_size = wasm_rt_grow_memory(&my_memory, 10);
- *    if (old_page_size == UINT32_MAX) {
+ *    uint64_t old_page_size = wasm_rt_grow_memory(&my_memory, 10);
+ *    if (old_page_size == UINT64_MAX) {
  *      // Failed to grow memory.
  *    }
  *  ```
@@ -731,8 +732,8 @@ void wasm_rt_free_externref_table(wasm_rt_externref_table_t*);
 /**
  * Grow a Table object by `delta` elements (giving the new elements the value
  * `init`), and return the previous element count. If this new element count is
- * greater than the maximum element count, the grow fails and 0xffffffffu
- * (UINT32_MAX) is returned instead.
+ * greater than the maximum element count, or the table cannot be allocated, the
+ * grow fails and 0xffffffffu (UINT32_MAX) is returned instead.
  */
 uint32_t wasm_rt_grow_funcref_table(wasm_rt_funcref_table_t*,
                                     uint32_t delta,
