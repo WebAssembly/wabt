@@ -147,6 +147,31 @@ Wasm2c provides a macro `WASM_RT_SANITY_CHECKS` that if defined enables
 additional sanity checks in the produced Wasm2c code. Note that this may have a
 high performance overhead, and is thus only recommended for debug builds.
 
+### Changing the size of the tail-call buffer
+
+The arguments and results of tail calls are passed in a buffer of
+`WASM_RT_TAIL_CALL_STACK_SIZE` bytes (1024 by default), which the function that
+starts a chain of tail calls allocates on the C stack. If the parameters or the
+results of a tail call do not fit, a `static_assert` in the generated code
+fails. Such a module can be compiled with a larger buffer, e.g.
+`-DWASM_RT_TAIL_CALL_STACK_SIZE=4096`. The value must be a positive integer
+literal, written the same way everywhere.
+
+The buffer is passed on to tail-callees in other modules, so all modules that
+call each other must be compiled with the same value as the runtime. Every
+module that uses tail calls calls `wasm_rt_check_tail_call_stack_size` when it
+is instantiated, and the name of that function contains the value (e.g.
+`wasm_rt_tail_call_stack_size_is_4096`), so a module compiled with a different
+value than the runtime fails to link (or, in a shared library, at the latest
+when it is instantiated). An embedder that calls the tail-callable form of an
+export (`wasm_tailcall_...`) directly must likewise pass a buffer of
+`WASM_RT_TAIL_CALL_STACK_SIZE` bytes, compiled with the same value.
+
+A larger buffer also takes more stack. Every function that starts a chain of
+tail calls, rather than being part of one, allocates its own buffer, so
+recursion through ordinary calls to such functions uses
+`WASM_RT_TAIL_CALL_STACK_SIZE` bytes of stack per level.
+
 ### Enabling Segue (a Linux x86_64 target specific optimization)
 
 Wasm2c can use the "Segue" optimization if allowed. The segue optimization uses
@@ -369,6 +394,7 @@ void wasm_rt_free_externref_table(wasm_rt_table_t*);
 uint32_t wasm_rt_call_stack_depth; /* on platforms that don't use the signal handler to detect exhaustion */
 void wasm_rt_init_thread(void);
 void wasm_rt_free_thread(void);
+void wasm_rt_check_tail_call_stack_size(void);
 ```
 
 `wasm_rt_init` must be called by the embedder before anything else, to
@@ -429,6 +455,12 @@ exhaustion.
 and free the runtime state for a given thread (other than the one that
 called `wasm_rt_init`). An example can be found in
 `wasm2c/examples/threads`.
+
+`wasm_rt_check_tail_call_stack_size` does nothing. It is a macro for a name that
+contains `WASM_RT_TAIL_CALL_STACK_SIZE`, which modules that use tail calls refer
+to, so that they fail to link with a runtime that was compiled with a different
+size (see [Changing the size of the tail-call
+buffer](#changing-the-size-of-the-tail-call-buffer)).
 
 ### Runtime support for exception handling
 

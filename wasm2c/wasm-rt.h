@@ -454,6 +454,44 @@ typedef struct wasm_rt_tailcallee_t {
 } wasm_rt_tailcallee_t;
 
 /**
+ * The size in bytes of the `tail_call_stack` buffer that passes the arguments
+ * and results along a chain of tail calls. The generated code checks at compile
+ * time that the parameters and results of each tail call, and of each function
+ * that can be tail-called, fit in the buffer. The function that starts a chain
+ * allocates the buffer and passes it to every tail-callee, including imported
+ * ones, so all modules that call each other must be compiled with the same
+ * value as the runtime. The value must be a positive integer literal, written
+ * the same way everywhere, because it is also part of the name of
+ * wasm_rt_check_tail_call_stack_size (see below).
+ */
+#ifndef WASM_RT_TAIL_CALL_STACK_SIZE
+#define WASM_RT_TAIL_CALL_STACK_SIZE 1024
+#endif
+
+#if WASM_RT_TAIL_CALL_STACK_SIZE < 1
+#error "WASM_RT_TAIL_CALL_STACK_SIZE must be a positive integer literal"
+#endif
+
+#define WASM_RT_TAIL_CALL_STACK_SIZE_SYMBOL_(size) \
+  wasm_rt_tail_call_stack_size_is_##size
+#define WASM_RT_TAIL_CALL_STACK_SIZE_SYMBOL(size) \
+  WASM_RT_TAIL_CALL_STACK_SIZE_SYMBOL_(size)
+#define wasm_rt_check_tail_call_stack_size \
+  WASM_RT_TAIL_CALL_STACK_SIZE_SYMBOL(WASM_RT_TAIL_CALL_STACK_SIZE)
+
+/**
+ * Does nothing. Its name contains WASM_RT_TAIL_CALL_STACK_SIZE (e.g.
+ * wasm_rt_tail_call_stack_size_is_1024), and every module that uses tail calls
+ * calls it when it is instantiated. A module compiled with a different
+ * WASM_RT_TAIL_CALL_STACK_SIZE than the runtime therefore fails to link (or,
+ * in a shared library, at the latest when it is instantiated), instead of
+ * passing a buffer of one size to code that expects another. Since all modules
+ * are linked with the same runtime, this makes them agree with each other as
+ * well.
+ */
+void wasm_rt_check_tail_call_stack_size(void);
+
+/**
  * The type of a function (an arbitrary number of param and result types).
  * This is represented as an opaque 256-bit ID.
  */

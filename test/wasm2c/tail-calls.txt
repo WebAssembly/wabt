@@ -1031,6 +1031,7 @@ static void init_instance_import(w2c_test* instance, struct w2c_spectest* w2c_sp
 
 void wasm2c_test_instantiate(w2c_test* instance, struct w2c_spectest* w2c_spectest_instance) {
   assert(wasm_rt_is_initialized());
+  wasm_rt_check_tail_call_stack_size();
   init_instance_import(instance, w2c_spectest_instance);
   init_tables(instance);
   init_elem_instances(instance);
@@ -1084,14 +1085,14 @@ void w2c_test_tailcaller_0(w2c_test* instance) {
   var_i0 = 1u;
   var_f1 = 2.0f;
   var_i2 = 0u;
-  static_assert(sizeof(struct wasm_multi_if) <= 1024);
+  static_assert(sizeof(struct wasm_multi_if) <= WASM_RT_TAIL_CALL_STACK_SIZE);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
   } else {
     void *instance_ptr_storage = 0;
     void **instance_ptr = &instance_ptr_storage;
-    char tail_call_stack[1024];
+    char tail_call_stack[WASM_RT_TAIL_CALL_STACK_SIZE];
     wasm_rt_tailcallee_t next_storage;
     wasm_rt_tailcallee_t *next = &next_storage;
     {
@@ -1120,7 +1121,7 @@ void wasm_tailcall_w2c_test_tailcaller_0(void **instance_ptr, void *tail_call_st
   var_i0 = 1u;
   var_f1 = 2.0f;
   var_i2 = 0u;
-  static_assert(sizeof(struct wasm_multi_if) <= 1024);
+  static_assert(sizeof(struct wasm_multi_if) <= WASM_RT_TAIL_CALL_STACK_SIZE);
   CHECK_CALL_INDIRECT(instance->w2c_tab, w2c_test_i32_f32, var_i2);
   if (!instance->w2c_tab.data[var_i2].func_tailcallee.fn) {
     CALL_INDIRECT(instance->w2c_tab, void (*)(void*, u32, f32), w2c_test_i32_f32, var_i2, instance->w2c_tab.data[var_i2].module_instance, var_i0, var_f1);
@@ -1150,11 +1151,11 @@ struct wasm_multi_id w2c_test_infiniteloop(w2c_test* instance, u32 var_p0, f64 v
   f64 var_d1;
   var_i0 = var_p0;
   var_d1 = var_p1;
-  static_assert(sizeof(struct wasm_multi_id) <= 1024);
+  static_assert(sizeof(struct wasm_multi_id) <= WASM_RT_TAIL_CALL_STACK_SIZE);
   {
     void *instance_ptr_storage = 0;
     void **instance_ptr = &instance_ptr_storage;
-    char tail_call_stack[1024];
+    char tail_call_stack[WASM_RT_TAIL_CALL_STACK_SIZE];
     wasm_rt_tailcallee_t next_storage;
     wasm_rt_tailcallee_t *next = &next_storage;
     {
@@ -1185,7 +1186,7 @@ struct wasm_multi_id w2c_test_infiniteloop(w2c_test* instance, u32 var_p0, f64 v
 }
 
 void wasm_tailcall_w2c_test_infiniteloop(void **instance_ptr, void *tail_call_stack, wasm_rt_tailcallee_t *next) {
-  static_assert(sizeof(struct wasm_multi_id) <= 1024);
+  static_assert(sizeof(struct wasm_multi_id) <= WASM_RT_TAIL_CALL_STACK_SIZE);
   w2c_test* instance = *instance_ptr;
   uint8_t* const wasm_rt_local_memory_base = NULL;
   uint64_t wasm_rt_local_memory_size = 0;
@@ -1203,7 +1204,7 @@ void wasm_tailcall_w2c_test_infiniteloop(void **instance_ptr, void *tail_call_st
   f64 var_d1;
   var_i0 = var_p0;
   var_d1 = var_p1;
-  static_assert(sizeof(struct wasm_multi_id) <= 1024);
+  static_assert(sizeof(struct wasm_multi_id) <= WASM_RT_TAIL_CALL_STACK_SIZE);
   {
     {
       struct wasm_multi_id tmp;
