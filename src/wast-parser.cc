@@ -851,8 +851,8 @@ Result WastParser::ParseVar(Var* out_var) {
   if (PeekMatch(TokenType::Nat)) {
     Token token = Consume();
     std::string_view sv = token.literal().text;
-    uint64_t index = kInvalidIndex;
-    if (Failed(ParseUint64(sv, &index))) {
+    Index index = kInvalidIndex;
+    if (Failed(ParseInt32(sv, &index, ParseIntType::UnsignedOnly))) {
       // Print an error, but don't fail parsing.
       Error(token.loc, "invalid int \"" PRIstringview "\"",
             WABT_PRINTF_STRING_VIEW_ARG(sv));
