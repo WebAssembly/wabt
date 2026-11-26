@@ -1,0 +1,30 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/gc/type-rec.wast
+;;; ARGS*: --enable-gc
+(;; STDOUT ;;;
+out/test/spec/gc/type-rec.wast:26: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.2.wasm:000002b: error: type mismatch in initializer expression, expected [(ref 0)] but got [(ref 2)]
+  000002c: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-rec.wast:36: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.3.wasm:0000035: error: type mismatch in initializer expression, expected [(ref 2)] but got [(ref 4)]
+  0000036: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-rec.wast:47: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.4.wasm:0000025: error: type mismatch in initializer expression, expected [(ref 0)] but got [(ref 3)]
+  0000026: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-rec.wast:57: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.5.wasm:0000028: error: type mismatch in initializer expression, expected [(ref 0)] but got [(ref 2)]
+  0000029: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-rec.wast:81: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-rec.wast:89: assert_unlinkable passed:
+  error: import signature mismatch
+out/test/spec/gc/type-rec.wast:115: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-rec.wast:124: assert_trap passed: indirect call signature mismatch
+out/test/spec/gc/type-rec.wast:137: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.14.wasm:0000025: error: type mismatch in initializer expression, expected [(ref 1)] but got [(ref 2)]
+  0000026: error: EndGlobalInitExpr callback failed
+out/test/spec/gc/type-rec.wast:149: assert_invalid passed:
+  out/test/spec/gc/type-rec/type-rec.15.wasm:0000021: error: type mismatch in initializer expression, expected [(ref 1)] but got [(ref 2)]
+  0000022: error: EndGlobalInitExpr callback failed
+19/19 tests passed.
+;;; STDOUT ;;)
