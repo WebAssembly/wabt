@@ -91,14 +91,17 @@ void RemoveEscapes(std::string_view text, OutputIter dest) {
           // Skip u and { characters.
           src += 2;
 
-          do {
+          for (; src[0] != '}'; src++) {
+            // The lexer already checked where each '_' is, so skip it here.
+            if (src[0] == '_') {
+              continue;
+            }
             if (Succeeded(ParseHexdigit(src[0], &digit))) {
               scalar_value = (scalar_value << 4) | digit;
             } else {
               assert(0);
             }
-            src++;
-          } while (src[0] != '}');
+          }
 
           // Maximum value of a unicode scalar value
           assert(scalar_value < 0x110000);

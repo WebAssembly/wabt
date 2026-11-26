@@ -427,6 +427,12 @@ Token WastLexer::GetStringToken(TokenType token_type) {
               if (scalar_value >= 0x110000) {
                 goto error;
               }
+
+              // The digits form a hexnum, so a single '_' may separate two
+              // hex digits.
+              if (MatchChar('_') && !IsHexDigit(PeekChar())) {
+                goto error;
+              }
             }
 
             if (PeekChar() != '}') {
