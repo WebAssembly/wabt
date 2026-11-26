@@ -572,7 +572,7 @@ static constexpr char kLocalSymbolPrefix[] = "var_";
 static constexpr char kAdminSymbolPrefix[] = "wasm2c_";
 static constexpr char kTailCallSymbolPrefix[] = "wasm_tailcall_";
 static constexpr char kTailCallFallbackPrefix[] = "wasm_fallback_";
-static constexpr unsigned int kTailCallStackSize = 1024;
+static constexpr char kTailCallStackSize[] = "WASM_RT_TAIL_CALL_STACK_SIZE";
 
 size_t CWriter::MarkTypeStack() const {
   return type_stack_.size();
@@ -2864,6 +2864,16 @@ void CWriter::WriteInit() {
 
   Write("assert(wasm_rt_is_initialized());", Newline());
 
+  // Functions that use tail calls allocate or fill a tail_call_stack, so the
+  // module must agree with the runtime on its size (see wasm-rt.h).
+  auto uses_tail_calls = [](const Func* func) {
+    return func->features_used.tailcall;
+  };
+  if (std::any_of(module_->funcs.begin() + module_->num_func_imports,
+                  module_->funcs.end(), uses_tail_calls)) {
+    Write("wasm_rt_check_tail_call_stack_size();", Newline());
+  }
+
   if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
     for (const auto& import_module_name : import_module_set_) {
@@ -3146,8 +3156,7 @@ void CWriter::WriteTailCallAsserts(const FuncSignature& sig) {
 void CWriter::WriteTailCallStack() {
   Write("void *instance_ptr_storage = 0;", Newline());
   Write("void **instance_ptr = &instance_ptr_storage;", Newline());
-  Write("char tail_call_stack[", std::to_string(kTailCallStackSize), "];",
-        Newline());
+  Write("char tail_call_stack[", kTailCallStackSize, "];", Newline());
   Write("wasm_rt_tailcallee_t next_storage;", Newline());
   Write("wasm_rt_tailcallee_t *next = &next_storage;", Newline());
 }

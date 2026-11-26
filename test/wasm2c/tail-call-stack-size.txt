@@ -1,0 +1,253 @@
+;;; TOOL: run-spec-wasm2c
+;;; ARGS: --cflags=-DWASM_RT_TAIL_CALL_STACK_SIZE=2048
+;; The tail calls below pass 128 i64 parameters and one i32, or return 129 i64
+;; results. Either takes 1032 bytes, more than the default
+;; WASM_RT_TAIL_CALL_STACK_SIZE of 1024.
+(module $A
+  (func $last (export "last")
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param $again i32) (result i64)
+    ;; tail-call itself once, so that $last has a tail-callable form
+    (if (local.get $again)
+      (then
+        (return_call $last
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7) (i64.const 7)
+          (i64.const 7) (i64.const 7)
+          (local.get 127) (i32.const 0))))
+    (local.get 127))
+  (func (export "f") (result i64)
+    (return_call $last
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0)
+      (i64.const 42) (i32.const 1))))
+(assert_return (invoke "f") (i64.const 42))
+(register "A" $A)
+
+;; A chain that starts here, with this module's buffer, continues in $A.
+(module
+  (import "A" "last" (func $last
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i64 i64 i64 i64 i64 i64 i64 i64)
+    (param i32) (result i64)))
+  (func (export "f") (result i64)
+    (return_call $last
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0) (i64.const 0)
+      (i64.const 0) (i64.const 0)
+      (i64.const 43) (i32.const 1))))
+(assert_return (invoke "f") (i64.const 43))
+
+(module
+  (func $results (param $again i32) (result
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64
+    )
+    (if (local.get $again)
+      (then (return_call $results (i32.const 0))))
+    (i64.const 1) (i64.const 2) (i64.const 3) (i64.const 4)
+    (i64.const 5) (i64.const 6) (i64.const 7) (i64.const 8)
+    (i64.const 9) (i64.const 10) (i64.const 11) (i64.const 12)
+    (i64.const 13) (i64.const 14) (i64.const 15) (i64.const 16)
+    (i64.const 17) (i64.const 18) (i64.const 19) (i64.const 20)
+    (i64.const 21) (i64.const 22) (i64.const 23) (i64.const 24)
+    (i64.const 25) (i64.const 26) (i64.const 27) (i64.const 28)
+    (i64.const 29) (i64.const 30) (i64.const 31) (i64.const 32)
+    (i64.const 33) (i64.const 34) (i64.const 35) (i64.const 36)
+    (i64.const 37) (i64.const 38) (i64.const 39) (i64.const 40)
+    (i64.const 41) (i64.const 42) (i64.const 43) (i64.const 44)
+    (i64.const 45) (i64.const 46) (i64.const 47) (i64.const 48)
+    (i64.const 49) (i64.const 50) (i64.const 51) (i64.const 52)
+    (i64.const 53) (i64.const 54) (i64.const 55) (i64.const 56)
+    (i64.const 57) (i64.const 58) (i64.const 59) (i64.const 60)
+    (i64.const 61) (i64.const 62) (i64.const 63) (i64.const 64)
+    (i64.const 65) (i64.const 66) (i64.const 67) (i64.const 68)
+    (i64.const 69) (i64.const 70) (i64.const 71) (i64.const 72)
+    (i64.const 73) (i64.const 74) (i64.const 75) (i64.const 76)
+    (i64.const 77) (i64.const 78) (i64.const 79) (i64.const 80)
+    (i64.const 81) (i64.const 82) (i64.const 83) (i64.const 84)
+    (i64.const 85) (i64.const 86) (i64.const 87) (i64.const 88)
+    (i64.const 89) (i64.const 90) (i64.const 91) (i64.const 92)
+    (i64.const 93) (i64.const 94) (i64.const 95) (i64.const 96)
+    (i64.const 97) (i64.const 98) (i64.const 99) (i64.const 100)
+    (i64.const 101) (i64.const 102) (i64.const 103) (i64.const 104)
+    (i64.const 105) (i64.const 106) (i64.const 107) (i64.const 108)
+    (i64.const 109) (i64.const 110) (i64.const 111) (i64.const 112)
+    (i64.const 113) (i64.const 114) (i64.const 115) (i64.const 116)
+    (i64.const 117) (i64.const 118) (i64.const 119) (i64.const 120)
+    (i64.const 121) (i64.const 122) (i64.const 123) (i64.const 124)
+    (i64.const 125) (i64.const 126) (i64.const 127) (i64.const 128)
+    (i64.const 129)
+    )
+  (func (export "f") (result
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64 i64 i64 i64 i64 i64 i64 i64
+    i64
+    )
+    (return_call $results (i32.const 1))))
+(assert_return (invoke "f")
+  (i64.const 1) (i64.const 2) (i64.const 3) (i64.const 4)
+  (i64.const 5) (i64.const 6) (i64.const 7) (i64.const 8)
+  (i64.const 9) (i64.const 10) (i64.const 11) (i64.const 12)
+  (i64.const 13) (i64.const 14) (i64.const 15) (i64.const 16)
+  (i64.const 17) (i64.const 18) (i64.const 19) (i64.const 20)
+  (i64.const 21) (i64.const 22) (i64.const 23) (i64.const 24)
+  (i64.const 25) (i64.const 26) (i64.const 27) (i64.const 28)
+  (i64.const 29) (i64.const 30) (i64.const 31) (i64.const 32)
+  (i64.const 33) (i64.const 34) (i64.const 35) (i64.const 36)
+  (i64.const 37) (i64.const 38) (i64.const 39) (i64.const 40)
+  (i64.const 41) (i64.const 42) (i64.const 43) (i64.const 44)
+  (i64.const 45) (i64.const 46) (i64.const 47) (i64.const 48)
+  (i64.const 49) (i64.const 50) (i64.const 51) (i64.const 52)
+  (i64.const 53) (i64.const 54) (i64.const 55) (i64.const 56)
+  (i64.const 57) (i64.const 58) (i64.const 59) (i64.const 60)
+  (i64.const 61) (i64.const 62) (i64.const 63) (i64.const 64)
+  (i64.const 65) (i64.const 66) (i64.const 67) (i64.const 68)
+  (i64.const 69) (i64.const 70) (i64.const 71) (i64.const 72)
+  (i64.const 73) (i64.const 74) (i64.const 75) (i64.const 76)
+  (i64.const 77) (i64.const 78) (i64.const 79) (i64.const 80)
+  (i64.const 81) (i64.const 82) (i64.const 83) (i64.const 84)
+  (i64.const 85) (i64.const 86) (i64.const 87) (i64.const 88)
+  (i64.const 89) (i64.const 90) (i64.const 91) (i64.const 92)
+  (i64.const 93) (i64.const 94) (i64.const 95) (i64.const 96)
+  (i64.const 97) (i64.const 98) (i64.const 99) (i64.const 100)
+  (i64.const 101) (i64.const 102) (i64.const 103) (i64.const 104)
+  (i64.const 105) (i64.const 106) (i64.const 107) (i64.const 108)
+  (i64.const 109) (i64.const 110) (i64.const 111) (i64.const 112)
+  (i64.const 113) (i64.const 114) (i64.const 115) (i64.const 116)
+  (i64.const 117) (i64.const 118) (i64.const 119) (i64.const 120)
+  (i64.const 121) (i64.const 122) (i64.const 123) (i64.const 124)
+  (i64.const 125) (i64.const 126) (i64.const 127) (i64.const 128)
+  (i64.const 129)
+  )
+(;; STDOUT ;;;
+3/3 tests passed.
+;;; STDOUT ;;)

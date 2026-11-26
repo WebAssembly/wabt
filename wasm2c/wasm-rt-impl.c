@@ -320,6 +320,8 @@ bool wasm_rt_is_initialized(void) {
 #endif
 }
 
+void wasm_rt_check_tail_call_stack_size(void) {}
+
 void wasm_rt_free(void) {
   assert(wasm_rt_is_initialized());
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
