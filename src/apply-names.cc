@@ -527,7 +527,11 @@ Result NameApplier::VisitTable(Table* table) {
 
 Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
-  CHECK_RESULT(UseNameForTableVar(&segment->table_var));
+  // Only an active segment refers to a table; a passive or declared one has
+  // no table_var to resolve.
+  if (segment->kind == SegmentKind::Active) {
+    CHECK_RESULT(UseNameForTableVar(&segment->table_var));
+  }
   CHECK_RESULT(visitor_.VisitExprList(segment->offset));
   for (ExprList& elem_expr : segment->elem_exprs) {
     Expr* expr = &elem_expr.front();
@@ -540,7 +544,11 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
 
 Result NameApplier::VisitDataSegment(Index data_segment_index,
                                      DataSegment* segment) {
-  CHECK_RESULT(UseNameForMemoryVar(&segment->memory_var));
+  // Only an active segment refers to a memory; a passive one has no
+  // memory_var to resolve.
+  if (segment->kind == SegmentKind::Active) {
+    CHECK_RESULT(UseNameForMemoryVar(&segment->memory_var));
+  }
   return visitor_.VisitExprList(segment->offset);
 }
 
