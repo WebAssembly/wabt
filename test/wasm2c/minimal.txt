@@ -945,7 +945,9 @@ DEFINE_TABLE_FILL(externref)
 
 
 void wasm2c_test_instantiate(w2c_test* instance) {
-  assert(wasm_rt_is_initialized());
+  if (!wasm_rt_is_initialized()) {
+    abort();
+  }
 }
 
 void wasm2c_test_free(w2c_test* instance) {

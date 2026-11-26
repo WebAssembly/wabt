@@ -2862,7 +2862,8 @@ void CWriter::WriteInit() {
   }
   Write(") ", OpenBrace());
 
-  Write("assert(wasm_rt_is_initialized());", Newline());
+  Write("if (!wasm_rt_is_initialized()) ", OpenBrace());
+  Write("abort();", Newline(), CloseBrace(), Newline());
 
   if (!import_module_set_.empty()) {
     Write("init_instance_import(instance");
