@@ -644,6 +644,52 @@ TEST(ParseFloat, RoundingSpec) {
   }
 }
 
+// Rounding drops three or four bits here, so the bits below the rounding bit
+// tell a tie from a value above half.
+TEST(ParseFloat, RoundingExtraBits) {
+  static const struct {
+    const char* input;
+    uint32_t output;
+  } kTests[] = {
+      {"0xf000007p0", 0x4d700000},         // below half
+      {"0xf000008p0", 0x4d700000},         // tie, rounds to even
+      {"0xf000009p0", 0x4d700001},         // above half
+      {"0xf00000fp0", 0x4d700001},         // above half
+      {"0xf000018p0", 0x4d700002},         // tie, rounds to even
+      {"0xf000019p0", 0x4d700002},         // above half
+      {"-0xf000009p0", 0xcd700001},        // above half
+      {"0xf.000009p-4", 0x3f700001},       // above half
+      {"0x7fffff7p0", 0x4cffffff},         // above half
+      {"0xf0000080000001p0", 0x5b700001},  // tie, then a non-zero digit
+  };
+
+  for (auto test : kTests) {
+    AssertHexFloatEquals(test.output, test.input);
+  }
+}
+
+TEST(ParseFloat, RoundingSubnormal) {
+  static const struct {
+    const char* input;
+    uint32_t output;
+  } kTests[] = {
+      {"0xfb1.fffe9p-138", 0x007d9000},  // rounds once, not twice
+      {"0x1.fffffcp-127", 0x007fffff},   // below the smallest normal
+      {"0x1.fffffdp-127", 0x007fffff},
+      {"0x1.fffffep-127", 0x00800000},   // tie, up to the smallest normal
+      {"0x1.fffffffp-127", 0x00800000},  // up to the smallest normal
+      {"-0x1.fffffffp-127", 0x80800000},
+      {"0xf.fffffffp-130", 0x00800000},
+      {"0x1p-150", 0x00000000},          // tie, rounds to even
+      {"0x1.0000001p-150", 0x00000001},  // above half the smallest value
+      {"0x1.fffffffp-150", 0x00000001},
+  };
+
+  for (auto test : kTests) {
+    AssertHexFloatEquals(test.output, test.input);
+  }
+}
+
 TEST(ParseFloat, OutOfRange) {
   AssertHexFloatFails("0x1p128");
   AssertHexFloatFails("-0x1p128");
@@ -825,6 +871,43 @@ TEST(ParseDouble, RoundingSpec) {
       {"-0x1.fffffffffffff4p1023", 18442240474082181119ull},
       {"+0x1.fffffffffffff7ffffffp1023", 9218868437227405311ull},
       {"-0x1.fffffffffffff7ffffffp1023", 18442240474082181119ull},
+  };
+
+  for (auto test : kTests) {
+    AssertHexDoubleEquals(test.output, test.input);
+  }
+}
+
+TEST(ParseDouble, RoundingExtraBits) {
+  static const struct {
+    const char* input;
+    uint64_t output;
+  } kTests[] = {
+      {"0x1.00000000000007p0", 0x3ff0000000000000},   // below half
+      {"0x1.00000000000008p0", 0x3ff0000000000000},   // tie, rounds to even
+      {"0x1.00000000000009p0", 0x3ff0000000000001},   // above half
+      {"0x1.0000000000000fp0", 0x3ff0000000000001},   // above half
+      {"0x1.00000000000018p0", 0x3ff0000000000002},   // tie, rounds to even
+      {"-0x1.00000000000009p0", 0xbff0000000000001},  // above half
+      {"0xf.ffffffffffff9p-3", 0x3fffffffffffffff},   // above half
+  };
+
+  for (auto test : kTests) {
+    AssertHexDoubleEquals(test.output, test.input);
+  }
+}
+
+TEST(ParseDouble, RoundingSubnormal) {
+  static const struct {
+    const char* input;
+    uint64_t output;
+  } kTests[] = {
+      {"0x7801f0188770ff0f1p-1089", 0x000f003e0310ee20},  // rounds once
+      {"0x1.ffffffffffffep-1023", 0x000fffffffffffff},
+      {"0x1.fffffffffffffp-1023", 0x0010000000000000},   // tie, up to normal
+      {"0x1.fffffffffffff8p-1023", 0x0010000000000000},  // up to normal
+      {"0x1p-1075", 0x0000000000000000},                 // tie, to even
+      {"0x1.0000000000001p-1075", 0x0000000000000001},   // above half
   };
 
   for (auto test : kTests) {

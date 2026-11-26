@@ -49,6 +49,16 @@ extern void WASM_RT_GROW_FAILED_HANDLER();
 #define WIN_MEMORY_LOCK_AQUIRE(name) EnterCriticalSection(&(name))
 #define WIN_MEMORY_LOCK_RELEASE(name) LeaveCriticalSection(&(name))
 
+static bool u64_mult_overflow(uint64_t a, uint64_t b, uint64_t* result) {
+  uint64_t x = a * b;
+  *result = x;
+  if (a != 0 && x / a != b) {
+    // overflow
+    return true;
+  }
+  return false;
+}
+
 #if WASM_RT_USE_MMAP
 
 #ifdef _WIN32
@@ -95,6 +105,7 @@ static void os_print_last_error(const char* msg) {
 }
 
 #else /* !_WIN32 */
+
 static void* os_mmap(size_t size) {
   int map_prot = PROT_NONE;
   int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
@@ -121,34 +132,52 @@ static void os_print_last_error(const char* msg) {
 
 #endif /* _WIN32 */
 
-static uint64_t get_alloc_size_for_mmap_default32(uint64_t max_pages) {
+static uint64_t round_up_to_os_page_size(uint64_t size) {
+  // page size should be initialized
+  assert(g_native_page_size);
+  // Keep an explicit check that isn't removed from the release builds
+  if (!g_native_page_size) {
+    return 0;
+  }
+  uint64_t remainder = size % g_native_page_size;
+  if (remainder != 0) {
+    uint64_t increment = g_native_page_size - remainder;
+    uint64_t new_size = size + increment;
+    if (new_size < size) {
+      // overflow. Return 0 on error
+      return 0;
+    }
+    size = new_size;
+  }
+  return size;
+}
+
+// Only used for memory32. Returns the virtual memory reservation size including
+// guard pages.
+static uint64_t get_mmap_size_for_memory32(uint64_t max_pages,
+                                           uint32_t page_size) {
+  bool is_default32 = page_size == WASM_DEFAULT_PAGE_SIZE;
 #if WASM_RT_MEMCHECK_GUARD_PAGES
-  /* Reserve 8GiB. */
-  const uint64_t max_size = 0x200000000ul;
-  return max_size;
-#else
-  if (max_pages != 0) {
-    const uint64_t max_size = max_pages * WASM_DEFAULT_PAGE_SIZE;
+  if (is_default32) {
+    /* Reserve 8GiB. */
+    const uint64_t max_size = 0x200000000ul;
     return max_size;
   }
-
-  /* Reserve 4GiB. */
-  const uint64_t max_size = 0x100000000ul;
-  return max_size;
 #endif
+
+  uint64_t max_size = page_size;
+  if (max_pages != 0) {
+    if (u64_mult_overflow(max_pages, page_size, &max_size)) {
+      return 0;
+    }
+  } else if (is_default32) {
+    /* Reserve 4GiB. */
+    max_size = 0x100000000ul;
+  }
+  return round_up_to_os_page_size(max_size);
 }
 
 #endif /* WASM_RT_USE_MMAP */
-
-static bool u64_mult_overflow(uint64_t a, uint64_t b, uint64_t* result) {
-  uint64_t x = a * b;
-  *result = x;
-  if (a != 0 && x / a != b) {
-    // overflow
-    return true;
-  }
-  return false;
-}
 
 // On 32-bit hosts a byte length can exceed SIZE_MAX, which calloc and realloc
 // would silently truncate.

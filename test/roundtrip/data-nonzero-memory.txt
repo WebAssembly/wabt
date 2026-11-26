@@ -1,0 +1,21 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout
+(module
+  (memory $mem1 1)
+  (memory $mem2 1)
+  (data $d "\01\02\03\04")
+  (func
+    (memory.init $mem2 $d (i32.const 0) (i32.const 0) (i32.const 4)))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    i32.const 0
+    i32.const 0
+    i32.const 4
+    memory.init 1 0)
+  (memory (;0;) 1)
+  (memory (;1;) 1)
+  (data (;0;) "\01\02\03\04"))
+;;; STDOUT ;;)

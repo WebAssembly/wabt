@@ -852,8 +852,11 @@ Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Space);
+  // The text format names the memory before the data segment, which is the
+  // opposite of the operand order used by the binary encoding. table.init has
+  // the same shape; ParseMemoryInstrVar() is the parser side of this.
   writer_->WriteMemoryVarUnlessZero(expr->memidx, NextChar::Space);
+  writer_->WriteVar(expr->var, NextChar::Space);
   writer_->WriteNewline(NO_FORCE_NEWLINE);
   return Result::Ok;
 }
@@ -1192,12 +1195,12 @@ Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadSplatExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadSplatExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadZeroExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadZeroExpr>(expr);
   return Result::Ok;
 }
 
@@ -1592,7 +1595,12 @@ void WatWriter::WriteTable(const Table& table) {
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
-  WriteType(table.elem_type, NextChar::None);
+  WriteType(table.elem_type, NextChar::Space);
+  /* A table whose element type has no default value carries an initializer,
+   * which the text format requires after the type. This does nothing when
+   * there is no initializer, and WriteCloseNewline() drops the pending space
+   * in that case. */
+  WriteInitExpr(table.init_expr);
   WriteCloseNewline();
   table_index_++;
 }

@@ -479,6 +479,7 @@ class CWriter {
   void Write(const StoreExpr&);
   void Write(const UnaryExpr&);
   void Write(const TernaryExpr&);
+  void Write(const QuaternaryExpr&);
   void Write(const SimdLaneOpExpr&);
   void Write(const SimdLoadLaneExpr&);
   void Write(const SimdStoreLaneExpr&);
@@ -2488,8 +2489,13 @@ void CWriter::WriteElemInitializers() {
         case ExprType::RefFunc: {
           const Func* func = module_->GetFunc(cast<RefFuncExpr>(&expr)->var);
           const FuncType* func_type = module_->GetFuncType(func->decl.type_var);
-          Write("{RefFunc, ", FuncTypeExpr(func_type),
-                ", (wasm_rt_function_ptr_t)", WrapperRef(func->name), ", {");
+          // The entry of an imported function reads the pointer to the
+          // instance of the import from the module instance (see
+          // funcref_table_init); a function defined here uses the module
+          // instance itself.
+          Write(IsImport(func->name) ? "{RefImportFunc, " : "{RefFunc, ",
+                FuncTypeExpr(func_type), ", (wasm_rt_function_ptr_t)",
+                WrapperRef(func->name), ", {");
           if (options_.features.tail_call_enabled() &&
               (IsImport(func->name) || func->features_used.tailcall)) {
             Write(TailCallRef(func->name));
@@ -3314,9 +3320,9 @@ void CWriter::WriteTailCallee(const Func& func) {
     Write(CloseBrace(), Newline());
   }
 
-  size_t stack_vars_section = func_sections_.size() - 1;
   WriteLocals(index_to_name);
 
+  size_t stack_vars_section = func_sections_.size() - 1;
   PushFuncSection();
 
   std::string label = DefineLabelName(kImplicitFuncLabel);
@@ -4184,6 +4190,10 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<TernaryExpr>(&expr));
         break;
 
+      case ExprType::Quaternary:
+        Write(*cast<QuaternaryExpr>(&expr));
+        break;
+
       case ExprType::SimdLaneOp: {
         Write(*cast<SimdLaneOpExpr>(&expr));
         break;
@@ -4375,7 +4385,10 @@ void CWriter::Write(const ExprList& exprs) {
         std::tie(ci->decl, ci->table) = std::make_pair(inst->decl, inst->table);
         Write(ExprList{std::move(ci)});
         if (in_tail_callee_) {
-          Write("next->fn = NULL;", Newline());
+          // The callee has no tail-callable form, so its result is on the
+          // stack. Leave through the function label, which puts it on the
+          // tail call stack for the caller before ending the chain.
+          Write(GotoLabel(Var(label_stack_.size() - 1, {})), Newline());
         }
         Write(CloseBrace(), " else ", OpenBrace());
 
@@ -4413,7 +4426,6 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicNotify:
       case ExprType::CallRef:
       case ExprType::ReturnCallRef:
-      case ExprType::Quaternary:
         UNIMPLEMENTED("...");
         break;
     }
@@ -4924,8 +4936,14 @@ void CWriter::Write(const BinaryExpr& expr) {
       WritePrefixBinaryExpr(expr.opcode, "simde_wasm_v128_xor");
       break;
 
+    case Opcode::I64MulWideS:
+    case Opcode::I64MulWideU:
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
+
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5373,7 +5391,8 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5793,7 +5812,8 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     default:
-      WABT_UNREACHABLE;
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
   }
 }
 
@@ -5807,6 +5827,18 @@ void CWriter::Write(const TernaryExpr& expr) {
       PushType(result_type);
       break;
     }
+    default:
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
+  }
+}
+
+void CWriter::Write(const QuaternaryExpr& expr) {
+  switch (expr.opcode) {
+    case Opcode::I64Add128:
+    case Opcode::I64Sub128:
+      WABT_FATAL("error: wasm2c does not support the %s instruction\n",
+                 expr.opcode.GetName());
     default:
       WABT_UNREACHABLE;
   }
