@@ -298,6 +298,36 @@ TEST_F(InterpTest, HostFunc) {
   EXPECT_EQ(2u, results[0].Get<u32>());
 }
 
+TEST_F(InterpTest, HostFunc_CallReexport) {
+  // (import "" "f" (func $f (result i32)))
+  // (export "f" (func $f))
+  ReadModule({
+      0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x05,
+      0x01, 0x60, 0x00, 0x01, 0x7f, 0x02, 0x06, 0x01, 0x00, 0x01,
+      0x66, 0x00, 0x00, 0x07, 0x05, 0x01, 0x01, 0x66, 0x00, 0x00,
+  });
+
+  auto host_func =
+      HostFunc::New(store_, FuncType{{}, {ValueType::I32}},
+                    [](Thread& thread, const Values& params, Values& results,
+                       Trap::Ptr* out_trap) -> Result {
+                      EXPECT_EQ(1u, results.size());
+                      results[0] = Value::Make(u32{42});
+                      return Result::Ok;
+                    });
+
+  Instantiate({host_func->self()});
+
+  auto func = store_.UnsafeGet<Func>(inst_->exports()[0]);
+  Values results;
+  Trap::Ptr trap;
+  Result result = func->Call(store_, {}, results, &trap);
+
+  ASSERT_EQ(Result::Ok, result);
+  EXPECT_EQ(1u, results.size());
+  EXPECT_EQ(42u, results[0].Get<u32>());
+}
+
 TEST_F(InterpTest, HostFunc_PingPong) {
   // (import "" "f" (func $f (param i32) (result i32)))
   // (func (export "g") (param i32) (result i32)
