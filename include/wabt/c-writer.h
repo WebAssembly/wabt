@@ -43,6 +43,18 @@ struct WriteCOptions {
       size_t num_imported_functions,
       size_t num_outputs)>
       name_to_output_file_index;
+  /*
+   * data_segment_name_to_output_file_index takes const iterators to begin and
+   * end of a list of all data_segments in the module, and number of .c outputs
+   * as argument, returns a vector where vector[i] the index of the .c output
+   * that data_segments_begin + i goes into. Only called when --num-outputs is
+   * used.
+   */
+  std::function<std::vector<size_t>(
+      std::vector<DataSegment*>::const_iterator data_segments_begin,
+      std::vector<DataSegment*>::const_iterator data_segments_end,
+      size_t num_outputs)>
+      data_segment_name_to_output_file_index;
 };
 
 Result WriteC(std::vector<Stream*>&& c_streams,
