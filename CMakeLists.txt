@@ -19,6 +19,12 @@ project(WABT LANGUAGES C CXX VERSION 1.0.42)
 
 include(GNUInstallDirs)
 
+# CMake 4.5 reports directory scope commands such as add_definitions under
+# -Wdev. They are used on purpose so every target and subproject gets the flags.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.5)
+  cmake_diagnostic(SET CMD_NON_TARGET_DIRECTIVE IGNORE)
+endif ()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
