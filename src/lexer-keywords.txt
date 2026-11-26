@@ -538,6 +538,7 @@ i8x16, TokenType::I8X16
 if, TokenType::If, Opcode::If
 import, TokenType::Import
 input, TokenType::Input
+instance, TokenType::Instance
 invoke, TokenType::Invoke
 item, TokenType::Item
 local.get, TokenType::LocalGet, Opcode::LocalGet

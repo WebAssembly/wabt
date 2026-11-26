@@ -160,6 +160,12 @@ class ActionCommandBase : public CommandMixin<TypeEnum> {
 
 using ActionCommand = ActionCommandBase<CommandType::Action>;
 
+class InstanceCommand : public CommandMixin<CommandType::Instance> {
+ public:
+  std::string instance_name;
+  std::string definition_name;
+};
+
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
   std::string as;
@@ -1089,6 +1095,15 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
+  } else if (Match("\"instance\"")) {
+    auto command = std::make_unique<InstanceCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("instance", &command->instance_name);
+    EXPECT(",");
+    PARSE_KEY_STRING_VALUE("definition", &command->definition_name);
+    *out_command = std::move(command);
   } else if (Match("\"register\"")) {
     auto command = std::make_unique<RegisterCommand>();
     EXPECT(",");
@@ -1251,6 +1266,7 @@ class CommandRunner {
 
   wabt::Result OnModuleCommand(const ModuleCommand*);
   wabt::Result OnActionCommand(const ActionCommand*);
+  wabt::Result OnInstanceCommand(const InstanceCommand*);
   wabt::Result OnRegisterCommand(const RegisterCommand*);
   wabt::Result OnAssertMalformedCommand(const AssertMalformedCommand*);
   wabt::Result OnAssertUnlinkableCommand(const AssertUnlinkableCommand*);
@@ -1292,6 +1308,7 @@ class CommandRunner {
   Registry registry_;   // Used when importing.
   Registry instances_;  // Used when referencing module by name in invoke.
   ExportMap last_instance_;
+  std::map<std::string, interp::Module::Ptr> definitions_;
   int passed_ = 0;
   int total_ = 0;
 
@@ -1364,6 +1381,13 @@ wabt::Result CommandRunner::Run(const Script& script) {
 
       case CommandType::Action:
         TallyCommand(OnActionCommand(cast<ActionCommand>(command.get())));
+        break;
+
+      case CommandType::Instance:
+        if (Failed(OnInstanceCommand(cast<InstanceCommand>(command.get())))) {
+          PrintError(command->line, "invalid instance command");
+          return wabt::Result::Error;
+        }
         break;
 
       case CommandType::Register:
@@ -1648,8 +1672,7 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
 
   if (command->is_definition) {
     if (!command->name.empty()) {
-      PrintError(command->line, "only instantiated modules can have names");
-      return wabt::Result::Error;
+      definitions_[command->name] = module;
     }
     return wabt::Result::Ok;
   }
@@ -1704,6 +1727,32 @@ wabt::Result CommandRunner::OnAssertMalformedCommand(
     return wabt::Result::Error;
   }
 
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnInstanceCommand(const InstanceCommand* command) {
+  auto definition_iter = definitions_.find(command->definition_name);
+  if (definition_iter == definitions_.end()) {
+    PrintError(command->line, "unknown module definition in register");
+    return wabt::Result::Error;
+  }
+
+  auto module = definition_iter->second;
+
+  RefVec imports;
+  PopulateImports(module, &imports);
+
+  Trap::Ptr trap;
+  auto instance = Instance::Instantiate(store_, module.ref(), imports, &trap);
+  if (trap) {
+    assert(!instance);
+    PrintError(command->line, "error instantiating module: \"%s\"",
+               trap->message().c_str());
+    return wabt::Result::Error;
+  }
+
+  PopulateExports(instance, &last_instance_);
+  instances_[command->instance_name] = last_instance_;
   return wabt::Result::Ok;
 }
 

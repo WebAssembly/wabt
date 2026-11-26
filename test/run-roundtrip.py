@@ -44,11 +44,9 @@ def FilesAreEqual(filename1, filename2, verbose=False):
         if verbose:
             hexdump1 = utils.Hexdump(data1)
             hexdump2 = utils.Hexdump(data2)
-            diff_lines = []
-            for line in difflib.unified_diff(hexdump1, hexdump2,
-                                             fromfile=filename1,
-                                             tofile=filename2):
-                diff_lines.append(line)
+            diff_lines = difflib.unified_diff(hexdump1, hexdump2,
+                                              fromfile=filename1,
+                                              tofile=filename2)
             msg += ''.join(diff_lines)
         msg += '\n'
         return (ERROR, msg)
@@ -188,7 +186,7 @@ def main(args):
 
     filename = options.file
     if not os.path.exists(filename):
-        sys.stderr.write('File not found: %s\n' % filename)
+        sys.stderr.write(f'File not found: {filename}\n')
         return ERROR
 
     skip_roundtrip_check = options.generate_names or options.inline_exports

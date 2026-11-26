@@ -115,6 +115,9 @@ class BinaryReaderDelegate {
 
   /* Import section */
   virtual Result BeginImportSection(Offset size) = 0;
+  // `count` is the number of entries in the import section.  When compact
+  // imports are used this can be less than the number of imports, since a
+  // single entry can contain multiple imports.
   virtual Result OnImportCount(Index count) = 0;
   virtual Result OnImport(Index index,
                           ExternalKind kind,
@@ -442,6 +445,9 @@ class BinaryReaderDelegate {
   virtual Result OnDylinkExport(std::string_view name, uint32_t flags) = 0;
   virtual Result OnDylinkNeededCount(Index count) = 0;
   virtual Result OnDylinkNeeded(std::string_view so_name) = 0;
+  virtual Result OnDylinkRuntimePathCount(Index count) = 0;
+  virtual Result OnDylinkRuntimePath(std::string_view path) = 0;
+  virtual Result OnDylinkTargetArch(std::string_view arch) = 0;
   virtual Result EndDylinkSection() = 0;
 
   /* target_features section */
@@ -496,6 +502,7 @@ class BinaryReaderDelegate {
                                uint32_t flags,
                                Index count) = 0;
   virtual Result OnComdatEntry(ComdatType kind, Index index) = 0;
+  virtual Result OnTargetArch(std::string_view arch) = 0;
   virtual Result EndLinkingSection() = 0;
 
   /* Tag section */

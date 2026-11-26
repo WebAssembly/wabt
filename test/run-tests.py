@@ -172,7 +172,7 @@ def DiffLines(expected, actual):
                              tofile='actual', lineterm=''))
 
 
-class Cell(object):
+class Cell:
 
     def __init__(self, value):
         self.value = [value]
@@ -200,7 +200,7 @@ def FixPythonExecutable(args):
     return args
 
 
-class CommandTemplate(object):
+class CommandTemplate:
 
     def __init__(self, exe):
         self.args = SplitArgs(exe)
@@ -241,7 +241,7 @@ class CommandTemplate(object):
         return Command(self, FixPythonExecutable(args), stdin)
 
 
-class Command(object):
+class Command:
 
     def __init__(self, template, args, stdin):
         self.template = template
@@ -282,7 +282,8 @@ class Command(object):
                 kwargs['preexec_fn'] = os.setsid
             stdin_data = None
             if self.stdin:
-                stdin_data = open(self.stdin, 'rb').read()
+                with open(self.stdin, 'rb') as f:
+                    stdin_data = f.read()
 
             # http://stackoverflow.com/a/10012262: subprocess with a timeout
             # http://stackoverflow.com/a/22582602: kill subprocess and children
@@ -308,7 +309,8 @@ class Command(object):
             KillProcess(False)
 
         if stdout_filename:
-            open(stdout_filename, 'wb').write(stdout)
+            with open(stdout_filename, 'wb') as f:
+                f.write(stdout)
             stdout = None
 
         return RunResult(self, stdout, stderr, returncode, duration)
@@ -317,7 +319,7 @@ class Command(object):
         return ' '.join(self.args)
 
 
-class RunResult(object):
+class RunResult:
 
     def __init__(self, cmd=None, stdout='', stderr='', returncode=0, duration=0):
         self.cmd = cmd
@@ -333,11 +335,10 @@ class RunResult(object):
         return self.returncode != self.GetExpectedReturncode()
 
     def __repr__(self):
-        return 'RunResult(%s, %s, %s, %s, %s)' % (
-            self.cmd, self.stdout, self.stderr, self.returncode, self.duration)
+        return f'RunResult({self.cmd}, {self.stdout}, {self.stderr}, {self.returncode}, {self.duration})'
 
 
-class TestResult(object):
+class TestResult:
 
     def __init__(self):
         self.results = []
@@ -366,7 +367,7 @@ class TestResult(object):
         self.duration += result.duration
 
 
-class TestInfo(object):
+class TestInfo:
 
     def __init__(self):
         self.filename = ''
@@ -449,7 +450,7 @@ class TestInfo(object):
 
     def SetTool(self, tool):
         if tool not in TOOLS:
-            raise Error('Unknown tool: %s' % tool)
+            raise Error(f'Unknown tool: {tool}')
         self.tool = tool
         self.is_wasm2c = self.tool == 'run-spec-wasm2c'
         for tool_key, tool_value in TOOLS[tool]:
@@ -459,7 +460,7 @@ class TestInfo(object):
         try:
             return self.cmds[index]
         except IndexError:
-            raise Error('Invalid command index: %s' % index)
+            raise Error(f'Invalid command index: {index}')
 
     def GetLastCommand(self):
         return self.GetCommand(len(self.cmds) - 1)
@@ -473,7 +474,7 @@ class TestInfo(object):
             for cmd in self.cmds:
                 fn(cmd)
         else:
-            raise Error('Invalid directive suffix: %s' % suffix)
+            raise Error(f'Invalid directive suffix: {suffix}')
 
     def ParseDirective(self, key, value):
         if key == 'RUN':
@@ -507,7 +508,7 @@ class TestInfo(object):
         elif key == 'NOT-PLATFORMS':
             self.skip = platform.system() in value.split()
         else:
-            raise Error('Unknown directive: %s' % key)
+            raise Error(f'Unknown directive: {key}')
 
     def Parse(self, filename):
         self.filename = filename
@@ -521,7 +522,7 @@ class TestInfo(object):
             input_lines = []
             stdout_lines = []
             stderr_lines = []
-            for line in f.readlines():
+            for line in f:
                 empty = False
                 m = re.match(b'\\s*\\(;; (STDOUT|STDERR) ;;;$', line.strip())
                 if m:
@@ -542,12 +543,11 @@ class TestInfo(object):
                             value = value.strip()
                             self.ParseDirective(key, value)
                         elif state in ('stdout', 'stderr'):
-                            if not re.match(r'%s ;;\)$' % state.upper(), directive):
-                                raise Error('Bad directive in %s block: %s' % (state,
-                                                                               directive))
+                            if not re.match(rf'{state.upper()} ;;\)$', directive):
+                                raise Error(f'Bad directive in {state} block: {directive}')
                             state = 'none'
                         else:
-                            raise Error('Unexpected directive: %s' % directive)
+                            raise Error(f'Unexpected directive: {directive}')
                     elif state == 'header':
                         state = 'input'
 
@@ -624,7 +624,7 @@ class TestInfo(object):
             raise Error(msg)
 
 
-class Status(object):
+class Status:
 
     def __init__(self, isatty):
         self.isatty = isatty
@@ -647,19 +647,19 @@ class Status(object):
             self._Clear()
             self._PrintShortStatus(info)
         else:
-            sys.stderr.write('+ %s (%.3fs)\n' % (info.GetName(), duration))
+            sys.stderr.write(f'+ {info.GetName()} ({duration:.3f}s)\n')
 
     def Failed(self, info, error_msg, result=None):
         self.failed += 1
         self.failed_tests.append((info, result))
         if self.isatty:
             self._Clear()
-        sys.stderr.write('- %s\n%s\n' % (info.GetName(), Indent(error_msg, 2)))
+        sys.stderr.write(f'- {info.GetName()}\n{Indent(error_msg, 2)}\n')
 
     def Skipped(self, info):
         self.skipped += 1
         if not self.isatty:
-            sys.stderr.write('. %s (skipped)\n' % info.GetName())
+            sys.stderr.write(f'. {info.GetName()} (skipped)\n')
 
     def Done(self):
         if self.isatty:
@@ -673,8 +673,7 @@ class Status(object):
             percent = 100 * (self.passed + self.failed) / (self.total - self.skipped)
         else:
             percent = 100
-        status = '[+%d|-%d|%%%d] (%.2fs) %s' % (self.passed, self.failed,
-                                                percent, total_duration, name)
+        status = f'[+{self.passed}|-{self.failed}|%{int(percent)}] ({total_duration:.2f}s) {name}'
         self.last_length = len(status)
         self.last_finished = info
         sys.stderr.write(status)
@@ -682,7 +681,7 @@ class Status(object):
 
     def _Clear(self):
         assert self.isatty
-        sys.stderr.write('\r%s\r' % (' ' * self.last_length))
+        sys.stderr.write(f"\r{' ' * self.last_length}\r")
 
 
 def FindTestFiles(ext, filter_pattern_re, exclude_dirs):
@@ -794,9 +793,8 @@ def HandleTestResult(status, info, result, rebase=False):
                     return
                 # This test has already failed, but diff it anyway.
                 last_failure = result.GetLastFailure()
-                msg = 'expected error code %d, got %d.' % (
-                    last_failure.GetExpectedReturncode(),
-                    last_failure.returncode)
+                expected = last_failure.GetExpectedReturncode()
+                msg = f'expected error code {expected}, got {last_failure.returncode}.'
                 try:
                     info.Diff(result.stdout, result.stderr)
                 except Error as e:
@@ -831,7 +829,7 @@ def YesNoPrompt(question, default='yes'):
     elif default == 'no':
         prompt = ' [y/N] '
     else:
-        raise ValueError('invalid default answer: \'%s\'' % default)
+        raise ValueError(f'invalid default answer: \'{default}\'')
 
     while True:
         sys.stdout.write(question + prompt)
@@ -921,6 +919,8 @@ def main(args):
                         default=GetDefaultJobCount())
     parser.add_argument('-t', '--timeout', type=float, default=DEFAULT_TIMEOUT,
                         help='per test timeout in seconds')
+    parser.add_argument('--skip-slow', help='don\'t run tests marked as slow.',
+                        action='store_true')
     parser.add_argument('--no-roundtrip',
                         help='don\'t run roundtrip.py on all tests',
                         action='store_false', default=True, dest='roundtrip')
@@ -942,7 +942,7 @@ def main(args):
 
     if options.patterns:
         pattern_re = '|'.join(
-            fnmatch.translate('*%s*' % p) for p in options.patterns)
+            fnmatch.translate(f'*{p}*') for p in options.patterns)
     else:
         pattern_re = '.*'
         # By default, exclude wasi tests because WASI support is not include
@@ -974,7 +974,7 @@ def main(args):
     infos = GetAllTestInfo(test_names, status)
     infos_to_run = []
     for info in infos:
-        if info.skip:
+        if info.skip or (options.skip_slow and info.slow):
             status.Skipped(info)
             continue
         infos_to_run.append(info)
@@ -1003,7 +1003,7 @@ def main(args):
 
     ret = 0
     if status.failed:
-        sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
+        sys.stderr.write(f"**** FAILED {'*' * (80 - 14)}\n")
         for info, result in status.failed_tests:
             if isinstance(result, TestResult):
                 msg = result.GetLastCommand()
@@ -1011,7 +1011,7 @@ def main(args):
                 msg = result
             else:
                 msg = ''
-            sys.stderr.write('- %s\n    %s\n' % (info.GetName(), msg))
+            sys.stderr.write(f'- {info.GetName()}\n    {msg}\n')
         ret = 1
 
     return ret

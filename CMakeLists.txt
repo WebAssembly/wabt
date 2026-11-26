@@ -15,9 +15,15 @@
 #
 
 cmake_minimum_required(VERSION 3.16)
-project(WABT LANGUAGES C CXX VERSION 1.0.41)
+project(WABT LANGUAGES C CXX VERSION 1.0.42)
 
 include(GNUInstallDirs)
+
+# CMake 4.5 reports directory scope commands such as add_definitions under
+# -Wdev. They are used on purpose so every target and subproject gets the flags.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.5)
+  cmake_diagnostic(SET CMD_NON_TARGET_DIRECTIVE IGNORE)
+endif ()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -668,8 +674,8 @@ if (BUILD_TESTS)
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
 
-  # Python 3.5 is the version shipped in Ubuntu Xenial
-  find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
+  # Python 3.8 is the version shipped in Ubuntu Focal
+  find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
 
   if (NOT USE_SYSTEM_GTEST)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
@@ -721,6 +727,7 @@ if (BUILD_TESTS)
     src/test-intrusive-list.cc
     src/test-literal.cc
     src/test-option-parser.cc
+    src/test-stream.cc
     src/test-filenames.cc
     src/test-utf8.cc
     src/test-wast-parser.cc
@@ -735,7 +742,7 @@ if (BUILD_TESTS)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
 
   add_custom_target(run-tests
-    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
+    COMMAND ${CMAKE_COMMAND} -E env WASM2C_CC=${CMAKE_C_COMPILER} WASM2C_CFLAGS=${WASM2C_CFLAGS} ${Python3_EXECUTABLE} ${RUN_TESTS_PY} ${WABT_RUN_TESTS_ARGS} --bindir $<TARGET_FILE_DIR:wat2wasm>
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
     USES_TERMINAL

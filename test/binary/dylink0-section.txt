@@ -3,6 +3,10 @@
 magic
 version
 section("dylink.0") {
+  section(DYLINK_TARGET_ARCH) {
+    str("wasm32")
+  }
+
   section(DYLINK_MEM_INFO) {
     mem_size[5]
     mem_align[1]
@@ -33,6 +37,12 @@ section("dylink.0") {
     str("baz")
     flags[0]
   }
+
+  section(DYLINK_RUNTIME_PATH) {
+    count[2]
+    str("path1")
+    str("path2")
+  }
 }
 (;; STDOUT ;;;
 
@@ -42,6 +52,7 @@ Section Details:
 
 Custom:
  - name: "dylink.0"
+ - target_arch: wasm32
  - mem_size     : 5
  - mem_p2align  : 1
  - table_size   : 3
@@ -55,6 +66,9 @@ Custom:
  - imports[2]:
   - env.bar [ binding=global vis=default ]
   - env.baz [ binding=global vis=default ]
+ - runtime_paths[2]:
+  - path1
+  - path2
 
 Code Disassembly:
 

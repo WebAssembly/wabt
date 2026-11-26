@@ -1132,6 +1132,7 @@ void ScriptValidator::CheckCommand(const Command* command) {
       CheckAction(cast<ActionCommand>(command)->action.get());
       break;
 
+    case CommandType::Instance:
     case CommandType::Register:
     case CommandType::AssertMalformed:
     case CommandType::AssertInvalid:

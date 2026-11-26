@@ -1,0 +1,23 @@
+;;; TOOL: run-interp
+;;; ARGS1: --host-print
+(module
+  (type $i_i (func (param i32) (result i32)))
+  (import "host" "print" (func $imported (type $i_i)))
+  (table funcref (elem $imported))
+
+  (func $tail (result i32)
+    i32.const 777
+    i32.const 0
+    i32.const 0
+    return_call_indirect (type $i_i))
+
+  (func (export "f") (result i32)
+    (local i32)
+    call $tail
+    local.get 0
+    return)
+)
+(;; STDOUT ;;;
+called host host.print(i32:0) => i32:0
+f() => i32:0
+;;; STDOUT ;;)

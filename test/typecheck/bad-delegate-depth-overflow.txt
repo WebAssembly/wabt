@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (tag $e)
+  (func
+    try
+      try
+        throw $e
+      delegate 4294967295
+    catch $e
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-delegate-depth-overflow.txt:7:7: error: invalid depth: 4294967295
+      try
+      ^^^
+;;; STDERR ;;)

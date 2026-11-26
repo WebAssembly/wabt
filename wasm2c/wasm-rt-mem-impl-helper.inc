@@ -69,7 +69,8 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
                                               bool is64,
                                               uint32_t page_size) {
   uint64_t byte_length;
-  if (u64_mult_overflow(initial_pages, page_size, &byte_length)) {
+  if (u64_mult_overflow(initial_pages, page_size, &byte_length) ||
+      !u64_fits_size_t(byte_length)) {
     abort();
   }
   memory->size = byte_length;
@@ -80,26 +81,29 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
   MEMORY_LOCK_VAR_INIT(memory->mem_lock);
 
 #if WASM_RT_USE_MMAP
-  if (MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
+  if (!memory->is64) {
     const uint64_t mmap_size =
-        get_alloc_size_for_mmap_default32(memory->max_pages);
+        get_mmap_size_for_memory32(memory->max_pages, memory->page_size);
+    if (mmap_size == 0 || !u64_fits_size_t(mmap_size)) {
+      abort();
+    }
     uint8_t* addr = os_mmap(mmap_size);
     if (!addr) {
       os_print_last_error("os_mmap failed.");
       abort();
     }
-    uint8_t* data_end = addr + mmap_size;
-#if !WABT_BIG_ENDIAN
-    int ret = os_mprotect(addr, byte_length);
-#else
-    int ret = os_mprotect(data_end - byte_length, byte_length);
-#endif
+    const uint64_t committed_size = round_up_to_os_page_size(byte_length);
+    // If round up returned in invalid value, fail.
+    if ((byte_length != 0 && committed_size == 0) ||
+        !u64_fits_size_t(committed_size)) {
+      abort();
+    }
+    int ret = os_mprotect(addr, committed_size);
     if (ret != 0) {
       os_print_last_error("os_mprotect failed.");
       abort();
     }
     memory->data = (MEMORY_CELL_TYPE)addr;
-    memory->data_end = (MEMORY_CELL_TYPE)data_end;
     return;
   }
 #endif
@@ -108,7 +112,6 @@ void MEMORY_API_NAME(wasm_rt_allocate_memory)(MEMORY_TYPE* memory,
   if (byte_length != 0 && !memory->data) {
     abort();
   }
-  memory->data_end = memory->data + byte_length;
 }
 
 // Returns 0 on success
@@ -117,13 +120,20 @@ static int MEMORY_API_NAME(expand_data_allocation)(MEMORY_TYPE* memory,
                                                    uint64_t new_size,
                                                    uint64_t delta_size) {
 #if WASM_RT_USE_MMAP
-  if (MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
-#if !WABT_BIG_ENDIAN
-    return os_mprotect((void*)(memory->data + old_size), delta_size);
-#else
-    return os_mprotect((void*)(memory->data_end - old_size - delta_size),
-                       delta_size);
-#endif
+  if (!memory->is64) {
+    const uint64_t old_commit_end = round_up_to_os_page_size(old_size);
+    const uint64_t commit_end = round_up_to_os_page_size(new_size);
+    // Safety check that all values make sense.
+    if ((old_size != 0 && old_commit_end == 0) ||
+        (new_size != 0 && commit_end == 0) || commit_end < old_commit_end) {
+      return -1;
+    }
+    // Expanded allocation sits on the same page. No change needed.
+    if (commit_end == old_commit_end) {
+      return 0;
+    }
+    return os_mprotect((void*)(memory->data + old_commit_end),
+                       commit_end - old_commit_end);
   }
 #endif
 
@@ -131,15 +141,9 @@ static int MEMORY_API_NAME(expand_data_allocation)(MEMORY_TYPE* memory,
   if (new_data == NULL) {
     return -1;
   }
-#if !WABT_BIG_ENDIAN
   memset((void*)(new_data + old_size), 0, delta_size);
-#else
-  memmove((void*)(new_data + new_size - old_size), (void*)new_data, old_size);
-  memset((void*)new_data, 0, delta_size);
-#endif
 
   memory->data = (MEMORY_CELL_TYPE)new_data;
-  memory->data_end = memory->data + new_size;
   return 0;
 }
 
@@ -157,7 +161,8 @@ static uint64_t MEMORY_API_NAME(grow_memory_impl)(MEMORY_TYPE* memory,
   uint64_t old_size, new_size, delta_size;
   if (u64_mult_overflow(old_pages, memory->page_size, &old_size) ||
       u64_mult_overflow(new_pages, memory->page_size, &new_size) ||
-      u64_mult_overflow(delta, memory->page_size, &delta_size)) {
+      u64_mult_overflow(delta, memory->page_size, &delta_size) ||
+      !u64_fits_size_t(new_size)) {
     return (uint64_t)-1;
   }
 
@@ -187,9 +192,9 @@ uint64_t MEMORY_API_NAME(wasm_rt_grow_memory)(MEMORY_TYPE* memory,
 
 void MEMORY_API_NAME(wasm_rt_free_memory)(MEMORY_TYPE* memory) {
 #if WASM_RT_USE_MMAP
-  if (MEMORY_API_NAME(wasm_rt_memory_is_default32)(memory)) {
+  if (!memory->is64) {
     const uint64_t mmap_size =
-        get_alloc_size_for_mmap_default32(memory->max_pages);
+        get_mmap_size_for_memory32(memory->max_pages, memory->page_size);
     os_munmap((void*)memory->data, mmap_size);  // ignore error
     return;
   }

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -16,10 +15,10 @@
 #
 
 import contextlib
-import os
 import json
-import shutil
+import os
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
@@ -27,15 +26,17 @@ import tempfile
 
 # Get signal names from numbers in Python
 # http://stackoverflow.com/a/2549950
-SIGNAMES = dict((k, v) for v, k in reversed(sorted(signal.__dict__.items()))
-                if v.startswith('SIG') and not v.startswith('SIG_'))
+SIGNAMES = {
+    k: v for v, k in sorted(signal.__dict__.items(), reverse=True)
+    if v.startswith('SIG') and not v.startswith('SIG_')
+}
 
 
 class Error(Exception):
     pass
 
 
-class Executable(object):
+class Executable:
 
     def __init__(self, exe, *after_args, **kwargs):
         self.exe = exe
@@ -73,22 +74,21 @@ class Executable(object):
             if process.returncode < 0:
                 # Terminated by signal
                 signame = SIGNAMES.get(-process.returncode, '<unknown>')
-                error = Error('Signal raised running "%s": %s\n%s' % (err_cmd_str,
-                              signame, stderr))
+                error = Error(f'Signal raised running "{err_cmd_str}": {signame}\n{stderr}')
             elif process.returncode > 0:
-                error = Error('Error running "%s" (%d):\n%s\n%s' % (err_cmd_str, process.returncode, stdout, stderr))
+                error = Error(f'Error running "{err_cmd_str}" ({process.returncode}):\n{stdout}\n{stderr}')
         except OSError as e:
-            error = Error('Error running "%s": %s' % (err_cmd_str, str(e)))
+            error = Error(f'Error running "{err_cmd_str}": {e!s}')
         return stdout, stderr, error
 
     def RunWithArgsForStdout(self, *args, **kwargs):
-        stdout, stderr, error = self._RunWithArgsInternal(*args, **kwargs)
+        stdout, _stderr, error = self._RunWithArgsInternal(*args, **kwargs)
         if error:
             raise error
         return stdout
 
     def RunWithArgs(self, *args, **kwargs):
-        stdout, stderr, error = self._RunWithArgsInternal(*args, **kwargs)
+        stdout, _stderr, error = self._RunWithArgsInternal(*args, **kwargs)
         if stdout:
             sys.stdout.write(stdout)
         if error:
@@ -103,7 +103,7 @@ class Executable(object):
                 if value is True:
                     self.AppendArg(option)
                 else:
-                    self.AppendArg('%s=%s' % (option, value))
+                    self.AppendArg(f'{option}={value}')
 
 
 @contextlib.contextmanager
@@ -141,11 +141,11 @@ def Hexdump(data):
     while p < end:
         line_start = p
         line_end = p + DUMP_OCTETS_PER_LINE
-        line = '%07x: ' % p
+        line = f'{p:07x}: '
         while p < line_end:
             for i in range(DUMP_OCTETS_PER_GROUP):
                 if p < end:
-                    line += '%02x' % data[p]
+                    line += f'{data[p]:02x}'
                 else:
                     line += '  '
                 p += 1
@@ -157,7 +157,7 @@ def Hexdump(data):
                 break
             x = data[p]
             if x >= 32 and x < 0x7f:
-                line += '%c' % x
+                line += f'{x:c}'
             else:
                 line += '.'
             p += 1

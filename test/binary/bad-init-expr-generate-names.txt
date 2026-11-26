@@ -1,0 +1,14 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS2: --generate-names
+magic
+version
+section(GLOBAL) {
+  count[1]
+  type[f32] mut[0] init_expr[local.get 0 end]
+}
+(;; STDERR ;;;
+out/test/binary/bad-init-expr-generate-names/bad-init-expr-generate-names.wasm:000000f: error: invalid initializer: instruction not valid in initializer expression: local.get
+out/test/binary/bad-init-expr-generate-names/bad-init-expr-generate-names.wasm:000000f: error: type mismatch in initializer expression, expected [f32] but got []
+out/test/binary/bad-init-expr-generate-names/bad-init-expr-generate-names.wasm:000000f: error: invalid initializer: instruction not valid in initializer expression: local.get
+out/test/binary/bad-init-expr-generate-names/bad-init-expr-generate-names.wasm:000000f: error: type mismatch in initializer expression, expected [f32] but got []
+;;; STDERR ;;)

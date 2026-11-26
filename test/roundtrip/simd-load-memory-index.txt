@@ -1,0 +1,62 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --debug-names
+(module
+  (memory 1)
+  (memory $m 1)
+  (func
+    (drop (v128.load8_splat 1 (i32.const 0)))
+    (drop (v128.load16_splat 1 (i32.const 0)))
+    (drop (v128.load32_splat 1 (i32.const 0)))
+    (drop (v128.load64_splat 1 (i32.const 0)))
+    (drop (v128.load32_zero 1 (i32.const 0)))
+    (drop (v128.load64_zero 1 (i32.const 0)))
+    (drop (v128.load8_splat $m (i32.const 0)))
+    (drop (v128.load16_splat $m (i32.const 0)))
+    (drop (v128.load32_splat $m (i32.const 0)))
+    (drop (v128.load64_splat $m (i32.const 0)))
+    (drop (v128.load32_zero $m (i32.const 0)))
+    (drop (v128.load64_zero $m (i32.const 0)))))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (drop
+      (v128.load8_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load16_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load32_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load64_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load32_zero 1
+        (i32.const 0)))
+    (drop
+      (v128.load64_zero 1
+        (i32.const 0)))
+    (drop
+      (v128.load8_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load16_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load32_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load64_splat 1
+        (i32.const 0)))
+    (drop
+      (v128.load32_zero 1
+        (i32.const 0)))
+    (drop
+      (v128.load64_zero 1
+        (i32.const 0))))
+  (memory (;0;) 1)
+  (memory $m 1)
+  (@custom "name" "\02\03\01\00\00\06\04\01\01\01m"))
+;;; STDOUT ;;)

@@ -379,6 +379,14 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnImport(Index index,
+                  ExternalKind kind,
+                  std::string_view module_name,
+                  std::string_view field_name) override {
+    objdump_state_->num_imports = index + 1;
+    return Result::Ok;
+  }
+
   Result OnImportFunc(Index import_index,
                       std::string_view module_name,
                       std::string_view field_name,
@@ -1229,6 +1237,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         std::string_view name,
                         uint32_t flags) override;
   Result OnDylinkExport(std::string_view name, uint32_t flags) override;
+  Result OnDylinkRuntimePathCount(Index count) override;
+  Result OnDylinkRuntimePath(std::string_view path) override;
+  Result OnDylinkTargetArch(std::string_view arch) override;
 
   Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
@@ -1276,6 +1287,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                        uint32_t flags,
                        Index count) override;
   Result OnComdatEntry(ComdatType kind, Index index) override;
+  Result OnTargetArch(std::string_view arch) override;
 
   Result OnTagCount(Index count) override;
   Result OnTagType(Index index, Index sig_index) override;
@@ -1576,7 +1588,10 @@ Result BinaryReaderObjdump::OnDataCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnImportCount(Index count) {
-  return OnCount(count);
+  // `count` is the number of entries in the import section, which can be
+  // less than the number of imports when compact imports are used.  Report
+  // the total number of imports (as counted during the prepass) instead.
+  return OnCount(std::max(count, objdump_state_->num_imports));
 }
 
 Result BinaryReaderObjdump::OnImportFunc(Index import_index,
@@ -2149,6 +2164,22 @@ Result BinaryReaderObjdump::OnDylinkNeeded(std::string_view so_name) {
   return Result::Ok;
 }
 
+Result BinaryReaderObjdump::OnDylinkRuntimePathCount(Index count) {
+  PrintDetails(" - runtime_paths[%u]:\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkRuntimePath(std::string_view path) {
+  PrintDetails("  - " PRIstringview "\n", WABT_PRINTF_STRING_VIEW_ARG(path));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkTargetArch(std::string_view arch) {
+  PrintDetails(" - target_arch: " PRIstringview "\n",
+               WABT_PRINTF_STRING_VIEW_ARG(arch));
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdump::OnRelocCount(Index count, Index section_index) {
   CHECK_RESULT(BinaryReaderObjdumpBase::OnRelocCount(count, section_index));
   PrintDetails("  - relocations for section: %d (" PRIstringview ") [%d]\n",
@@ -2429,6 +2460,12 @@ Result BinaryReaderObjdump::OnComdatEntry(ComdatType kind, Index index) {
     }
   }
   PrintDetails("\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnTargetArch(std::string_view arch) {
+  PrintDetails("  - target arch: " PRIstringview "\n",
+               WABT_PRINTF_STRING_VIEW_ARG(arch));
   return Result::Ok;
 }
 

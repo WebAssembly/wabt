@@ -569,8 +569,14 @@ void WastParser::Error(Location loc, const char* format, ...) {
 }
 
 Token WastParser::GetToken() {
-  if (tokens_.empty()) {
-    tokens_.push_back(lexer_->GetToken());
+  while (tokens_.empty()) {
+    Token cur = lexer_->GetToken();
+    if (cur.token_type() != TokenType::LparAnn) {
+      tokens_.push_back(cur);
+      break;
+    }
+
+    ParseAnnotations(cur);
   }
   return tokens_.front();
 }
@@ -586,42 +592,7 @@ TokenType WastParser::Peek(size_t n) {
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
-      // Custom annotation. For now, discard until matching Rpar, unless it is
-      // a code metadata annotation or custom section. In those cases, we know
-      // how to parse it.
-      if (!options_->features.annotations_enabled()) {
-        Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
-        tokens_.push_back(Token(cur.loc, TokenType::Invalid));
-        continue;
-      }
-      if ((options_->features.code_metadata_enabled() &&
-           cur.text().starts_with("metadata.code.")) ||
-          cur.text() == "custom") {
-        tokens_.push_back(cur);
-        continue;
-      }
-      int indent = 1;
-      while (indent > 0) {
-        cur = lexer_->GetToken();
-        switch (cur.token_type()) {
-          case TokenType::Lpar:
-          case TokenType::LparAnn:
-            indent++;
-            break;
-
-          case TokenType::Rpar:
-            indent--;
-            break;
-
-          case TokenType::Eof:
-            indent = 0;
-            Error(cur.loc, "unterminated annotation");
-            break;
-
-          default:
-            break;
-        }
-      }
+      ParseAnnotations(cur);
     }
   }
   return tokens_.at(n).token_type();
@@ -644,8 +615,7 @@ bool WastParser::PeekMatchExpr() {
 }
 
 bool WastParser::PeekMatchRefType() {
-  return (options_->features.function_references_enabled() ||
-          options_->features.exceptions_enabled()) &&
+  return options_->features.function_references_enabled() &&
          PeekMatchLpar(TokenType::Ref);
 }
 
@@ -761,6 +731,78 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
     return ErrorExpected(expected, example);
   }
   return Result::Ok;
+}
+
+void WastParser::AddScriptErrors(const Errors& errors,
+                                 const Location& loc,
+                                 const char* desc) {
+  for (const auto& error : errors) {
+    // Some spec tests may trigger wabt warnings, although these
+    // tests are still valid according to the specification.
+    if (error.error_level != ErrorLevel::Warning) {
+      if (error.loc.offset == kInvalidOffset) {
+        Error(loc, "error in %s module: %s", desc, error.message.c_str());
+      } else {
+        Error(loc, "error in %s module: @0x%08" PRIzx ": %s", desc,
+              error.loc.offset, error.message.c_str());
+      }
+    }
+  }
+}
+
+void WastParser::ParseAnnotations(Token& token) {
+  // Custom annotation. For now, discard until matching Rpar, unless it is
+  // a code metadata annotation or custom section. In those cases, we know
+  // how to parse it.
+  if (!options_->features.annotations_enabled()) {
+    Error(token.loc, "annotations not enabled: %s", token.to_string().c_str());
+    tokens_.push_back(Token(token.loc, TokenType::Invalid));
+    return;
+  }
+
+  if (token.text().size() == 0) {
+    Error(token.loc, "empty annotation id");
+  } else if (*token.text().data() == '\"') {
+    std::string name;
+    RemoveEscapes(token.text(), std::back_inserter(name));
+    size_t length = name.length();
+
+    if (length == 0) {
+      Error(token.loc, "empty annotation id");
+    } else if (!IsValidUtf8(name.data(), length)) {
+      Error(token.loc, "quoted annotation id has an invalid utf-8 encoding");
+    }
+  }
+
+  if ((options_->features.code_metadata_enabled() &&
+       token.text().starts_with("metadata.code.")) ||
+      token.text() == "custom") {
+    tokens_.push_back(token);
+    return;
+  }
+
+  int indent = 1;
+  while (indent > 0) {
+    Token cur = lexer_->GetToken();
+    switch (cur.token_type()) {
+      case TokenType::Lpar:
+      case TokenType::LparAnn:
+        indent++;
+        break;
+
+      case TokenType::Rpar:
+        indent--;
+        break;
+
+      case TokenType::Eof:
+        indent = 0;
+        Error(token.loc, "unterminated annotation");
+        break;
+
+      default:
+        break;
+    }
+  }
 }
 
 Result WastParser::ParseVarText(Token& token, std::string* out_text) {
@@ -3827,7 +3869,29 @@ Result WastParser::ParseActionCommand(CommandPtr* out_command) {
 Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   WABT_TRACE(ParseModuleCommand);
   std::unique_ptr<ScriptModule> script_module;
-  CHECK_RESULT(ParseScriptModule(&script_module));
+  EXPECT(Lpar);
+  if (Peek(1) == TokenType::Instance) {
+    Location loc = GetLocation();
+    EXPECT(Module);
+    EXPECT(Instance);
+    if (!PeekMatch(TokenType::Var)) {
+      Error(loc, "missing instance name");
+      return Result::Error;
+    }
+    std::string instance_name;
+    CHECK_RESULT(ParseBindVarOpt(&instance_name));
+    if (!PeekMatch(TokenType::Var)) {
+      Error(loc, "missing definition name");
+      return Result::Error;
+    }
+    std::string definition_name;
+    CHECK_RESULT(ParseBindVarOpt(&definition_name));
+    EXPECT(Rpar);
+    out_command->reset(
+        new InstanceCommand(loc, instance_name, definition_name));
+    return Result::Ok;
+  }
+  CHECK_RESULT(ParseScriptModuleNoLpar(&script_module));
 
   Module* module = nullptr;
 
@@ -3859,14 +3923,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       }
       module->name = bsm->name;
       module->loc = bsm->loc;
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(bsm->loc, "error in binary module: %s", error.message.c_str());
-        } else {
-          Error(bsm->loc, "error in binary module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, bsm->loc, "binary");
 
       command->script_module = std::move(script_module);
       *out_command = std::move(command);
@@ -3883,14 +3940,7 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
       std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
           filename, qsm->data.data(), qsm->data.size(), &errors);
       auto result = ParseWatModule(lexer.get(), &m, &errors, options_);
-      for (const auto& error : errors) {
-        if (error.loc.offset == kInvalidOffset) {
-          Error(qsm->loc, "error in quoted module: %s", error.message.c_str());
-        } else {
-          Error(qsm->loc, "error in quoted module: @0x%08" PRIzx ": %s",
-                error.loc.offset, error.message.c_str());
-        }
-      }
+      AddScriptErrors(errors, qsm->loc, "quoted");
       if (Succeeded(result)) {
         *module = std::move(*m.get());
       }
@@ -4018,10 +4068,9 @@ Result WastParser::ParseEither(ConstVector* alternatives) {
   return Result::Ok;
 }
 
-Result WastParser::ParseScriptModule(
+Result WastParser::ParseScriptModuleNoLpar(
     std::unique_ptr<ScriptModule>* out_module) {
-  WABT_TRACE(ParseScriptModule);
-  EXPECT(Lpar);
+  WABT_TRACE(ParseScriptModuleNoLpar);
   Location loc = GetLocation();
   EXPECT(Module);
   bool is_definition = Match(TokenType::Definition);
@@ -4078,6 +4127,14 @@ Result WastParser::ParseScriptModule(
   (*out_module)->is_definition = is_definition;
   EXPECT(Rpar);
   return Result::Ok;
+}
+
+Result WastParser::ParseScriptModule(
+    std::unique_ptr<ScriptModule>* out_module) {
+  WABT_TRACE(ParseScriptModule);
+  EXPECT(Lpar);
+  // Should be a tail call.
+  return ParseScriptModuleNoLpar(out_module);
 }
 
 template <typename T>

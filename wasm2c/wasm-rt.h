@@ -57,6 +57,19 @@ extern "C" {
 #endif
 #endif
 
+// Check for known platforms that should be defining WABT_BIG_ENDIAN
+#ifndef WABT_BIG_ENDIAN
+#define WABT_BIG_ENDIAN 0
+#endif
+
+#if !WABT_BIG_ENDIAN &&                                                    \
+    ((defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) &&          \
+      __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) ||                           \
+     defined(__BIG_ENDIAN__) || defined(__s390__) || defined(__s390x__) || \
+     defined(__sparc__) || defined(__sparc))
+#error "Expected WABT_BIG_ENDIAN to be defined on big endian platforms"
+#endif
+
 /**
  * Many devices don't implement the C11 threads.h. We use CriticalSection APIs
  * for Windows and pthreads on other platforms where threads are not available.
@@ -160,8 +173,9 @@ extern "C" {
  * compiler or the embedder must permit a non-conforming setting (allow dead
  * read elimination from linear memory)
  */
-#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP && \
-    (WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION || defined(__GNUC__))
+#if UINTPTR_MAX > 0xffffffff && WASM_RT_USE_MMAP &&      \
+    (WASM_RT_NONCONFORMING_ALLOW_OOB_READ_ELIMINATION || \
+     defined(__GNUC__) || defined(__clang__))
 #define WASM_RT_GUARD_PAGES_SUPPORTED 1
 #else
 #define WASM_RT_GUARD_PAGES_SUPPORTED 0
@@ -481,8 +495,6 @@ typedef void* wasm_rt_externref_t;
 typedef struct {
   /** The linear memory data, with a byte length of `size`. */
   uint8_t* data;
-  /** The location after the the reserved space for the linear memory data. */
-  uint8_t* data_end;
   /** The page size for this Memory object
       (always 64 KiB without the custom-page-sizes feature) */
   uint32_t page_size;
@@ -511,9 +523,6 @@ typedef struct {
    * volatile.
    */
   _Atomic volatile uint8_t* data;
-  /** The location one byte after the reserved space for the linear memory data.
-   * This includes any reserved pages that are not yet allocated. */
-  _Atomic volatile uint8_t* data_end;
   /** The page size for this Memory object
       (always 64 KiB without the custom-page-sizes feature) */
   uint32_t page_size;
