@@ -1285,13 +1285,17 @@ WASM_IMPL_REF(trap);
 
 WASM_IMPL_SHARABLE_REF(module)
 
-#define WASM_IMPL_EXTERN(name)                                                 \
+#define WASM_IMPL_EXTERN(name, kind)                                           \
   const wasm_##name##type_t* wasm_externtype_as_##name##type_const(            \
       const wasm_externtype_t* t) {                                            \
-    return static_cast<const wasm_##name##type_t*>(t);                         \
+    return wasm_externtype_kind(t) == kind                                     \
+               ? static_cast<const wasm_##name##type_t*>(t)                    \
+               : nullptr;                                                      \
   }                                                                            \
   wasm_##name##type_t* wasm_externtype_as_##name##type(wasm_externtype_t* t) { \
-    return static_cast<wasm_##name##type_t*>(t);                               \
+    return wasm_externtype_kind(t) == kind                                     \
+               ? static_cast<wasm_##name##type_t*>(t)                          \
+               : nullptr;                                                      \
   }                                                                            \
   wasm_externtype_t* wasm_##name##type_as_externtype(wasm_##name##type_t* t) { \
     return static_cast<wasm_externtype_t*>(t);                                 \
@@ -1308,12 +1312,13 @@ WASM_IMPL_SHARABLE_REF(module)
     return static_cast<const wasm_extern_t*>(name);                            \
   }                                                                            \
   wasm_##name##_t* wasm_extern_as_##name(wasm_extern_t* ext) {                 \
-    return static_cast<wasm_##name##_t*>(ext);                                 \
+    return wasm_extern_kind(ext) == kind ? static_cast<wasm_##name##_t*>(ext)  \
+                                         : nullptr;                            \
   }
 
-WASM_IMPL_EXTERN(table);
-WASM_IMPL_EXTERN(func);
-WASM_IMPL_EXTERN(global);
-WASM_IMPL_EXTERN(memory);
+WASM_IMPL_EXTERN(table, WASM_EXTERN_TABLE);
+WASM_IMPL_EXTERN(func, WASM_EXTERN_FUNC);
+WASM_IMPL_EXTERN(global, WASM_EXTERN_GLOBAL);
+WASM_IMPL_EXTERN(memory, WASM_EXTERN_MEMORY);
 
 }  // extern "C"
