@@ -1,0 +1,29 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (type (func (param i32)))
+  (func (call 4294967296))
+  (func (call 0x1_0000_0000))
+  (func (block (br 4294967296)))
+  (func (local.get 4294967296))
+  (func (type 4294967296) (param i64)))
+(;; STDERR ;;;
+out/test/parse/expr/bad-index-overflow.txt:5:15: error: invalid int "4294967296"
+  (func (call 4294967296))
+              ^^^^^^^^^^
+out/test/parse/expr/bad-index-overflow.txt:6:15: error: invalid int "0x1_0000_0000"
+  (func (call 0x1_0000_0000))
+              ^^^^^^^^^^^^^
+out/test/parse/expr/bad-index-overflow.txt:7:20: error: invalid int "4294967296"
+  (func (block (br 4294967296)))
+                   ^^^^^^^^^^
+out/test/parse/expr/bad-index-overflow.txt:8:20: error: invalid int "4294967296"
+  (func (local.get 4294967296))
+                   ^^^^^^^^^^
+out/test/parse/expr/bad-index-overflow.txt:9:15: error: invalid int "4294967296"
+  (func (type 4294967296) (param i64)))
+              ^^^^^^^^^^
+out/test/parse/expr/bad-index-overflow.txt:9:4: error: invalid func type index 4294967295
+  (func (type 4294967296) (param i64)))
+   ^^^^
+;;; STDERR ;;)
