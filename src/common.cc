@@ -30,8 +30,11 @@
 #include <fcntl.h>
 #include <io.h>
 #include <stdlib.h>
+#include <limits>
 #define PATH_MAX _MAX_PATH
-#define stat _stat
+#define stat _stat64
+#define fseek _fseeki64
+#define ftell _ftelli64
 #define S_IFREG _S_IFREG
 #endif
 
@@ -129,7 +132,7 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return res;
   }
 
-  long size = ftell(infile);
+  auto size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
     fclose(infile);
@@ -142,7 +145,15 @@ Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
     return Result::Error;
   }
 
-  out_data->resize(size);
+#if COMPILER_IS_MSVC
+  if (static_cast<uint64_t>(size) >
+      static_cast<uint64_t>(std::numeric_limits<size_t>::max())) {
+    fprintf(stderr, "%s: file too large to read into memory\n", filename_cstr);
+    fclose(infile);
+    return Result::Error;
+  }
+#endif
+  out_data->resize(static_cast<size_t>(size));
   if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
     fprintf(stderr, "%s: fread failed: %s\n", filename_cstr, strerror(errno));
     fclose(infile);

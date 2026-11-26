@@ -614,10 +614,6 @@ def main(args):
 
         o_filenames = []
         cflags = [f'-I{options.wasmrt_dir}', f'-I{options.simde_dir}']
-        if not options.disable_memory64 and IS_WINDOWS:
-            sys.stderr.write('skipping: wasm2c+memory64 is not yet supported under msvc\n')
-            return SKIPPED
-
         use_c11 = options.enable_threads
 
         for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):

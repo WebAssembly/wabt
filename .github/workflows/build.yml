@@ -66,6 +66,32 @@ jobs:
       run: cmake --build out --target run-c-api-tests
     - name: tests
       run: cmake --build out --target run-tests
+  build-msvc-other-archs:
+    name: build (windows ${{ matrix.arch }}) (minimal tests)
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86
+            runner: windows-latest
+            cmake_arch: Win32
+          - arch: arm64
+            runner: windows-11-arm
+            cmake_arch: ARM64
+    steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: cmake
+      run: cmake -S . -B out -A ${{ matrix.cmake_arch }} -DWERROR=ON -Werror=dev -DCMAKE_ERROR_DEPRECATED=OFF -DWABT_RUN_TESTS_ARGS=address64
+    - name: build
+      run: cmake --build out
+    - name: tests
+      run: cmake --build out --target run-tests
   emscripten:
     name: emscripten
     runs-on: ubuntu-latest

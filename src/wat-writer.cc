@@ -1194,12 +1194,12 @@ Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadSplatExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadSplatExpr>(expr);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnLoadZeroExpr(LoadZeroExpr* expr) {
-  writer_->WriteLoadStoreExpr<LoadZeroExpr>(expr);
+  writer_->WriteMemoryLoadStoreExpr<LoadZeroExpr>(expr);
   return Result::Ok;
 }
 
@@ -1625,7 +1625,12 @@ void WatWriter::WriteTable(const Table& table) {
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
-  WriteType(table.elem_type, NextChar::None);
+  WriteType(table.elem_type, NextChar::Space);
+  /* A table whose element type has no default value carries an initializer,
+   * which the text format requires after the type. This does nothing when
+   * there is no initializer, and WriteCloseNewline() drops the pending space
+   * in that case. */
+  WriteInitExpr(table.init_expr);
   WriteCloseNewline();
   table_index_++;
 }

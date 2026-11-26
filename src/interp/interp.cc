@@ -1222,9 +1222,13 @@ RunResult Thread::PopCall() {
 }
 
 RunResult Thread::DoReturnCall(const Func::Ptr& func, Trap::Ptr* out_trap) {
-  PopCall();
-  DoCall(func, out_trap);
-  return frames_.empty() ? RunResult::Return : RunResult::Ok;
+  RunResult result = PopCall();
+  if (DoCall(func, out_trap) == RunResult::Trap) {
+    return RunResult::Trap;
+  }
+  // A host function has already returned. Return to the host if that is what
+  // called the frame we popped.
+  return isa<HostFunc>(func.get()) ? result : RunResult::Ok;
 }
 
 void Thread::PopValues(const ValueTypes& types, Values* out_values) {
@@ -1720,6 +1724,10 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
       Ref new_func_ref = inst_->funcs()[instr.imm_u32];
       Frame& current_frame = frames_.back();
       current_frame.func = new_func_ref;
+      // The preceding drop_keep has left the callee's arguments at the base of
+      // the reused frame, so re-cache the value stack height for the function
+      // we are switching to, exactly as PushCall does for a non-tail call.
+      current_frame.values = values_.size();
       break;
     }
 
