@@ -400,7 +400,7 @@ class BinaryWriter {
                                  Offset leb_size_guess,
                                  const char* desc);
   void BeginKnownSection(BinarySection section_code);
-  void BeginCustomSection(const char* name);
+  void BeginCustomSection(std::string_view name);
   void WriteSectionHeader(const char* desc, BinarySection section_code);
   void EndSection();
   void BeginSubsection(const char* name);
@@ -565,9 +565,12 @@ void BinaryWriter::BeginKnownSection(BinarySection section_code) {
   WriteSectionHeader(desc, section_code);
 }
 
-void BinaryWriter::BeginCustomSection(const char* name) {
+void BinaryWriter::BeginCustomSection(std::string_view name) {
   char desc[100];
-  wabt_snprintf(desc, sizeof(desc), "section \"%s\"", name);
+  // A section name is a byte vector and may contain a null byte, so give
+  // snprintf an explicit length instead of letting it stop at the first one.
+  wabt_snprintf(desc, sizeof(desc), "section \"%.*s\"",
+                static_cast<int>(name.length()), name.data());
   WriteSectionHeader(desc, BinarySection::Custom);
   WriteStr(stream_, name, "custom section name", PrintChars::Yes);
 }
@@ -1830,7 +1833,7 @@ Result BinaryWriter::WriteModule() {
          options_.features.code_metadata_enabled())) {
       continue;
     }
-    BeginCustomSection(custom.name.data());
+    BeginCustomSection(custom.name);
     stream_->WriteData(custom.data, "custom data");
     EndSection();
   }
@@ -1925,7 +1928,7 @@ void BinaryWriter::WriteCodeMetadataSections() {
     std::string name = "metadata.code.";
     name.append(s.first);
     auto& section = s.second;
-    BeginCustomSection(name.c_str());
+    BeginCustomSection(name);
     WriteU32Leb128(stream_, section.entries.size(), "function count");
     for (auto& f : section.entries) {
       WriteU32Leb128WithReloc(f.func_idx, "function index",
