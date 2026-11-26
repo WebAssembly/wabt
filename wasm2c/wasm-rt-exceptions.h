@@ -126,8 +126,8 @@ void wasm_rt_free_exnref_table(wasm_rt_exnref_table_t*);
 /**
  * Grow a Table object by `delta` elements (giving the new elements the value
  * `init`), and return the previous element count. If this new element count is
- * greater than the maximum element count, the grow fails and 0xffffffffu
- * (UINT32_MAX) is returned instead.
+ * greater than the maximum element count, or the table cannot be allocated, the
+ * grow fails and 0xffffffffu (UINT32_MAX) is returned instead.
  */
 uint32_t wasm_rt_grow_exnref_table(wasm_rt_exnref_table_t*,
                                    uint32_t delta,
