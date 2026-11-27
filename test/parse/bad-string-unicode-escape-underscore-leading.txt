@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (func (export "foo\u{_1F600}bar")))
+(;; STDERR ;;;
+out/test/parse/bad-string-unicode-escape-underscore-leading.txt:3:27: error: bad escape "\u{"
+(module (func (export "foo\u{_1F600}bar")))
+                          ^^^
+out/test/parse/bad-string-unicode-escape-underscore-leading.txt:3:23: error: unexpected token "Invalid", expected a quoted string (e.g. "foo").
+(module (func (export "foo\u{_1F600}bar")))
+                      ^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

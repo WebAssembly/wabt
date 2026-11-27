@@ -1,0 +1,14 @@
+;;; TOOL: wat-desugar
+(module
+  (func)
+  (export "\u{1_F600}" (func 0))
+  (export "a\u{0_00_1_f6_0_0}" (func 0))
+  (export "\u{0_0}\u{8_0}\u{D7_FF}\u{E_000}\u{10_FFFF}" (func 0)))
+(;; STDOUT ;;;
+(module
+  (func (;0;))
+  (export "\f0\9f\98\80" (func 0))
+  (export "a\f0\9f\98\80" (func 0))
+  (export "\00\c2\80\ed\9f\bf\ee\80\80\f4\8f\bf\bf" (func 0))
+  (type (;0;) (func)))
+;;; STDOUT ;;)
