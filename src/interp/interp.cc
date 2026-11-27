@@ -2071,7 +2071,7 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
 
     case O::I32X4DotI16X8S: return DoSimdDot<u32x4, s16x8>();
     case O::I16X8DotI8X16I7X16S: return DoSimdDot<u16x8, s8x16>();
-    case O::I32X4DotI8X16I7X16AddS: return DoSimdDotAdd<u32x4, s16x8>();
+    case O::I32X4DotI8X16I7X16AddS: return DoSimdDotAdd<u32x4, s8x16>();
 
     case O::F32X4RelaxedMadd: return DoSimdRelaxedMadd<f32>();
     case O::F32X4RelaxedNmadd: return DoSimdRelaxedNmadd<f32>();
@@ -2744,9 +2744,11 @@ RunResult Thread::DoSimdDotAdd() {
   auto lhs = Pop<T>();
   S result;
   for (u8 i = 0; i < S::lanes; ++i) {
-    u8 laneidx = i * 2;
-    SL lo = SL(lhs[laneidx] * rhs[laneidx]);
-    SL hi = SL(lhs[laneidx + 1] * rhs[laneidx + 1]);
+    u8 laneidx = i * 4;
+    SL lo = SL(lhs[laneidx] * rhs[laneidx] +
+               lhs[laneidx + 1] * rhs[laneidx + 1]);
+    SL hi = SL(lhs[laneidx + 2] * rhs[laneidx + 2] +
+               lhs[laneidx + 3] * rhs[laneidx + 3]);
     result[i] = Add(lo, hi);
     result[i] = Add(result[i], acc[i]);
   }
